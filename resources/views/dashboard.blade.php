@@ -13,7 +13,22 @@
 
 @section('content')
     <div class="container-xl">
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            Bienvenido
+                        </h3>
+                    </div>
 
+                    <div class="card-body">
+                        Has iniciado sesión como:
+                        <strong>
+                            {{ auth()->user()->name }}
+                        </strong>
+                    </div>
+                </div>
+            </div>
         <div class="row row-deck row-cards">
 
             <div class="col-sm-6 col-lg-3">
@@ -86,24 +101,6 @@
                         <div class="text-secondary">
                             Sistema funcionando
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            Bienvenido
-                        </h3>
-                    </div>
-
-                    <div class="card-body">
-                        Has iniciado sesión como:
-
-                        <strong>
-                            {{ auth()->user()->name }}
-                        </strong>
                     </div>
                 </div>
             </div>
