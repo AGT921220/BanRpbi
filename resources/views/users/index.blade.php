@@ -1,0 +1,90 @@
+@extends('layouts.app')
+
+@section('title', 'Usuarios')
+@section('page-title', 'Usuarios')
+
+@section('page-actions')
+    @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_CREATE)
+        <a href="{{ route('users.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-2"></i>
+            Nuevo usuario
+        </a>
+    @endcan
+@endsection
+
+@section('content')
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Listado de usuarios</h3>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Roles</th>
+                            <th class="w-1">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($users as $user)
+                            <tr>
+                                <td>{{ $user->name }}</td>
+                                <td class="text-secondary">{{ $user->email }}</td>
+                                <td>
+                                    @forelse ($user->roles as $role)
+                                        <span class="badge bg-blue-lt">{{ $role->name }}</span>
+                                    @empty
+                                        <span class="text-secondary">Sin rol</span>
+                                    @endforelse
+                                </td>
+                                <td>
+                                    <div class="btn-list flex-nowrap">
+                                        @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_UPDATE)
+                                            <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-primary">
+                                                Editar
+                                            </a>
+                                        @endcan
+
+                                        @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_DELETE)
+                                            <form
+                                                action="{{ route('users.destroy', $user) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('¿Eliminar este usuario?')"
+                                            >
+                                                @csrf
+                                                @method('DELETE')
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    @disabled(auth()->id() === $user->id)
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-4">
+                                    No hay usuarios registrados.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if ($users->hasPages())
+                <div class="card-footer d-flex align-items-center">
+                    {{ $users->links() }}
+                </div>
+            @endif
+        </div>
+    </div>
+@endsection

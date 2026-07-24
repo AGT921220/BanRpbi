@@ -436,7 +436,7 @@
 
                                     <div class="dropdown-menu">
                                         @can(PermissionTypes::USERS_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('users.index') }}" class="dropdown-item">
                                                 <i class="ti ti-users me-2"></i>
                                                 Usuarios
                                             </a>

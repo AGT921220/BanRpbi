@@ -13,38 +13,54 @@
 </head>
 
 <body>
-
     <div class="page">
-      <!-- BEGIN NAVBAR  -->
-       @include('partials.dashboard.header')
-      <!-- END NAVBAR  -->
-      <div class="page-wrapper">
-        <!-- BEGIN PAGE HEADER -->
-        <div class="page-header d-print-none" aria-label="Page header">
-          <div class="container-xl">
-            <div class="row g-2 align-items-center">
-              <div class="col">
-                <!-- Page pre-title -->
-                <h2 class="page-title">Dashboard</h2>
-              </div>
-              <!-- Page title actions -->
+        @include('partials.dashboard.header')
+
+        <div class="page-wrapper">
+            <div class="page-header d-print-none" aria-label="Page header">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                @yield('page-title', 'Dashboard')
+                            </h2>
+                        </div>
+                        <div class="col-auto ms-auto d-print-none">
+                            <div class="btn-list">
+                                @yield('page-actions')
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <div class="page-body">
+                <div class="container-xl">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <div class="d-flex">
+                                <div>{{ session('success') }}</div>
+                            </div>
+                            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <div class="d-flex">
+                                <div>{{ session('error') }}</div>
+                            </div>
+                            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                        </div>
+                    @endif
+                </div>
+
+                @yield('content')
+            </div>
+
+            @include('partials.dashboard.footer')
         </div>
-        <!-- END PAGE HEADER -->
-        <!-- BEGIN PAGE BODY -->
-        <div class="page-body">
-          {{-- <div class="container-xl"> --}}
-            @yield('content')
-          {{-- </div> --}}
-        </div>
-        <!-- END PAGE BODY -->
-        <!--  BEGIN FOOTER  -->
-        @include('partials.dashboard.footer')
-        <!--  END FOOTER  -->
-      </div>
     </div>
     @stack('scripts')
 </body>
 </html>
-
