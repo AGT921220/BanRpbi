@@ -465,7 +465,6 @@
                                     </div>
                                 </li>
                             @endcanany
-
                         </ul>
                     </div>
                 </div>
