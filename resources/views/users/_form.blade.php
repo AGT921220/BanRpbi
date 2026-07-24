@@ -10,73 +10,49 @@
     );
 @endphp
 
-<div class="mb-3">
-    <label for="name" class="form-label required">Nombre</label>
-    <input
-        type="text"
-        name="name"
-        id="name"
-        class="form-control @error('name') is-invalid @enderror"
-        value="{{ old('name', $user->name ?? '') }}"
-        required
-        autofocus
-    >
-    @error('name')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
+<x-form.input
+    name="name"
+    label="Nombre"
+    icon="ti ti-user"
+    :value="$user->name ?? ''"
+    required
+    autofocus
+/>
 
-<div class="mb-3">
-    <label for="email" class="form-label required">Correo electrónico</label>
-    <input
-        type="email"
-        name="email"
-        id="email"
-        class="form-control @error('email') is-invalid @enderror"
-        value="{{ old('email', $user->email ?? '') }}"
-        required
-    >
-    @error('email')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
+<x-form.input
+    name="email"
+    label="Correo electrónico"
+    type="email"
+    icon="ti ti-mail"
+    :value="$user->email ?? ''"
+    required
+    autocomplete="email"
+/>
 
-<div class="mb-3">
-    <label for="password" class="form-label @empty($user) required @endempty">
-        Contraseña
-        @isset($user)
-            <span class="text-secondary">(dejar vacío para no cambiar)</span>
-        @endisset
-    </label>
-    <input
-        type="password"
-        name="password"
-        id="password"
-        class="form-control @error('password') is-invalid @enderror"
-        @empty($user) required @endempty
-        autocomplete="new-password"
-    >
-    @error('password')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
+<x-form.input
+    name="password"
+    label="Contraseña"
+    type="password"
+    icon="ti ti-lock"
+    :required="! isset($user)"
+    autocomplete="new-password"
+    :help="isset($user) ? '(dejar vacío para no cambiar)' : null"
+/>
 
-<div class="mb-3">
-    <label for="password_confirmation" class="form-label @empty($user) required @endempty">
-        Confirmar contraseña
-    </label>
-    <input
-        type="password"
-        name="password_confirmation"
-        id="password_confirmation"
-        class="form-control"
-        @empty($user) required @endempty
-        autocomplete="new-password"
-    >
-</div>
+<x-form.input
+    name="password_confirmation"
+    label="Confirmar contraseña"
+    type="password"
+    icon="ti ti-lock-check"
+    :required="! isset($user)"
+    autocomplete="new-password"
+/>
 
 <div class="mb-4">
-    <label class="form-label">Roles</label>
+    <label class="form-label">
+        <i class="ti ti-shield me-1"></i>
+        Roles
+    </label>
     <div class="row g-2">
         @forelse ($roles as $role)
             <div class="col-md-6">
@@ -89,7 +65,10 @@
                         data-role="{{ $role->name }}"
                         @checked($selectedRoles->contains($role->name))
                     >
-                    <span class="form-check-label">{{ $role->name }}</span>
+                    <span class="form-check-label">
+                        <i class="ti ti-user-shield me-1 text-secondary"></i>
+                        {{ $role->name }}
+                    </span>
                 </label>
             </div>
         @empty
@@ -106,7 +85,10 @@
 <div class="mb-0">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
         <div>
-            <label class="form-label mb-0">Permisos</label>
+            <label class="form-label mb-0">
+                <i class="ti ti-key me-1"></i>
+                Permisos
+            </label>
             <div class="text-secondary small">
                 Los permisos heredados de un rol aparecen marcados y no se pueden desactivar.
             </div>
@@ -186,6 +168,8 @@
                     badge?.remove();
                 }
             });
+
+            document.dispatchEvent(new Event('permissions:refresh-groups'));
         }
 
         roleCheckboxes.forEach((checkbox) => {
@@ -198,6 +182,7 @@
                     checkbox.checked = true;
                 }
             });
+            document.dispatchEvent(new Event('permissions:refresh-groups'));
         });
 
         document.getElementById('deselect-all-user-permissions')?.addEventListener('click', function () {
@@ -206,6 +191,7 @@
                     checkbox.checked = false;
                 }
             });
+            document.dispatchEvent(new Event('permissions:refresh-groups'));
         });
 
         refreshPermissionLocks();

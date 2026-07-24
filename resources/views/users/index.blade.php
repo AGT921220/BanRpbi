@@ -52,6 +52,7 @@
                                     <div class="btn-list flex-nowrap">
                                         @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_UPDATE)
                                             <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-pencil me-1"></i>
                                                 Editar
                                             </a>
                                         @endcan
@@ -69,6 +70,7 @@
                                                     class="btn btn-sm btn-outline-danger"
                                                     @disabled(auth()->id() === $user->id)
                                                 >
+                                                    <i class="ti ti-trash me-1"></i>
                                                     Eliminar
                                                 </button>
                                             </form>

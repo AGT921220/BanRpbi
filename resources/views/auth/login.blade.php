@@ -2,24 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <meta
-        name="csrf-token"
-        content="{{ csrf_token() }}"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Iniciar sesión | BAN RPBI</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-        @vite([
+    @vite([
         'resources/css/app.css',
         'resources/js/app.js',
     ])
@@ -40,16 +26,13 @@
 
                     <div class="card shadow-sm">
                         <div class="card-body p-4">
-
                             <h2 class="h4 text-center mb-4">
+                                <i class="ti ti-login me-1"></i>
                                 Iniciar sesión
                             </h2>
 
                             @if ($errors->any())
-                                <div
-                                    class="alert alert-danger"
-                                    role="alert"
-                                >
+                                <div class="alert alert-danger" role="alert">
                                     <ul class="mb-0 ps-3">
                                         @foreach ($errors->all() as $error)
                                             <li>{{ $error }}</li>
@@ -59,57 +42,33 @@
                             @endif
 
                             @if (session('status'))
-                                <div
-                                    class="alert alert-success"
-                                    role="alert"
-                                >
+                                <div class="alert alert-success" role="alert">
                                     {{ session('status') }}
                                 </div>
                             @endif
 
-                            <form
-                                method="POST"
-                                action="{{ route('login') }}"
-                            >
+                            <form method="POST" action="{{ route('login') }}">
                                 @csrf
 
-                                <div class="mb-3">
-                                    <label
-                                        for="email"
-                                        class="form-label"
-                                    >
-                                        Correo electrónico
-                                    </label>
+                                <x-form.input
+                                    name="email"
+                                    label="Correo electrónico"
+                                    type="email"
+                                    icon="ti ti-mail"
+                                    :value="old('email')"
+                                    required
+                                    autofocus
+                                    autocomplete="email"
+                                />
 
-                                    <input
-                                        id="email"
-                                        type="email"
-                                        name="email"
-                                        value="{{ old('email') }}"
-                                        class="form-control @error('email') is-invalid @enderror"
-                                        autocomplete="email"
-                                        autofocus
-                                        required
-                                    >
-                                </div>
-
-                                <div class="mb-3">
-                                    <label
-                                        for="password"
-                                        class="form-label"
-                                    >
-                                        Contraseña
-                                    </label>
-
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        name="password"
-                                        class="form-control @error('password') is-invalid @enderror"
-                                        autocomplete="current-password"
-                                        required
-                                    >
-                                </div>
+                                <x-form.input
+                                    name="password"
+                                    label="Contraseña"
+                                    type="password"
+                                    icon="ti ti-lock"
+                                    required
+                                    autocomplete="current-password"
+                                />
 
                                 <div class="form-check mb-4">
                                     <input
@@ -118,23 +77,16 @@
                                         name="remember"
                                         class="form-check-input"
                                     >
-
-                                    <label
-                                        for="remember"
-                                        class="form-check-label"
-                                    >
+                                    <label for="remember" class="form-check-label">
                                         Mantener sesión iniciada
                                     </label>
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary w-100"
-                                >
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="ti ti-login me-1"></i>
                                     Iniciar sesión
                                 </button>
                             </form>
-
                         </div>
                     </div>
 
