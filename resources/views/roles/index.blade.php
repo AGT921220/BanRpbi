@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Usuarios')
-@section('page-title', 'Usuarios')
+@section('title', 'Roles')
+@section('page-title', 'Roles')
 
 @section('page-actions')
-    @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_CREATE)
-        <a href="{{ route('users.create') }}" class="btn btn-primary">
+    @can(\App\Features\Permissions\Constants\PermissionTypes::ROLES_CREATE)
+        <a href="{{ route('roles.create') }}" class="btn btn-primary">
             <i class="ti ti-plus me-2"></i>
-            Nuevo usuario
+            Nuevo rol
         </a>
     @endcan
 @endsection
@@ -16,7 +16,7 @@
     <div class="container-xl">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Listado de usuarios</h3>
+                <h3 class="card-title">Listado de roles</h3>
             </div>
 
             <div class="table-responsive">
@@ -24,50 +24,43 @@
                     <thead>
                         <tr>
                             <th>Nombre</th>
-                            <th>Correo</th>
-                            <th>Roles</th>
+                            <th>Permisos</th>
+                            <th>Usuarios</th>
                             <th class="w-1">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($users as $user)
+                        @forelse ($roles as $role)
                             <tr>
-                                <td>{{ $user->name }}</td>
-                                <td class="text-secondary">{{ $user->email }}</td>
                                 <td>
-                                    @forelse ($user->roles as $role)
-                                        <span class="badge bg-blue-lt">{{ $role->name }}</span>
-                                    @empty
-                                        <span class="text-secondary">Sin rol</span>
-                                    @endforelse
-                                    @if ($user->permissions->isNotEmpty())
-                                        <div class="mt-1">
-                                            <span class="badge bg-green-lt">
-                                                +{{ $user->permissions->count() }} permiso(s) directo(s)
-                                            </span>
-                                        </div>
-                                    @endif
+                                    <strong>{{ $role->name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-azure-lt">{{ $role->permissions->count() }} permisos</span>
+                                </td>
+                                <td>
+                                    <span class="text-secondary">{{ $role->users_count }}</span>
                                 </td>
                                 <td>
                                     <div class="btn-list flex-nowrap">
-                                        @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_UPDATE)
-                                            <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-primary">
+                                        @can(\App\Features\Permissions\Constants\PermissionTypes::ROLES_UPDATE)
+                                            <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-primary">
                                                 Editar
                                             </a>
                                         @endcan
 
-                                        @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_DELETE)
+                                        @can(\App\Features\Permissions\Constants\PermissionTypes::ROLES_DELETE)
                                             <form
-                                                action="{{ route('users.destroy', $user) }}"
+                                                action="{{ route('roles.destroy', $role) }}"
                                                 method="POST"
-                                                onsubmit="return confirm('¿Eliminar este usuario?')"
+                                                onsubmit="return confirm('¿Eliminar este rol?')"
                                             >
                                                 @csrf
                                                 @method('DELETE')
                                                 <button
                                                     type="submit"
                                                     class="btn btn-sm btn-outline-danger"
-                                                    @disabled(auth()->id() === $user->id)
+                                                    @disabled($role->name === 'Super Administrador')
                                                 >
                                                     Eliminar
                                                 </button>
@@ -79,7 +72,7 @@
                         @empty
                             <tr>
                                 <td colspan="4" class="text-center text-secondary py-4">
-                                    No hay usuarios registrados.
+                                    No hay roles registrados.
                                 </td>
                             </tr>
                         @endforelse
@@ -87,9 +80,9 @@
                 </table>
             </div>
 
-            @if ($users->hasPages())
+            @if ($roles->hasPages())
                 <div class="card-footer d-flex align-items-center">
-                    {{ $users->links() }}
+                    {{ $roles->links() }}
                 </div>
             @endif
         </div>

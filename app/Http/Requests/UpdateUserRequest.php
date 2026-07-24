@@ -28,6 +28,8 @@ class UpdateUserRequest extends FormRequest
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['string', 'exists:roles,name'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', 'exists:permissions,name'],
         ];
     }
 
@@ -41,6 +43,7 @@ class UpdateUserRequest extends FormRequest
             'email' => 'correo electrónico',
             'password' => 'contraseña',
             'roles' => 'roles',
+            'permissions' => 'permisos',
         ];
     }
 }

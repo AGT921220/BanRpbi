@@ -260,4 +260,60 @@ class PermissionHandler
             $this->getAllPermissions()
         );
     }
+
+    /**
+     * Agrupa permisos por módulo (prefijo antes del punto).
+     *
+     * @return array<string, array<int, array{name: string, label: string}>>
+     */
+    public function getGroupedPermissions(): array
+    {
+        $labels = $this->getPermissionNamesInSpanish();
+        $grouped = [];
+
+        foreach ($this->getAllPermissions() as $permission) {
+            $module = explode('.', $permission)[0] ?? 'otros';
+
+            $grouped[$module][] = [
+                'name' => $permission,
+                'label' => $labels[$permission] ?? $permission,
+            ];
+        }
+
+        ksort($grouped);
+
+        return $grouped;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getModuleLabels(): array
+    {
+        return [
+            'dashboard' => 'Dashboard',
+            'clients' => 'Clientes',
+            'contracts' => 'Contratos',
+            'approvals' => 'Aprobaciones',
+            'collections' => 'Recolecciones',
+            'routes' => 'Rutas',
+            'zones' => 'Zonas',
+            'manifests' => 'Manifiestos',
+            'waste_capture' => 'Captura de residuos',
+            'driver_shifts' => 'Jornadas de chofer',
+            'environmental_processes' => 'Procesos ambientales',
+            'batches' => 'Bachadas',
+            'certificates' => 'Certificados',
+            'logbooks' => 'Bitácoras',
+            'invoices' => 'Facturas',
+            'payments' => 'Pagos',
+            'reports' => 'Reportes',
+            'customer_documents' => 'Documentos de clientes',
+            'users' => 'Usuarios',
+            'roles' => 'Roles',
+            'catalogs' => 'Catálogos',
+            'settings' => 'Configuración',
+            'profile' => 'Perfil',
+        ];
+    }
 }

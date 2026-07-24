@@ -4,13 +4,12 @@ namespace App\Http\Requests;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
-class StoreUserRequest extends FormRequest
+class StoreRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionTypes::USERS_CREATE) ?? false;
+        return $this->user()?->can(PermissionTypes::ROLES_CREATE) ?? false;
     }
 
     /**
@@ -19,11 +18,7 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'roles' => ['nullable', 'array'],
-            'roles.*' => ['string', 'exists:roles,name'],
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
         ];
@@ -36,9 +31,6 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'nombre',
-            'email' => 'correo electrónico',
-            'password' => 'contraseña',
-            'roles' => 'roles',
             'permissions' => 'permisos',
         ];
     }

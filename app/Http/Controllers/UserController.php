@@ -3,21 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Features\Permissions\PermissionHandler;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly PermissionHandler $permissionHandler
+    ) {}
+
     public function index(): View
     {
         $this->authorize(PermissionTypes::USERS_VIEW);
 
         $users = User::query()
-            ->with('roles')
+            ->with(['roles', 'permissions'])
             ->latest()
             ->paginate(15);
 
@@ -28,9 +34,7 @@ class UserController extends Controller
     {
         $this->authorize(PermissionTypes::USERS_CREATE);
 
-        $roles = Role::query()->orderBy('name')->get();
-
-        return view('users.create', compact('roles'));
+        return view('users.create', $this->formData());
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
@@ -43,7 +47,11 @@ class UserController extends Controller
             'password' => $validated['password'],
         ]);
 
-        $user->syncRoles($validated['roles'] ?? []);
+        $this->syncRolesAndPermissions(
+            $user,
+            $validated['roles'] ?? [],
+            $validated['permissions'] ?? []
+        );
 
         return redirect()
             ->route('users.index')
@@ -54,9 +62,17 @@ class UserController extends Controller
     {
         $this->authorize(PermissionTypes::USERS_UPDATE);
 
-        $roles = Role::query()->orderBy('name')->get();
+        $user->load(['roles.permissions', 'permissions']);
 
-        return view('users.edit', compact('user', 'roles'));
+        return view('users.edit', array_merge(
+            $this->formData(),
+            [
+                'user' => $user,
+                'selectedRoles' => $user->roles->pluck('name'),
+                'directPermissions' => $user->getDirectPermissions()->pluck('name'),
+                'lockedPermissions' => $user->getPermissionsViaRoles()->pluck('name'),
+            ]
+        ));
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
@@ -71,7 +87,12 @@ class UserController extends Controller
         }
 
         $user->save();
-        $user->syncRoles($validated['roles'] ?? []);
+
+        $this->syncRolesAndPermissions(
+            $user,
+            $validated['roles'] ?? [],
+            $validated['permissions'] ?? []
+        );
 
         return redirect()
             ->route('users.index')
@@ -91,5 +112,54 @@ class UserController extends Controller
         return redirect()
             ->route('users.index')
             ->with('success', 'Usuario eliminado correctamente.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formData(): array
+    {
+        $roles = Role::query()
+            ->with('permissions')
+            ->orderBy('name')
+            ->get();
+
+        return [
+            'roles' => $roles,
+            'rolesPermissionsMap' => $roles->mapWithKeys(
+                fn (Role $role): array => [
+                    $role->name => $role->permissions->pluck('name')->values()->all(),
+                ]
+            ),
+            'groupedPermissions' => $this->permissionHandler->getGroupedPermissions(),
+            'moduleLabels' => $this->permissionHandler->getModuleLabels(),
+            'selectedRoles' => collect(),
+            'directPermissions' => collect(),
+            'lockedPermissions' => collect(),
+        ];
+    }
+
+    /**
+     * @param  array<int, string>  $roles
+     * @param  array<int, string>  $permissions
+     */
+    private function syncRolesAndPermissions(User $user, array $roles, array $permissions): void
+    {
+        $user->syncRoles($roles);
+
+        $permissionsFromRoles = Role::query()
+            ->whereIn('name', $roles)
+            ->with('permissions')
+            ->get()
+            ->flatMap(fn (Role $role): Collection => $role->permissions->pluck('name'))
+            ->unique()
+            ->all();
+
+        $directPermissions = collect($permissions)
+            ->diff($permissionsFromRoles)
+            ->values()
+            ->all();
+
+        $user->syncPermissions($directPermissions);
     }
 }

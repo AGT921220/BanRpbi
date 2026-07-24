@@ -4,13 +4,13 @@ namespace App\Http\Requests;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
 
-class StoreUserRequest extends FormRequest
+class UpdateRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionTypes::USERS_CREATE) ?? false;
+        return $this->user()?->can(PermissionTypes::ROLES_UPDATE) ?? false;
     }
 
     /**
@@ -18,12 +18,11 @@ class StoreUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var \Spatie\Permission\Models\Role $role */
+        $role = $this->route('role');
+
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'roles' => ['nullable', 'array'],
-            'roles.*' => ['string', 'exists:roles,name'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($role->id)],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
         ];
@@ -36,9 +35,6 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'nombre',
-            'email' => 'correo electrónico',
-            'password' => 'contraseña',
-            'roles' => 'roles',
             'permissions' => 'permisos',
         ];
     }

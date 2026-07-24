@@ -443,7 +443,7 @@
                                         @endcan
 
                                         @can(PermissionTypes::ROLES_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('roles.index') }}" class="dropdown-item">
                                                 <i class="ti ti-shield-lock me-2"></i>
                                                 Roles y permisos
                                             </a>
