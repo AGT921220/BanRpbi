@@ -5,30 +5,14 @@ namespace App\Models;
 use Database\Factories\ContractFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contract extends Model
 {
     /** @use HasFactory<ContractFactory> */
     use HasFactory;
 
-    public const STATUS_DRAFT = 'draft';
-
-    public const STATUS_ACTIVE = 'active';
-
-    public const STATUS_EXPIRED = 'expired';
-
-    public const STATUS_CANCELLED = 'cancelled';
-
-    /**
-     * @var list<string>
-     */
-    public const STATUSES = [
-        self::STATUS_DRAFT,
-        self::STATUS_ACTIVE,
-        self::STATUS_EXPIRED,
-        self::STATUS_CANCELLED,
-    ];
+    use SoftDeletes;
 
     /**
      * @var list<string>
@@ -43,14 +27,10 @@ class Contract extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'folio',
-        'client_id',
         'name',
-        'starts_at',
-        'ends_at',
-        'status',
-        'collection_frequency',
         'notes',
+        'duration_months',
+        'frequency',
     ];
 
     /**
@@ -59,29 +39,7 @@ class Contract extends Model
     protected function casts(): array
     {
         return [
-            'starts_at' => 'date',
-            'ends_at' => 'date',
-        ];
-    }
-
-    /**
-     * @return BelongsTo<Client, $this>
-     */
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(Client::class);
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function statusLabels(): array
-    {
-        return [
-            self::STATUS_DRAFT => 'Borrador',
-            self::STATUS_ACTIVE => 'Vigente',
-            self::STATUS_EXPIRED => 'Vencido',
-            self::STATUS_CANCELLED => 'Cancelado',
+            'duration_months' => 'integer',
         ];
     }
 

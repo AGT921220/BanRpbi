@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="card-body">
-                        @include('contracts._form', ['clients' => $clients])
+                        @include('contracts._form')
                     </div>
 
                     <div class="card-footer d-flex justify-content-end gap-2">

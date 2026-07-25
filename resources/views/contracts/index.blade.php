@@ -18,7 +18,7 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="ti ti-file-description me-2"></i>
-                    Listado de contratos
+                    Catálogo de contratos
                 </h3>
             </div>
 
@@ -36,7 +36,7 @@
                                 id="contracts-search"
                                 class="form-control"
                                 value="{{ request('search') }}"
-                                placeholder="Folio, nombre, cliente o empresa"
+                                placeholder="Nombre, notas o frecuencia"
                             >
                         </div>
                     </div>
@@ -61,45 +61,26 @@
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th>Folio</th>
                             <th>Nombre</th>
-                            <th>Cliente</th>
-                            <th>Vigencia</th>
-                            <th>Estado</th>
+                            <th>Duración</th>
+                            <th>Frecuencia</th>
+                            <th>Notas</th>
                             <th class="w-1">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($contracts as $contract)
+                            @php
+                                $frequencyLabels = \App\Models\Contract::frequencyLabels();
+                            @endphp
                             <tr>
-                                <td>{{ $contract->folio }}</td>
                                 <td>{{ $contract->name }}</td>
+                                <td>{{ $contract->duration_months }} meses</td>
                                 <td>
-                                    {{ $contract->client?->name }}
-                                    {{ $contract->client?->parentarl_surname }}
-                                    @if ($contract->client?->company)
-                                        <div class="text-secondary small">{{ $contract->client->company }}</div>
-                                    @endif
+                                    {{ $frequencyLabels[$contract->frequency] ?? $contract->frequency }}
                                 </td>
                                 <td class="text-secondary">
-                                    {{ $contract->starts_at?->format('d/m/Y') }}
-                                    —
-                                    {{ $contract->ends_at?->format('d/m/Y') }}
-                                </td>
-                                <td>
-                                    @php
-                                        $statusLabels = \App\Models\Contract::statusLabels();
-                                        $badge = match ($contract->status) {
-                                            'active' => 'bg-green-lt',
-                                            'draft' => 'bg-blue-lt',
-                                            'expired' => 'bg-yellow-lt',
-                                            'cancelled' => 'bg-red-lt',
-                                            default => 'bg-secondary-lt',
-                                        };
-                                    @endphp
-                                    <span class="badge {{ $badge }}">
-                                        {{ $statusLabels[$contract->status] ?? $contract->status }}
-                                    </span>
+                                    {{ \Illuminate\Support\Str::limit($contract->notes ?? '—', 60) }}
                                 </td>
                                 <td>
                                     <div class="btn-list flex-nowrap">
@@ -117,7 +98,7 @@
                                             <form
                                                 action="{{ route('contracts.destroy', $contract) }}"
                                                 method="POST"
-                                                onsubmit="return confirm('¿Eliminar este contrato?')"
+                                                onsubmit="return confirm('¿Eliminar este contrato del catálogo?')"
                                             >
                                                 @csrf
                                                 @method('DELETE')
@@ -132,8 +113,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-secondary py-4">
-                                    No hay contratos registrados.
+                                <td colspan="5" class="text-center text-secondary py-4">
+                                    No hay contratos en el catálogo.
                                 </td>
                             </tr>
                         @endforelse

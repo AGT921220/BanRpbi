@@ -8,14 +8,10 @@ final class CreateContract
 {
     /**
      * @param  array{
-     *     folio: string,
-     *     client_id: int,
      *     name: string,
-     *     starts_at: string,
-     *     ends_at: string,
-     *     status: string,
-     *     collection_frequency?: string|null,
-     *     notes?: string|null
+     *     notes?: string|null,
+     *     duration_months: int,
+     *     frequency: string
      * }  $data
      */
     public function __invoke(array $data): Contract

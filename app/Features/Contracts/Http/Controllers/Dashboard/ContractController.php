@@ -4,7 +4,6 @@ namespace App\Features\Contracts\Http\Controllers\Dashboard;
 
 use App\Features\Contracts\Application\CreateContract;
 use App\Features\Contracts\Application\DeleteContract;
-use App\Features\Contracts\Application\ListContractClients;
 use App\Features\Contracts\Application\ListContracts;
 use App\Features\Contracts\Application\UpdateContract;
 use App\Features\Contracts\Http\Requests\StoreContractRequest;
@@ -20,7 +19,6 @@ final class ContractController extends Controller
 {
     public function __construct(
         private readonly ListContracts $listContracts,
-        private readonly ListContractClients $listContractClients,
         private readonly CreateContract $createContract,
         private readonly UpdateContract $updateContract,
         private readonly DeleteContract $deleteContract,
@@ -45,9 +43,7 @@ final class ContractController extends Controller
     {
         $this->authorize(PermissionTypes::CONTRACTS_CREATE);
 
-        return view('contracts.create', [
-            'clients' => ($this->listContractClients)(),
-        ]);
+        return view('contracts.create');
     }
 
     public function store(StoreContractRequest $request): RedirectResponse
@@ -67,7 +63,6 @@ final class ContractController extends Controller
 
         return view('contracts.edit', [
             'contract' => $contract,
-            'clients' => ($this->listContractClients)(),
         ]);
     }
 

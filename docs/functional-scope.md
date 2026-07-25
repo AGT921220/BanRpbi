@@ -398,7 +398,7 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 | Módulo | Estado | Responsable | Prioridad | Dependencias pendientes | Notas |
 | ------ | ------ | ----------- | --------- | ----------------------- | ----- |
 | Clientes | Parcial | — | Alta | Aprobaciones, contratos, zonas, datos fiscales | CRUD web básico; no cubre aún el flujo funcional completo |
-| Contratos | Parcial | — | Alta | Catálogo de tipos / renovación | CRUD web básico con cliente, folio, vigencia y estado |
+| Contratos | Parcial | — | Alta | Asignación a clientes | Catálogo web (nombre, duración, frecuencia, notas) |
 | Ventas | No iniciado | — | Alta | Clientes, contratos, zonas | Sin feature ni pantallas |
 | Recolecciones | No iniciado | — | Alta | Clientes, contratos | Solo constantes de permiso definidas |
 | Captura de residuos | No iniciado | — | Alta | Recolecciones, rutas | Aplicación móvil; solo permisos |
@@ -424,14 +424,15 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 
 #### Contratos — Parcial
 
-- Feature: `app/Features/Contracts/Application/{ListContracts,ListContractClients,CreateContract,UpdateContract,DeleteContract}.php`
+- Feature: `app/Features/Contracts/Application/{ListContracts,CreateContract,UpdateContract,DeleteContract}.php`
 - Controlador: `app/Features/Contracts/Http/Controllers/Dashboard/ContractController.php`
 - Requests: `app/Features/Contracts/Http/Requests/{StoreContractRequest,UpdateContractRequest}.php`
 - Rutas: `app/Features/Contracts/routes/dashboard.php`
 - Vistas: `resources/views/contracts/{index,create,edit,_form}.blade.php`
 - Modelo y migración: `app/Models/Contract.php`, `database/migrations/2026_07_25_050000_create_contracts_table.php`
 - Pruebas: `tests/Feature/Contracts/ContractCrudTest.php`
-- Pendiente: catálogo formal de tipos, renovación automática, firma/PDF y generación de recolecciones
+- Alcance actual: catálogo de contratos (`name`, `notes`, `duration_months`, `frequency`)
+- Pendiente: asignación a clientes, renovación, firma/PDF y generación de recolecciones
 
 #### Zonas del mapa — Parcial
 

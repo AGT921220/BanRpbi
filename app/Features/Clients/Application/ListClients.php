@@ -36,6 +36,11 @@ final class ListClients
             ->orderBy('name')
             ->orderBy('parentarl_surname')
             ->paginate($perPage)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(function (Client $client): Client {
+                $client->has_contract = $client->contracts()->exists();
+
+                return $client;
+            });
     }
 }

@@ -5,7 +5,6 @@ namespace App\Models;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Client extends Model
 {
@@ -22,12 +21,8 @@ class Client extends Model
         'phone',
         'company',
     ];
-
-    /**
-     * @return HasMany<Contract, $this>
-     */
-    public function contracts(): HasMany
+    public function contracts()
     {
-        return $this->hasMany(Contract::class);
+        return $this->hasMany(ClientContract::class);
     }
 }

@@ -16,8 +16,8 @@ final class StoreContractRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->input('collection_frequency') === '') {
-            $this->merge(['collection_frequency' => null]);
+        if ($this->input('notes') === '') {
+            $this->merge(['notes' => null]);
         }
     }
 
@@ -27,14 +27,10 @@ final class StoreContractRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'folio' => ['required', 'string', 'max:50', 'unique:contracts,folio'],
-            'client_id' => ['required', 'integer', 'exists:clients,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'starts_at' => ['required', 'date'],
-            'ends_at' => ['required', 'date', 'after_or_equal:starts_at'],
-            'status' => ['required', 'string', Rule::in(Contract::STATUSES)],
-            'collection_frequency' => ['nullable', 'string', Rule::in(Contract::FREQUENCIES)],
+            'name' => ['required', 'string', 'max:255', 'unique:contracts,name'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'duration_months' => ['required', 'integer', 'min:1', 'max:120'],
+            'frequency' => ['required', 'string', Rule::in(Contract::FREQUENCIES)],
         ];
     }
 
@@ -44,14 +40,10 @@ final class StoreContractRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'folio' => 'folio',
-            'client_id' => 'cliente',
             'name' => 'nombre',
-            'starts_at' => 'fecha de inicio',
-            'ends_at' => 'fecha de finalización',
-            'status' => 'estado',
-            'collection_frequency' => 'frecuencia de recolección',
             'notes' => 'notas',
+            'duration_months' => 'duración en meses',
+            'frequency' => 'frecuencia',
         ];
     }
 }

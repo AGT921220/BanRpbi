@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Client;
 use App\Models\Contract;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,21 +17,16 @@ class ContractFactory extends Factory
      */
     public function definition(): array
     {
-        $startsAt = fake()->dateTimeBetween('-1 month', '+1 month');
-
         return [
-            'folio' => 'CTR-'.fake()->unique()->numerify('######'),
-            'client_id' => Client::factory(),
-            'name' => fake()->randomElement([
+            'name' => fake()->unique()->randomElement([
                 'Contrato estándar RPBI',
                 'Contrato anual de recolección',
-                'Contrato especial',
-            ]),
-            'starts_at' => $startsAt,
-            'ends_at' => (clone $startsAt)->modify('+1 year'),
-            'status' => Contract::STATUS_ACTIVE,
-            'collection_frequency' => fake()->randomElement(Contract::FREQUENCIES),
+                'Contrato especial industrial',
+                'Contrato básico',
+            ]).' '.fake()->unique()->numerify('##'),
             'notes' => fake()->optional()->sentence(),
+            'duration_months' => 12,
+            'frequency' => fake()->randomElement(Contract::FREQUENCIES),
         ];
     }
 }
