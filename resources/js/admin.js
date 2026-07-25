@@ -76,13 +76,14 @@ window.BanHttp = { get, post };
 
 export default window.BanHttp;
 
-export function showToast(type, text, time = 5000, persist = false) {
+export function showToast(type, text, textType = null, time = 5000, persist = false) {
     if (type != "success" && type != "danger") {
         type = "success";
     }
     let typeText = type == "success" ? "Éxito" : "Error";
-    // let toast = $('<div class="toast toast-' + type + '">' + text + '<span><i class="fa fa-close close_toast"></i></div>');
-    // let toast = $('<div class="toast toast-' + type + '">' + text + '<span><button type="button" class="close close_toast" data-dismiss="alert"aria-hidden="true">&times;</button></i></div>');
+    if(textType){
+        typeText = textType;
+    }
     let toast = $(
         ' <div class="toast toast-' +
             type +

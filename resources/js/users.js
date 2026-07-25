@@ -129,7 +129,7 @@ async function loadUserIntoModal(userId, editUrl) {
     }
 
     const url = editUrl || `/users/${userId}/edit`;
-    const data = await window.BanHttp.get(url,'Cargando Usuarios');
+    const data = await window.BanHttp.get(url,'Cargando Usuario');
     fillUserForm(data);
 }
 
