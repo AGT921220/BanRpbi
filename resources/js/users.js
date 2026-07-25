@@ -3,6 +3,8 @@
  * Usa BanHttp.get / BanHttp.post.
  */
 
+import { showToast } from "./admin";
+
 function getRolesPermissionsMap() {
     const node = document.getElementById('users-roles-permissions-map');
     if (!node) {
@@ -127,7 +129,7 @@ async function loadUserIntoModal(userId, editUrl) {
     }
 
     const url = editUrl || `/users/${userId}/edit`;
-    const data = await window.BanHttp.get(url);
+    const data = await window.BanHttp.get(url,'Cargando Usuarios');
     fillUserForm(data);
 }
 

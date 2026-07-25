@@ -1,30 +1,106 @@
-import axios from 'axios';
+import axios from "axios";
+import $ from "jquery";
+import { showLoader, hideLoader } from "./components/loader";
 
 const csrfToken = document
     .querySelector('meta[name="csrf-token"]')
-    ?.getAttribute('content');
+    ?.getAttribute("content");
 
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-axios.defaults.headers.common['Accept'] = 'application/json';
+axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+axios.defaults.headers.common["Accept"] = "application/json";
 
 if (csrfToken) {
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+    axios.defaults.headers.common["X-CSRF-TOKEN"] = csrfToken;
 }
 
 /**
  * GET
  */
-export function get(url, config = {}) {
-    return axios.get(url, config).then((response) => response.data);
-}
+export async function get(
+    url,
+    loaderText = "Cargando...",
+    params = {}, headers = {}, loader = true, timeout = 500,
+) {
+    if (loader) {
+        showLoader(loaderText);
+    }
 
+    try {
+        const response = await axios.get(url, {
+            params,
+            headers,
+            timeout,
+        });
+
+        return response.data;
+    } finally {
+        if (loader) {
+            setTimeout(hideLoader, timeout);
+        }
+    }
+}
 /**
  * POST
  */
-export function post(url, data = {}, config = {}) {
-    return axios.post(url, data, config).then((response) => response.data);
+export async function post(
+    url,
+    data = {},
+    loaderText = "Guardando...",
+    {
+        params = {},
+        headers = {},
+        loader = true,
+        timeout = 5000,
+    } = {},
+) {
+    if (loader) {
+        showLoader(loaderText);
+    }
+
+    try {
+        const response = await axios.post(url, data, {
+            params,
+            headers,
+            timeout,
+        });
+
+        return response.data;
+    } finally {
+        if (loader) {
+            hideLoader();
+        }
+    }
 }
 
 window.BanHttp = { get, post };
 
 export default window.BanHttp;
+
+export function showToast(type, text, time = 5000, persist = false) {
+    if (type != "success" && type != "danger") {
+        type = "success";
+    }
+    let typeText = type == "success" ? "Éxito" : "Error";
+    // let toast = $('<div class="toast toast-' + type + '">' + text + '<span><i class="fa fa-close close_toast"></i></div>');
+    // let toast = $('<div class="toast toast-' + type + '">' + text + '<span><button type="button" class="close close_toast" data-dismiss="alert"aria-hidden="true">&times;</button></i></div>');
+    let toast = $(
+        ' <div class="toast toast-' +
+            type +
+            ' success"><div class="container-1"><i class="fas fa-check-circle"></i></div><div class="container-2">    <p>' +
+            typeText +
+            "</p>    <p>" +
+            text +
+            '</p></div>   <span><button type="button" class="close close_toast" data-dismiss="alert"aria-hidden="true">&times;</button></i>   </div>',
+    );
+
+    $(".toast-container").append(toast);
+
+    if (!persist) {
+        toast
+            .fadeIn(500)
+            .delay(time)
+            .fadeOut(500, function () {
+                $(this).remove();
+            });
+    }
+}

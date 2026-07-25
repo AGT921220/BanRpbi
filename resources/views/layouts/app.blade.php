@@ -1,14 +1,12 @@
 <!doctype html>
 <html lang="es">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Panel') | BAN RPBI</title>
-    @vite([
-        'resources/css/app.css',
-        'resources/js/app.js',
-    ])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
 
@@ -61,6 +59,9 @@
             @include('partials.dashboard.footer')
         </div>
     </div>
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;" aria-live="polite"
+        aria-atomic="true"></div>
     @stack('scripts')
 </body>
+
 </html>

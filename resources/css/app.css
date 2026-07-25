@@ -1,5 +1,7 @@
 @import '@tabler/core/dist/css/tabler.min.css';
 @import '@tabler/icons-webfont/dist/tabler-icons.min.css';
+@import "./components/toast.css";
+@import "./components/loader.css";
 
 /* Estilos personalizados del sistema */
 html,
