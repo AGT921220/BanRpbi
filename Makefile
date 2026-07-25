@@ -1,6 +1,6 @@
 include .env
 
- example:
+example:
 	@echo ${SERVER_PASS};
 up:
 	@docker compose down;\
@@ -20,5 +20,14 @@ nginx:
 clear:
 	@docker exec -it php-ban /bin/bash -c \
 "php artisan config:cache && php artisan config:clear && php artisan horizon:terminate && php artisan queue:restart && php artisan route:clear && php artisan route:cache"
-#&& php artisan horizon:purge
-#&& php artisan cache:clear
+
+import-db:
+	@docker exec -i ${DB_HOST} mysql -u user -ppassword -e "DROP DATABASE IF EXISTS ${DB_DATABASE}; CREATE DATABASE ${DB_DATABASE};"
+	@docker exec -i ${DB_HOST} mysql -u user -ppassword ${DB_DATABASE} < storage/app/gan.sql
+	@$(MAKE) update-bulk-passwords
+
+db-export:
+	@docker exec -i ${DB_HOST} mysqldump -u ${DB_USERNAME} -p${DB_PASSWORD} --no-tablespaces ${DB_DATABASE} > storage/app/gan.sql
+
+update-bulk-passwords:
+	@docker exec -i php-ban php artisan users:update-bulk-passwords --force
