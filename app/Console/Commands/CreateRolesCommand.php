@@ -21,8 +21,8 @@ class CreateRolesCommand extends Command
         try {
             $permissionRegistrar->forgetCachedPermissions();
 
-            $superAdministrator = Role::findOrCreate(
-                'Super Administrador',
+            $admin = Role::findOrCreate(
+                'Admin',
                 'web'
             );
 
@@ -56,7 +56,7 @@ class CreateRolesCommand extends Command
                 'web'
             );
 
-            $superAdministrator->syncPermissions(
+            $admin->syncPermissions(
                 Permission::query()
                     ->where('guard_name', 'web')
                     ->get()

@@ -116,14 +116,14 @@ class RoleController extends Controller
     {
         $this->authorize(PermissionTypes::ROLES_DELETE);
 
-        if ($role->name === 'Super Administrador') {
+        if ($role->name === 'Admin') {
             if ($request->wantsJson()) {
                 return response()->json([
-                    'message' => 'No se puede eliminar el rol Super Administrador.',
+                    'message' => 'No se puede eliminar el rol Admin.',
                 ], 422);
             }
 
-            return back()->with('error', 'No se puede eliminar el rol Super Administrador.');
+            return back()->with('error', 'No se puede eliminar el rol Admin.');
         }
 
         if ($role->users()->count() > 0) {

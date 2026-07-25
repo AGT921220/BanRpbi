@@ -76,7 +76,7 @@
                                                 <button
                                                     type="submit"
                                                     class="btn btn-sm btn-outline-danger"
-                                                    @disabled($role->name === 'Super Administrador')
+                                                    @disabled($role->name === 'Admin')
                                                 >
                                                     <i class="ti ti-trash me-1"></i>
                                                     Eliminar
