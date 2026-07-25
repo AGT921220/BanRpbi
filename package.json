@@ -17,6 +17,7 @@
         "@popperjs/core": "^2.11.8",
         "@tabler/core": "^1.4.0",
         "@tabler/icons-webfont": "^3.45.0",
+        "axios": "^1.18.1",
         "bootstrap": "^5.3.8",
         "save": "^2.9.0"
     }

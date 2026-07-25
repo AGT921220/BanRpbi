@@ -5,10 +5,15 @@
 
 @section('page-actions')
     @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_CREATE)
-        <a href="{{ route('users.create') }}" class="btn btn-primary">
+        <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#user-form-modal"
+        >
             <i class="ti ti-plus me-2"></i>
             Nuevo usuario
-        </a>
+        </button>
     @endcan
 @endsection
 
@@ -16,7 +21,10 @@
     <div class="container-xl">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Listado de usuarios</h3>
+                <h3 class="card-title">
+                    <i class="ti ti-users me-2"></i>
+                    Listado de usuarios
+                </h3>
             </div>
 
             <div class="table-responsive">
@@ -51,10 +59,17 @@
                                 <td>
                                     <div class="btn-list flex-nowrap">
                                         @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_UPDATE)
-                                            <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-primary">
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#user-form-modal"
+                                                data-user-id="{{ $user->id }}"
+                                                data-edit-url="{{ route('users.edit', $user) }}"
+                                            >
                                                 <i class="ti ti-pencil me-1"></i>
                                                 Editar
-                                            </a>
+                                            </button>
                                         @endcan
 
                                         @can(\App\Features\Permissions\Constants\PermissionTypes::USERS_DELETE)
@@ -96,4 +111,15 @@
             @endif
         </div>
     </div>
+
+    @canany([
+        \App\Features\Permissions\Constants\PermissionTypes::USERS_CREATE,
+        \App\Features\Permissions\Constants\PermissionTypes::USERS_UPDATE,
+    ])
+        @include('users._modal')
+
+        <script type="application/json" id="users-roles-permissions-map">
+            @json($rolesPermissionsMap)
+        </script>
+    @endcanany
 @endsection

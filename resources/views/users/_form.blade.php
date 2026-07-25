@@ -1,52 +1,73 @@
 @php
-    $selectedRoles = collect(old('roles', isset($selectedRoles) ? $selectedRoles->all() : []));
-    $selectedPermissions = collect(old(
-        'permissions',
-        isset($directPermissions) ? $directPermissions->merge($lockedPermissions ?? [])->unique()->all() : []
-    ));
-    $initialLocked = collect(old('roles')
-        ? []
-        : (isset($lockedPermissions) ? $lockedPermissions->all() : [])
-    );
+    $selectedRoles = collect();
+    $selectedPermissions = collect();
+    $initialLocked = collect();
 @endphp
 
-<x-form.input
-    name="name"
-    label="Nombre"
-    icon="ti ti-user"
-    :value="$user->name ?? ''"
-    required
-    autofocus
-/>
+<div class="mb-3">
+    <label for="user-name" class="form-label required">Nombre</label>
+    <div class="input-icon">
+        <span class="input-icon-addon"><i class="ti ti-user"></i></span>
+        <input
+            type="text"
+            name="name"
+            id="user-name"
+            class="form-control"
+            required
+        >
+    </div>
+    <div class="invalid-feedback d-none" data-error-for="name"></div>
+</div>
 
-<x-form.input
-    name="email"
-    label="Correo electrónico"
-    type="email"
-    icon="ti ti-mail"
-    :value="$user->email ?? ''"
-    required
-    autocomplete="email"
-/>
+<div class="mb-3">
+    <label for="user-email" class="form-label required">Correo electrónico</label>
+    <div class="input-icon">
+        <span class="input-icon-addon"><i class="ti ti-mail"></i></span>
+        <input
+            type="email"
+            name="email"
+            id="user-email"
+            class="form-control"
+            required
+            autocomplete="email"
+        >
+    </div>
+    <div class="invalid-feedback d-none" data-error-for="email"></div>
+</div>
 
-<x-form.input
-    name="password"
-    label="Contraseña"
-    type="password"
-    icon="ti ti-lock"
-    :required="! isset($user)"
-    autocomplete="new-password"
-    :help="isset($user) ? '(dejar vacío para no cambiar)' : null"
-/>
+<div class="mb-3">
+    <label for="user-password-input" class="form-label required">
+        Contraseña
+        <span id="user-password-help" class="text-secondary d-none">(dejar vacío para no cambiar)</span>
+    </label>
+    <div class="input-icon">
+        <span class="input-icon-addon"><i class="ti ti-lock"></i></span>
+        <input
+            type="password"
+            name="password"
+            id="user-password-input"
+            class="form-control"
+            required
+            autocomplete="new-password"
+        >
+    </div>
+    <div class="invalid-feedback d-none" data-error-for="password"></div>
+</div>
 
-<x-form.input
-    name="password_confirmation"
-    label="Confirmar contraseña"
-    type="password"
-    icon="ti ti-lock-check"
-    :required="! isset($user)"
-    autocomplete="new-password"
-/>
+<div class="mb-3">
+    <label for="user-password-confirmation-input" class="form-label required">Confirmar contraseña</label>
+    <div class="input-icon">
+        <span class="input-icon-addon"><i class="ti ti-lock-check"></i></span>
+        <input
+            type="password"
+            name="password_confirmation"
+            id="user-password-confirmation-input"
+            class="form-control"
+            required
+            autocomplete="new-password"
+        >
+    </div>
+</div>
 
 <div class="mb-4">
     <label class="form-label">
@@ -63,7 +84,6 @@
                         name="roles[]"
                         value="{{ $role->name }}"
                         data-role="{{ $role->name }}"
-                        @checked($selectedRoles->contains($role->name))
                     >
                     <span class="form-check-label">
                         <i class="ti ti-user-shield me-1 text-secondary"></i>
@@ -77,19 +97,17 @@
             </div>
         @endforelse
     </div>
-    @error('roles')
-        <div class="text-danger small mt-1">{{ $message }}</div>
-    @enderror
+    <div class="invalid-feedback d-none" data-error-for="roles"></div>
 </div>
 
-<div class="mb-0">
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+<div class="mb-0 mt-4 pt-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
-            <label class="form-label mb-0">
+            <label class="form-label mb-1">
                 <i class="ti ti-key me-1"></i>
                 Permisos
             </label>
-            <div class="text-secondary small">
+            <div class="text-secondary small mb-0">
                 Los permisos heredados de un rol aparecen marcados y no se pueden desactivar.
             </div>
         </div>
@@ -114,87 +132,5 @@
         'checkboxClass' => 'user-permission-checkbox',
     ])
 
-    @error('permissions')
-        <div class="text-danger small mt-2">{{ $message }}</div>
-    @enderror
+    <div class="invalid-feedback d-none" data-error-for="permissions"></div>
 </div>
-
-@push('scripts')
-<script>
-    (function () {
-        const rolesPermissionsMap = @json($rolesPermissionsMap);
-        const roleCheckboxes = document.querySelectorAll('.user-role-checkbox');
-        const permissionCheckboxes = document.querySelectorAll('.user-permission-checkbox');
-
-        function getSelectedRolePermissions() {
-            const locked = new Set();
-
-            roleCheckboxes.forEach((checkbox) => {
-                if (!checkbox.checked) {
-                    return;
-                }
-
-                (rolesPermissionsMap[checkbox.value] || []).forEach((permission) => {
-                    locked.add(permission);
-                });
-            });
-
-            return locked;
-        }
-
-        function refreshPermissionLocks() {
-            const lockedPermissions = getSelectedRolePermissions();
-
-            permissionCheckboxes.forEach((checkbox) => {
-                const permission = checkbox.dataset.permission;
-                const isLocked = lockedPermissions.has(permission);
-                const label = checkbox.closest('label');
-                let badge = label?.querySelector('.badge-role-lock');
-
-                if (isLocked) {
-                    checkbox.checked = true;
-                    checkbox.disabled = true;
-                    label?.classList.add('text-secondary');
-
-                    if (label && !badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'badge bg-secondary-lt ms-1 badge-role-lock';
-                        badge.textContent = 'Rol';
-                        label.querySelector('.form-check-label')?.appendChild(badge);
-                    }
-                } else {
-                    checkbox.disabled = false;
-                    label?.classList.remove('text-secondary');
-                    badge?.remove();
-                }
-            });
-
-            document.dispatchEvent(new Event('permissions:refresh-groups'));
-        }
-
-        roleCheckboxes.forEach((checkbox) => {
-            checkbox.addEventListener('change', refreshPermissionLocks);
-        });
-
-        document.getElementById('select-all-user-permissions')?.addEventListener('click', function () {
-            permissionCheckboxes.forEach((checkbox) => {
-                if (!checkbox.disabled) {
-                    checkbox.checked = true;
-                }
-            });
-            document.dispatchEvent(new Event('permissions:refresh-groups'));
-        });
-
-        document.getElementById('deselect-all-user-permissions')?.addEventListener('click', function () {
-            permissionCheckboxes.forEach((checkbox) => {
-                if (!checkbox.disabled) {
-                    checkbox.checked = false;
-                }
-            });
-            document.dispatchEvent(new Event('permissions:refresh-groups'));
-        });
-
-        refreshPermissionLocks();
-    })();
-</script>
-@endpush

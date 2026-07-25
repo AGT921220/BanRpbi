@@ -10,8 +10,7 @@ Route::middleware('auth')->group(function (): void {
     Route::view('/dashboard', 'dashboard')
         ->name('dashboard');
 
-    Route::resource('users', UserController::class)
-        ->except(['show']);
+    Route::resource('users', UserController::class);
 
     Route::resource('roles', RoleController::class)
         ->except(['show']);

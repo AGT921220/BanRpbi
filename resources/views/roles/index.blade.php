@@ -5,10 +5,15 @@
 
 @section('page-actions')
     @can(\App\Features\Permissions\Constants\PermissionTypes::ROLES_CREATE)
-        <a href="{{ route('roles.create') }}" class="btn btn-primary">
+        <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#role-form-modal"
+        >
             <i class="ti ti-plus me-2"></i>
             Nuevo rol
-        </a>
+        </button>
     @endcan
 @endsection
 
@@ -16,7 +21,10 @@
     <div class="container-xl">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Listado de roles</h3>
+                <h3 class="card-title">
+                    <i class="ti ti-shield-lock me-2"></i>
+                    Listado de roles
+                </h3>
             </div>
 
             <div class="table-responsive">
@@ -44,10 +52,17 @@
                                 <td>
                                     <div class="btn-list flex-nowrap">
                                         @can(\App\Features\Permissions\Constants\PermissionTypes::ROLES_UPDATE)
-                                            <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-primary">
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#role-form-modal"
+                                                data-role-id="{{ $role->id }}"
+                                                data-edit-url="{{ route('roles.edit', $role) }}"
+                                            >
                                                 <i class="ti ti-pencil me-1"></i>
                                                 Editar
-                                            </a>
+                                            </button>
                                         @endcan
 
                                         @can(\App\Features\Permissions\Constants\PermissionTypes::ROLES_DELETE)
@@ -89,4 +104,11 @@
             @endif
         </div>
     </div>
+
+    @canany([
+        \App\Features\Permissions\Constants\PermissionTypes::ROLES_CREATE,
+        \App\Features\Permissions\Constants\PermissionTypes::ROLES_UPDATE,
+    ])
+        @include('roles._modal')
+    @endcanany
 @endsection

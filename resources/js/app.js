@@ -1,7 +1,5 @@
-import '@tabler/core/dist/js/tabler.min.js';
-
-console.log('BAN RPBI: app.js cargado');
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('BAN RPBI: DOM cargado');
-});
+import '@tabler/core/dist/js/tabler.esm.js';
+import './admin';
+import './permissions';
+import './users';
+import './roles';

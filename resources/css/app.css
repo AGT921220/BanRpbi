@@ -6,3 +6,56 @@ html,
 body {
     min-height: 100%;
 }
+
+/* Modales con scroll (form envolviendo header/body/footer) */
+.modal-dialog-scrollable {
+    height: calc(100% - 3.5rem);
+    max-height: calc(100vh - 3.5rem);
+}
+
+.modal-dialog-scrollable .modal-content {
+    max-height: calc(100vh - 3.5rem);
+    overflow: hidden;
+}
+
+.modal-dialog-scrollable .modal-content > form {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 3.5rem);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.modal-dialog-scrollable .modal-header,
+.modal-dialog-scrollable .modal-footer {
+    flex: 0 0 auto;
+}
+
+.modal-dialog-scrollable .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+}
+
+/* Grupos de permisos */
+.permission-group-header {
+    background: var(--tblr-bg-surface-secondary, #f8fafc);
+}
+
+.permission-group:has(.permission-group-collapse.is-open) .permission-group-header {
+    border-bottom: 1px solid var(--tblr-border-color, #e6e7e9);
+}
+
+.permission-group-toggle-btn {
+    box-shadow: none !important;
+}
+
+.permission-group-chevron {
+    width: 1rem;
+    text-align: center;
+}
+
+.permission-group-collapse.is-open {
+    display: block !important;
+}
