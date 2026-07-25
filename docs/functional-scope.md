@@ -403,7 +403,7 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 | Recolecciones | No iniciado | — | Alta | Clientes, contratos | Solo constantes de permiso definidas |
 | Captura de residuos | No iniciado | — | Alta | Recolecciones, rutas | Aplicación móvil; solo permisos |
 | Rutas | No iniciado | — | Alta | Zonas, recolecciones | Solo constantes de permiso definidas |
-| Zonas del mapa | No iniciado | — | Alta | Proveedor de mapas por definir | Solo constantes de permiso definidas |
+| Zonas del mapa | Parcial | — | Alta | Proveedor de mapas / restricción de API key | CRUD web + polígonos GeoJSON; asignación a clientes pendiente |
 | Procesos ambientales | No iniciado | — | Alta | Recolecciones | Solo constantes y etiquetas de permiso |
 | Facturación | No iniciado | — | Alta | Proveedor externo | Solo constantes de permiso definidas |
 | Usuarios | Parcial | — | Alta | — | Login Fortify, CRUD de usuarios/roles y Spatie Permission |
@@ -422,6 +422,19 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - Pruebas: `tests/Feature/Clients/ClientCrudTest.php`
 - Campos actuales en migración: `name`, `parentarl_surname`, `email`, `phone`, `company` (sin RFC, direcciones, estados de aprobación ni vínculo a contratos/zonas)
 
+#### Zonas del mapa — Parcial
+
+- Feature: `app/Features/Zones/Application/{ListZones,CreateZone,UpdateZone,DeleteZone,ToggleZoneStatus}.php`
+- Controlador: `app/Features/Zones/Http/Controllers/Dashboard/ZoneController.php`
+- Requests: `app/Features/Zones/Http/Requests/{StoreZoneRequest,UpdateZoneRequest}.php`
+- Regla: `app/Rules/ValidGeoJsonPolygon.php`
+- Rutas: `app/Features/Zones/routes/dashboard.php`
+- Vistas: `resources/views/zones/{index,create,edit,_form}.blade.php`
+- JS: `resources/js/modules/zones/form.js` (Google Maps + Terra Draw)
+- Modelo y migración: `app/Models/Zone.php`, `database/migrations/2026_07_25_043000_create_zones_table.php`
+- Pruebas: `tests/Feature/Zones/ZoneCrudTest.php`, `tests/Unit/Rules/ValidGeoJsonPolygonTest.php`
+- Pendiente: asignación de clientes a zonas, regla definitiva de superposición y validación visual del mapa con API key real
+
 #### Usuarios — Parcial
 
 - Autenticación: Laravel Fortify
@@ -433,4 +446,4 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 
 #### Resto de módulos — No iniciado
 
-Existen constantes de permiso anticipadas en `PermissionTypes` (contratos, recolecciones, rutas, zonas, manifiestos, captura de residuos, procesos ambientales, facturación, etc.), sin features, migraciones de dominio ni pruebas asociadas.
+Existen constantes de permiso anticipadas en `PermissionTypes` (contratos, recolecciones, rutas, manifiestos, captura de residuos, procesos ambientales, facturación, etc.), sin features, migraciones de dominio ni pruebas asociadas.

@@ -7,6 +7,7 @@
 | Documento | Descripción |
 | --------- | ----------- |
 | [Módulos y alcance del sistema RPBI](functional-scope.md) | Objetivo, roles, flujos, módulos, dependencias, reglas transversales, pendientes, fuera de alcance, convenciones técnicas y estado de implementación |
+| [Configuración de Google Maps](google-maps.md) | API key, variables Vite, restricciones, centro del mapa, yarn y costos |
 
 ## Uso recomendado
 

@@ -213,7 +213,7 @@
                                         @endcan
 
                                         @can(PermissionTypes::ZONES_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('zones.index') }}" class="dropdown-item">
                                                 <i class="ti ti-map-2 me-2"></i>
                                                 Zonas
                                             </a>

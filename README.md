@@ -6,6 +6,7 @@ Plataforma para la gestión de residuos peligrosos biológico-infecciosos (RPBI)
 
 - [Índice de documentación](docs/README.md)
 - [Módulos y alcance del sistema RPBI](docs/functional-scope.md)
+- [Configuración de Google Maps](docs/google-maps.md)
 
 ---
 

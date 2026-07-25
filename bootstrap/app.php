@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function (): void {
             Route::middleware('web')
                 ->group(base_path('app/Features/Clients/routes/dashboard.php'));
+
+            Route::middleware('web')
+                ->group(base_path('app/Features/Zones/routes/dashboard.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
