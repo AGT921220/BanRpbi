@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Features\Zones\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Rules\ValidGeoJsonPolygon;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class UpdateZoneRequest extends FormRequest
+final class StoreZoneRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionTypes::ZONES_UPDATE) ?? false;
+        return $this->user()?->can(PermissionTypes::ZONES_CREATE) ?? false;
     }
 
     protected function prepareForValidation(): void

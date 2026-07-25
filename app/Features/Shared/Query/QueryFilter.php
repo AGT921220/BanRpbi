@@ -7,11 +7,15 @@ use InvalidArgumentException;
 
 final readonly class QueryFilter implements QueryModifierInterface
 {
+    /**
+     * @param  array<int, string>|null  $fields
+     */
     private function __construct(
         private string $type,
         private string $field,
         private mixed $value = null,
         private string $comparison = '=',
+        private ?array $fields = null,
     ) {}
 
     public static function where(
@@ -83,6 +87,26 @@ final readonly class QueryFilter implements QueryModifierInterface
         );
     }
 
+    /**
+     * @param  array<int, string>  $fields
+     */
+    public static function whereAnyLike(
+        array $fields,
+        string $value,
+    ): self {
+        return new self(
+            type: 'where_any_like',
+            field: $fields[0] ?? '',
+            value: $value,
+            fields: array_values($fields),
+        );
+    }
+
+    public function category(): QueryModifierCategory
+    {
+        return QueryModifierCategory::FILTER;
+    }
+
     public function apply(Builder $builder): Builder
     {
         return match ($this->type) {
@@ -115,9 +139,33 @@ final readonly class QueryFilter implements QueryModifierInterface
                 $this->field,
             ),
 
+            'where_any_like' => $this->applyWhereAnyLike($builder),
+
             default => throw new InvalidArgumentException(
                 "Filtro no soportado: {$this->type}",
             ),
         };
+    }
+
+    private function applyWhereAnyLike(Builder $builder): Builder
+    {
+        $fields = $this->fields ?? [];
+        $term = '%'.((string) $this->value).'%';
+
+        if ($fields === []) {
+            return $builder;
+        }
+
+        return $builder->where(function (Builder $query) use ($fields, $term): void {
+            foreach ($fields as $index => $field) {
+                if ($index === 0) {
+                    $query->where($field, 'like', $term);
+
+                    continue;
+                }
+
+                $query->orWhere($field, 'like', $term);
+            }
+        });
     }
 }

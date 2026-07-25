@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Features\Contracts\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Models\Contract;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-final class UpdateContractRequest extends FormRequest
+final class StoreContractRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionTypes::CONTRACTS_UPDATE) ?? false;
+        return $this->user()?->can(PermissionTypes::CONTRACTS_CREATE) ?? false;
     }
 
     protected function prepareForValidation(): void
@@ -26,16 +26,8 @@ final class UpdateContractRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var Contract|null $contract */
-        $contract = $this->route('contract');
-
         return [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('contracts', 'name')->ignore($contract),
-            ],
+            'name' => ['required', 'string', 'max:255', 'unique:contracts,name'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'duration_months' => ['required', 'integer', 'min:1', 'max:120'],
             'frequency' => ['required', 'string', Rule::in(Contract::FREQUENCIES)],

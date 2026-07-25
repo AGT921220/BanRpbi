@@ -361,7 +361,11 @@ No se encontró documentación previa del proyecto que confirme alguno de estos 
 - Cada módulo se organiza por Feature.
 - Los casos de uso sencillos se colocan directamente en `Application`.
 - No crear una carpeta adicional `UseCases`.
-- Los controladores del panel administrativo se colocan en `Http/Controllers/Dashboard`.
+- Los controladores del panel administrativo se colocan en `app/Http/Controllers/Admin`.
+- Las Form Requests del panel se colocan en `app/Http/Requests/Admin`.
+- Las rutas del panel se consolidan en `routes/admin.php` (middleware `web` + `auth`).
+- `Features` no debe contener controllers ni carpeta `Http`.
+- Reservar `app/Http/Controllers/Api` y `/api` para una futura API móvil/pública.
 - Los controladores deben permanecer delgados.
 - La validación debe estar en Form Requests.
 - Los permisos deben utilizar constantes.
@@ -373,18 +377,15 @@ Ejemplo de estructura simplificada (módulo Clients):
 
 ```text
 app/Features/Clients/
-├── Application/
-│   ├── ListClients.php
-│   ├── CreateClient.php
-│   ├── UpdateClient.php
-│   └── DeleteClient.php
-├── Http/
-│   ├── Controllers/
-│   │   └── Dashboard/
-│   │       └── ClientController.php
-│   └── Requests/
-│       ├── StoreClientRequest.php
-│       └── UpdateClientRequest.php
+└── Application/
+    ├── ListClients.php
+    ├── CreateClient.php
+    ├── UpdateClient.php
+    └── DeleteClient.php
+
+app/Http/Controllers/Admin/ClientController.php
+app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest}.php
+routes/admin.php
 ```
 
 Referencias de permisos existentes en código: `app/Features/Permissions/Constants/PermissionTypes.php` y etiquetas en `app/Features/Permissions/PermissionHandler.php` (incluye el módulo etiquetado como **Procesos ambientales**; no aparece el nombre alternativo “Reciclaje” en el proyecto).
@@ -414,20 +415,20 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 #### Clientes — Parcial
 
 - Feature: `app/Features/Clients/Application/{ListClients,CreateClient,UpdateClient,DeleteClient}.php`
-- Controlador: `app/Features/Clients/Http/Controllers/Dashboard/ClientController.php`
-- Requests: `app/Features/Clients/Http/Requests/{StoreClientRequest,UpdateClientRequest}.php`
-- Rutas: `app/Features/Clients/routes/dashboard.php` (`clients.index|create|store|edit|update|destroy`)
+- Controlador: `app/Http/Controllers/Admin/ClientController.php`
+- Requests: `app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest}.php`
+- Rutas: `routes/admin.php` (`clients.index|create|store|edit|update|destroy`)
 - Vistas: `resources/views/clients/{index,create,edit,_form}.blade.php`
 - Modelo y migración: `app/Models/Client.php`, `database/migrations/2026_07_25_022811_create_clients_table.php`
-- Pruebas: `tests/Feature/Clients/ClientCrudTest.php`
+- Pruebas: `tests/Feature/Clients/ClientCrudTest.php`, `tests/Feature/Clients/ListClientsTest.php`
 - Campos actuales en migración: `name`, `parentarl_surname`, `email`, `phone`, `company` (sin RFC, direcciones, estados de aprobación ni vínculo a contratos/zonas)
 
 #### Contratos — Parcial
 
 - Feature: `app/Features/Contracts/Application/{ListContracts,CreateContract,UpdateContract,DeleteContract}.php`
-- Controlador: `app/Features/Contracts/Http/Controllers/Dashboard/ContractController.php`
-- Requests: `app/Features/Contracts/Http/Requests/{StoreContractRequest,UpdateContractRequest}.php`
-- Rutas: `app/Features/Contracts/routes/dashboard.php`
+- Controlador: `app/Http/Controllers/Admin/ContractController.php`
+- Requests: `app/Http/Requests/Admin/{StoreContractRequest,UpdateContractRequest}.php`
+- Rutas: `routes/admin.php`
 - Vistas: `resources/views/contracts/{index,create,edit,_form}.blade.php`
 - Modelo y migración: `app/Models/Contract.php`, `database/migrations/2026_07_25_050000_create_contracts_table.php`
 - Pruebas: `tests/Feature/Contracts/ContractCrudTest.php`
@@ -437,10 +438,10 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 #### Zonas del mapa — Parcial
 
 - Feature: `app/Features/Zones/Application/{ListZones,CreateZone,UpdateZone,DeleteZone,ToggleZoneStatus}.php`
-- Controlador: `app/Features/Zones/Http/Controllers/Dashboard/ZoneController.php`
-- Requests: `app/Features/Zones/Http/Requests/{StoreZoneRequest,UpdateZoneRequest}.php`
+- Controlador: `app/Http/Controllers/Admin/ZoneController.php`
+- Requests: `app/Http/Requests/Admin/{StoreZoneRequest,UpdateZoneRequest}.php`
 - Regla: `app/Rules/ValidGeoJsonPolygon.php`
-- Rutas: `app/Features/Zones/routes/dashboard.php`
+- Rutas: `routes/admin.php`
 - Vistas: `resources/views/zones/{index,create,edit,_form}.blade.php`
 - JS: `resources/js/modules/zones/form.js` (Google Maps + Terra Draw)
 - Modelo y migración: `app/Models/Zone.php`, `database/migrations/2026_07_25_043000_create_zones_table.php`
@@ -450,11 +451,12 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 #### Usuarios — Parcial
 
 - Autenticación: Laravel Fortify
-- Controladores: `app/Http/Controllers/UserController.php`, `app/Http/Controllers/RoleController.php`
+- Controladores: `app/Http/Controllers/Admin/UserController.php`, `app/Http/Controllers/Admin/RoleController.php`
+- Requests: `app/Http/Requests/Admin/{Store,Update}{User,Role}Request.php`
 - Permisos: Spatie (`database/migrations/2026_07_24_025544_create_permission_tables.php`), `PermissionTypes`, `PermissionHandler`
 - Comandos: `permissions:create`, creación de roles (`CreateRolesCommand`)
 - Vistas: `resources/views/users/*`, `resources/views/roles/*`
-- Aún no sigue por completo la estructura Feature descrita en la sección 9
+- Rutas del panel: `routes/admin.php`
 
 #### Resto de módulos — No iniciado
 

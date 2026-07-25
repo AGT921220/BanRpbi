@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/modules/zones/form.js',
+                'resources/js/modules/clients/index.js',
             ],
             refresh: true,
             fonts: [

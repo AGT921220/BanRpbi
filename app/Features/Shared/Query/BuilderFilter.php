@@ -4,7 +4,7 @@ namespace App\Features\Shared\Query;
 
 use Illuminate\Database\Eloquent\Builder;
 
-final class ApplyQueryModifiers
+final class BuilderFilter
 {
     /**
      * @param  array<int, mixed>  $modifiers
@@ -12,9 +12,17 @@ final class ApplyQueryModifiers
     public function __invoke(
         Builder $builder,
         array $modifiers = [],
+        ?QueryModifierCategory $category = null,
     ): Builder {
         foreach ($modifiers as $modifier) {
             if (! $modifier instanceof QueryModifierInterface) {
+                continue;
+            }
+
+            if (
+                $category !== null
+                && $modifier->category() !== $category
+            ) {
                 continue;
             }
 

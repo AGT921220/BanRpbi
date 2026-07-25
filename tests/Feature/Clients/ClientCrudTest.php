@@ -34,33 +34,53 @@ class ClientCrudTest extends TestCase
     {
         $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_VIEW]);
 
+        $response = $this->get(route('clients.index'));
+
+        $response->assertOk();
+        $response->assertSee('Listado de clientes');
+        $response->assertSee('clients-table');
+    }
+
+    public function test_clients_datatable_returns_json_payload(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_VIEW]);
+
         Client::factory()->create([
             'name' => 'Ana',
             'parentarl_surname' => 'García',
         ]);
 
-        $response = $this->get(route('clients.index'));
+        $response = $this->getJson(route('clients.index', [
+            'draw' => 1,
+            'start' => 0,
+            'length' => 10,
+        ]));
 
         $response->assertOk();
-        $response->assertSee('Ana');
-        $response->assertSee('García');
+        $response->assertJsonPath('draw', 1);
+        $response->assertJsonPath('recordsTotal', 1);
+        $response->assertJsonPath('recordsFiltered', 1);
+        $response->assertJsonPath('data.0.full_name', 'Ana García');
     }
 
-    public function test_clients_index_can_be_filtered_by_name(): void
+    public function test_clients_datatable_can_be_filtered_by_name(): void
     {
         $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_VIEW]);
 
         Client::factory()->create(['name' => 'Pedro']);
         Client::factory()->create(['name' => 'María']);
 
-        $response = $this->get(route('clients.index', ['search' => 'Pedro']));
+        $response = $this->getJson(route('clients.index', [
+            'draw' => 1,
+            'search' => ['value' => 'Pedro'],
+        ]));
 
         $response->assertOk();
-        $response->assertSee('Pedro');
-        $response->assertDontSee('María');
+        $response->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Pedro', (string) $response->json('data.0.full_name'));
     }
 
-    public function test_clients_index_can_be_filtered_by_parentarl_surname(): void
+    public function test_clients_datatable_can_be_filtered_by_parentarl_surname(): void
     {
         $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_VIEW]);
 
@@ -73,27 +93,31 @@ class ClientCrudTest extends TestCase
             'parentarl_surname' => 'Martínez',
         ]);
 
-        $response = $this->get(route('clients.index', ['search' => 'Hernández']));
+        $response = $this->getJson(route('clients.index', [
+            'draw' => 1,
+            'search' => ['value' => 'Hernández'],
+        ]));
 
         $response->assertOk();
-        $response->assertSee('Hernández');
-        $response->assertDontSee('Martínez');
+        $response->assertJsonPath('recordsFiltered', 1);
+        $response->assertJsonPath('data.0.full_name', 'Luis Hernández');
     }
 
-    public function test_clients_index_can_be_filtered_by_email(): void
+    public function test_clients_datatable_can_be_filtered_by_email(): void
     {
         $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_VIEW]);
 
         Client::factory()->create(['email' => 'cliente.uno@example.com']);
         Client::factory()->create(['email' => 'cliente.dos@example.com']);
 
-        $response = $this->get(route('clients.index', [
-            'search' => 'cliente.uno@example.com',
+        $response = $this->getJson(route('clients.index', [
+            'draw' => 1,
+            'search' => ['value' => 'cliente.uno@example.com'],
         ]));
 
         $response->assertOk();
-        $response->assertSee('cliente.uno@example.com');
-        $response->assertDontSee('cliente.dos@example.com');
+        $response->assertJsonPath('recordsFiltered', 1);
+        $response->assertJsonPath('data.0.email', 'cliente.uno@example.com');
     }
 
     public function test_authorized_user_can_create_a_client(): void

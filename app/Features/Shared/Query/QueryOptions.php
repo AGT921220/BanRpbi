@@ -40,6 +40,11 @@ final readonly class QueryOptions implements QueryModifierInterface
         );
     }
 
+    public function category(): QueryModifierCategory
+    {
+        return QueryModifierCategory::OPTION;
+    }
+
     public function apply(Builder $builder): Builder
     {
         return match ($this->type) {

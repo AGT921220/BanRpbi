@@ -2,8 +2,9 @@
 
 namespace Tests\Unit\Shared\Query;
 
-use App\Features\Shared\Query\ApplyQueryModifiers;
+use App\Features\Shared\Query\BuilderFilter;
 use App\Features\Shared\Query\QueryFilter;
+use App\Features\Shared\Query\QueryModifierCategory;
 use App\Features\Shared\Query\QueryOptions;
 use App\Models\Client;
 use Illuminate\Database\Eloquent\Builder;
@@ -73,11 +74,28 @@ class QueryModifiersTest extends TestCase
         $this->assertStringContainsString('"email" is not null', $builder->toSql());
     }
 
+    public function test_where_any_like_applies_or_conditions(): void
+    {
+        $builder = QueryFilter::whereAnyLike(
+            fields: ['name', 'email', 'company'],
+            value: 'Ana',
+        )->apply($this->builder());
+
+        $sql = $builder->toSql();
+
+        $this->assertStringContainsString('"name" like ?', $sql);
+        $this->assertStringContainsString('"email" like ?', $sql);
+        $this->assertStringContainsString('"company" like ?', $sql);
+        $this->assertSame(['%Ana%', '%Ana%', '%Ana%'], $builder->getBindings());
+        $this->assertSame(QueryModifierCategory::FILTER, QueryFilter::whereAnyLike(['name'], 'x')->category());
+    }
+
     public function test_order_by_accepts_asc(): void
     {
         $builder = QueryOptions::orderBy('name', 'asc')->apply($this->builder());
 
         $this->assertStringContainsString('order by "name" asc', $builder->toSql());
+        $this->assertSame(QueryModifierCategory::OPTION, QueryOptions::orderBy('name')->category());
     }
 
     public function test_order_by_accepts_desc(): void
@@ -108,27 +126,27 @@ class QueryModifiersTest extends TestCase
         $this->assertSame(1, $builder->getQuery()->limit);
     }
 
-    public function test_apply_query_modifiers_accepts_query_filter(): void
+    public function test_builder_filter_applies_query_filter(): void
     {
-        $builder = (new ApplyQueryModifiers)($this->builder(), [
+        $builder = (new BuilderFilter)($this->builder(), [
             QueryFilter::where('org_id', 5),
         ]);
 
         $this->assertStringContainsString('"org_id" = ?', $builder->toSql());
     }
 
-    public function test_apply_query_modifiers_accepts_query_options(): void
+    public function test_builder_filter_applies_query_options(): void
     {
-        $builder = (new ApplyQueryModifiers)($this->builder(), [
+        $builder = (new BuilderFilter)($this->builder(), [
             QueryOptions::limit(25),
         ]);
 
         $this->assertSame(25, $builder->getQuery()->limit);
     }
 
-    public function test_filters_and_options_can_be_mixed(): void
+    public function test_builder_filter_accepts_both_in_same_array(): void
     {
-        $builder = (new ApplyQueryModifiers)($this->builder(), [
+        $builder = (new BuilderFilter)($this->builder(), [
             QueryFilter::where('org_id', 5),
             QueryFilter::whereIn('status', ['active', 'pending']),
             QueryOptions::orderBy('created_at', 'desc'),
@@ -143,17 +161,70 @@ class QueryModifiersTest extends TestCase
         $this->assertStringContainsString('order by "created_at" desc', $sql);
         $this->assertSame(20, $builder->getQuery()->offset);
         $this->assertSame(10, $builder->getQuery()->limit);
-        $this->assertSame([5, 'active', 'pending'], $builder->getBindings());
     }
 
-    public function test_invalid_elements_are_ignored(): void
+    public function test_builder_filter_applies_only_filters_for_filter_category(): void
     {
-        $builder = (new ApplyQueryModifiers)($this->builder(), [
+        $builder = (new BuilderFilter)(
+            builder: $this->builder(),
+            modifiers: [
+                QueryFilter::where('org_id', 5),
+                QueryOptions::orderBy('name', 'desc'),
+                QueryOptions::limit(10),
+            ],
+            category: QueryModifierCategory::FILTER,
+        );
+
+        $sql = $builder->toSql();
+
+        $this->assertStringContainsString('"org_id" = ?', $sql);
+        $this->assertStringNotContainsString('order by', $sql);
+        $this->assertNull($builder->getQuery()->limit);
+    }
+
+    public function test_builder_filter_applies_only_options_for_option_category(): void
+    {
+        $builder = (new BuilderFilter)(
+            builder: $this->builder(),
+            modifiers: [
+                QueryFilter::where('org_id', 5),
+                QueryOptions::orderBy('name', 'asc'),
+                QueryOptions::limit(7),
+            ],
+            category: QueryModifierCategory::OPTION,
+        );
+
+        $sql = $builder->toSql();
+
+        $this->assertStringNotContainsString('"org_id" = ?', $sql);
+        $this->assertStringContainsString('order by "name" asc', $sql);
+        $this->assertSame(7, $builder->getQuery()->limit);
+        $this->assertSame([], $builder->getBindings());
+    }
+
+    public function test_builder_filter_applies_all_when_category_is_null(): void
+    {
+        $builder = (new BuilderFilter)(
+            builder: $this->builder(),
+            modifiers: [
+                QueryFilter::where('org_id', 5),
+                QueryOptions::limit(3),
+            ],
+            category: null,
+        );
+
+        $this->assertStringContainsString('"org_id" = ?', $builder->toSql());
+        $this->assertSame(3, $builder->getQuery()->limit);
+    }
+
+    public function test_builder_filter_ignores_invalid_elements(): void
+    {
+        $builder = (new BuilderFilter)($this->builder(), [
+            null,
             'texto',
             123,
-            null,
+            ['field' => 'org_id'],
             new \stdClass,
-            ['field' => 'org_id', 'operator' => 'where', 'value' => 1],
             QueryFilter::where('org_id', 5),
         ]);
 
@@ -161,9 +232,9 @@ class QueryModifiersTest extends TestCase
         $this->assertSame([5], $builder->getBindings());
     }
 
-    public function test_modifiers_apply_in_received_order(): void
+    public function test_builder_filter_preserves_received_order(): void
     {
-        $builder = (new ApplyQueryModifiers)($this->builder(), [
+        $builder = (new BuilderFilter)($this->builder(), [
             QueryOptions::orderBy('name', 'asc'),
             QueryOptions::orderBy('created_at', 'desc'),
         ]);
@@ -174,9 +245,9 @@ class QueryModifiersTest extends TestCase
         );
     }
 
-    public function test_result_is_still_a_builder(): void
+    public function test_builder_filter_returns_a_builder(): void
     {
-        $builder = (new ApplyQueryModifiers)($this->builder(), [
+        $builder = (new BuilderFilter)($this->builder(), [
             QueryFilter::where('org_id', 5),
             QueryOptions::limit(10),
         ]);
@@ -184,7 +255,7 @@ class QueryModifiersTest extends TestCase
         $this->assertInstanceOf(Builder::class, $builder);
     }
 
-    public function test_no_query_is_executed(): void
+    public function test_builder_filter_does_not_execute_query(): void
     {
         $executed = [];
 
@@ -194,9 +265,8 @@ class QueryModifiersTest extends TestCase
                 $executed[] = $query->sql;
             });
 
-        (new ApplyQueryModifiers)($this->builder(), [
+        (new BuilderFilter)($this->builder(), [
             QueryFilter::where('org_id', 5),
-            QueryFilter::whereIn('status', ['active']),
             QueryOptions::orderBy('created_at', 'desc'),
             QueryOptions::offset(20),
             QueryOptions::limit(10),

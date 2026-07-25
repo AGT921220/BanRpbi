@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Features\Contracts\Http\Controllers\Dashboard;
+namespace App\Http\Controllers\Admin;
 
 use App\Features\Contracts\Application\CreateContract;
 use App\Features\Contracts\Application\DeleteContract;
 use App\Features\Contracts\Application\ListContracts;
 use App\Features\Contracts\Application\UpdateContract;
-use App\Features\Contracts\Http\Requests\StoreContractRequest;
-use App\Features\Contracts\Http\Requests\UpdateContractRequest;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreContractRequest;
+use App\Http\Requests\Admin\UpdateContractRequest;
 use App\Models\Contract;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

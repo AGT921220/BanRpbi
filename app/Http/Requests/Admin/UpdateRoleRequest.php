@@ -1,15 +1,17 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
-class StoreRoleRequest extends FormRequest
+class UpdateRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionTypes::ROLES_CREATE) ?? false;
+        return $this->user()?->can(PermissionTypes::ROLES_UPDATE) ?? false;
     }
 
     /**
@@ -17,8 +19,11 @@ class StoreRoleRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var Role $role */
+        $role = $this->route('role');
+
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($role->id)],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
         ];

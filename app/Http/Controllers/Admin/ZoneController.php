@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Features\Zones\Http\Controllers\Dashboard;
+namespace App\Http\Controllers\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Zones\Application\CreateZone;
@@ -8,9 +8,9 @@ use App\Features\Zones\Application\DeleteZone;
 use App\Features\Zones\Application\ListZones;
 use App\Features\Zones\Application\ToggleZoneStatus;
 use App\Features\Zones\Application\UpdateZone;
-use App\Features\Zones\Http\Requests\StoreZoneRequest;
-use App\Features\Zones\Http\Requests\UpdateZoneRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreZoneRequest;
+use App\Http\Requests\Admin\UpdateZoneRequest;
 use App\Models\Zone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
