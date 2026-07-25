@@ -57,18 +57,51 @@ function parseNumber(value, fallback) {
     return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function hexToRgba(hex, alpha) {
-    const normalized = (hex || '#206bc4').replace('#', '');
+const DEFAULT_ZONE_COLOR = '#206bc4';
 
-    if (!/^[0-9A-Fa-f]{6}$/.test(normalized)) {
-        return `rgba(32, 107, 196, ${alpha})`;
+function normalizeHexColor(hex) {
+    const value = String(hex || DEFAULT_ZONE_COLOR).trim();
+    const withHash = value.startsWith('#') ? value : `#${value}`;
+
+    if (!/^#[0-9A-Fa-f]{6}$/.test(withHash)) {
+        return DEFAULT_ZONE_COLOR;
     }
 
-    const r = Number.parseInt(normalized.slice(0, 2), 16);
-    const g = Number.parseInt(normalized.slice(2, 4), 16);
-    const b = Number.parseInt(normalized.slice(4, 6), 16);
+    return withHash.toLowerCase();
+}
 
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+function polygonDrawStyles(color) {
+    const fillColor = normalizeHexColor(color);
+
+    return {
+        fillColor,
+        fillOpacity: 0.35,
+        outlineColor: fillColor,
+        outlineOpacity: 0.95,
+        outlineWidth: 2,
+        closingPointColor: fillColor,
+        closingPointOutlineColor: '#ffffff',
+        editedPointColor: fillColor,
+        editedPointOutlineColor: '#ffffff',
+        coordinatePointColor: fillColor,
+        coordinatePointOutlineColor: '#ffffff',
+    };
+}
+
+function polygonSelectStyles(color) {
+    const fillColor = normalizeHexColor(color);
+
+    return {
+        selectedPolygonColor: fillColor,
+        selectedPolygonFillOpacity: 0.4,
+        selectedPolygonOutlineColor: fillColor,
+        selectedPolygonOutlineOpacity: 1,
+        selectedPolygonOutlineWidth: 3,
+        selectionPointColor: fillColor,
+        selectionPointOutlineColor: '#ffffff',
+        midPointColor: fillColor,
+        midPointOutlineColor: '#ffffff',
+    };
 }
 
 function geoJsonToLatLngLiteral(geometry) {
@@ -201,10 +234,29 @@ async function initZoneMapForm() {
     const editBtn = document.getElementById('zone-edit-btn');
     const deleteBtn = document.getElementById('zone-delete-polygon-btn');
     const centerBtn = document.getElementById('zone-center-btn');
+    const colorInput = document.getElementById('zone-color');
 
     let draw = null;
     let map = null;
     let overlayPolygons = [];
+
+    const getSelectedColor = () => normalizeHexColor(colorInput?.value || DEFAULT_ZONE_COLOR);
+
+    const applySelectedColorStyles = () => {
+        if (!draw) {
+            return;
+        }
+
+        const color = getSelectedColor();
+
+        draw.updateModeOptions('polygon', {
+            styles: polygonDrawStyles(color),
+        });
+
+        draw.updateModeOptions('select', {
+            styles: polygonSelectStyles(color),
+        });
+    };
 
     const syncFormState = () => {
         if (!draw) {
@@ -268,14 +320,14 @@ async function initZoneMapForm() {
                 return;
             }
 
-            const color = zone.color || '#6c7a91';
+            const color = normalizeHexColor(zone.color || '#6c7a91');
             const polygon = new google.maps.Polygon({
                 paths: path,
                 strokeColor: color,
                 strokeOpacity: 0.85,
                 strokeWeight: 2,
-                fillColor: hexToRgba(color, 0.2),
-                fillOpacity: 0.35,
+                fillColor: color,
+                fillOpacity: 0.25,
                 clickable: true,
                 editable: false,
                 draggable: false,
@@ -347,6 +399,8 @@ async function initZoneMapForm() {
                 return;
             }
 
+            const initialColor = getSelectedColor();
+
             draw = new TerraDraw({
                 adapter: new TerraDrawGoogleMapsAdapter({
                     map,
@@ -356,9 +410,11 @@ async function initZoneMapForm() {
                 modes: [
                     new TerraDrawPolygonMode({
                         modeName: 'polygon',
+                        styles: polygonDrawStyles(initialColor),
                     }),
                     new TerraDrawSelectMode({
                         modeName: 'select',
+                        styles: polygonSelectStyles(initialColor),
                         flags: {
                             polygon: {
                                 feature: {
@@ -379,6 +435,7 @@ async function initZoneMapForm() {
 
             draw.on('ready', () => {
                 renderExistingZones();
+                applySelectedColorStyles();
 
                 if (isValidPolygonGeometry(currentGeometry)) {
                     draw.addFeatures([
@@ -453,6 +510,14 @@ async function initZoneMapForm() {
     });
 
     centerBtn?.addEventListener('click', () => centerMap());
+
+    colorInput?.addEventListener('input', () => {
+        applySelectedColorStyles();
+    });
+
+    colorInput?.addEventListener('change', () => {
+        applySelectedColorStyles();
+    });
 }
 
 if (document.readyState === 'loading') {

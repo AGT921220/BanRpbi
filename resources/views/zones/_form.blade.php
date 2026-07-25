@@ -34,6 +34,7 @@
 
         <x-form.input
             name="color"
+            id="zone-color"
             type="color"
             label="Color"
             icon="ti ti-palette"

@@ -156,7 +156,7 @@
                                         @endcan
 
                                         @can(PermissionTypes::CONTRACTS_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('contracts.index') }}" class="dropdown-item">
                                                 <i class="ti ti-file-description me-2"></i>
                                                 Contratos
                                             </a>
