@@ -12,6 +12,7 @@ final class PermissionTypes
     public const CLIENTS_CREATE = 'clients.create';
     public const CLIENTS_UPDATE = 'clients.update';
     public const CLIENTS_DELETE = 'clients.delete';
+    public const CLIENTS_ASSIGN_CONTRACTS = 'clients.assign_contracts';
     public const CLIENTS_SWITCH_STATUS = 'clients.switch_status';
 
     // Contratos

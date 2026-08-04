@@ -27,7 +27,7 @@
                     <table
                         id="clients-table"
                         class="table table-vcenter card-table w-100"
-                        data-url="{{ route('clients.index') }}"
+                        data-url="{{ route('client-headers.index') }}"
                     >
                         <thead>
                             <tr>

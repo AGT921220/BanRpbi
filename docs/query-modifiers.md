@@ -20,9 +20,9 @@ Ubicación: `app/Features/Shared/Query/`
 4. Con `category: QueryModifierCategory::FILTER` solo aplica filtros; con `OPTION` solo opciones; con `null` aplica todos.
 5. Normalizaciones en `QueryOptions`: dirección inválida → `asc`; offset negativo → `0`; límite &lt; 1 → `1`.
 
-## Uso con DataTables (Clients)
+## Uso con proyecciones Headers (Clients)
 
-El controller construye un solo arreglo de modificadores y `ListClients` aplica primero filtros (para `recordsFiltered`) y después opciones (para la página):
+El controlador JSON (`ClientHeaderController`) construye los modificadores y `SearchClientHeaders` aplica primero filtros (para `filtered`) y después opciones (para la página). El `$draw` de DataTables nunca entra al Caso de Uso:
 
 ```php
 $modifiers = [];
@@ -36,14 +36,15 @@ $modifiers[] = QueryOptions::orderBy(field: 'created_at', direction: 'desc');
 $modifiers[] = QueryOptions::offset(20);
 $modifiers[] = QueryOptions::limit(10);
 
-$result = ($this->listClients)(
+$result = ($this->searchClientHeaders)(
     modifiers: $modifiers,
-    draw: $request->integer('draw'),
+    offset: 20,
+    limit: 10,
 );
 ```
 
 ## Pruebas
 
 ```bash
-docker exec php-ban php artisan test tests/Unit/Shared/Query/QueryModifiersTest.php tests/Feature/Clients/ListClientsTest.php
+docker exec php-ban php artisan test tests/Unit/Shared/Query/QueryModifiersTest.php tests/Feature/Clients/SearchClientHeadersTest.php tests/Feature/Clients/ClientHeaderControllerTest.php
 ```

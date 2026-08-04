@@ -362,10 +362,11 @@ No se encontró documentación previa del proyecto que confirme alguno de estos 
 - Los casos de uso sencillos se colocan directamente en `Application`.
 - No crear una carpeta adicional `UseCases`.
 - Los controladores del panel administrativo se colocan en `app/Http/Controllers/Admin`.
+- Los controladores JSON compartidos (DataTables / app móvil) se colocan en `app/Http/Controllers/Api`.
 - Las Form Requests del panel se colocan en `app/Http/Requests/Admin`.
 - Las rutas del panel se consolidan en `routes/admin.php` (middleware `web` + `auth`).
 - `Features` no debe contener controllers ni carpeta `Http`.
-- Reservar `app/Http/Controllers/Api` y `/api` para una futura API móvil/pública.
+- Reservar `/api` (archivo `routes/api.php`) para una futura API móvil/pública con autenticación propia; mientras DataTables use sesión, las rutas JSON pueden vivir en `routes/admin.php`.
 - Los controladores deben permanecer delgados.
 - La validación debe estar en Form Requests.
 - Los permisos deben utilizar constantes.
@@ -373,18 +374,49 @@ No se encontró documentación previa del proyecto que confirme alguno de estos 
 - Domain e Infrastructure se agregan cuando existan reglas de negocio, contratos externos, múltiples fuentes de datos o necesidades reales de desacoplamiento.
 - No introducir entidades, DTOs, repositorios o mapeadores únicamente para trasladar datos sin reglas.
 
-Ejemplo de estructura simplificada (módulo Clients):
+### Convención Headers (proyecciones ligeras)
+
+Cuando una clase Application devuelve una colección de proyecciones ligeras para listados, DataTables, selectores o consumidores móviles, debe usar el sufijo plural `Headers`.
+
+Ejemplos:
+
+- `SearchClientHeaders`
+- `SearchManifestHeaders`
+- `SearchEventHeaders`
+
+La proyección individual usa singular:
+
+- `ClientHeader`
+- `ManifestHeader`
+- `EventHeader`
+
+El resultado de la búsqueda usa:
+
+- `ClientHeaderSearchResult`
+
+Los casos de uso que trabajan con entidades o agregados completos no necesitan el sufijo `Headers` (`GetClient`, `CreateClient`, `UpdateClient`, etc.).
+
+El controlador JSON del recurso se nombra en singular:
+
+- `ClientHeaderController`
+
+El envelope específico de DataTables (`draw`, `recordsTotal`, `recordsFiltered`) vive en el controlador JSON. El Caso de Uso expone datos (`has_contract`, `can_update`, `can_delete`); el HTML de acciones se renderiza en el frontend (DataTables).
+
+Ejemplo de estructura del módulo Clients:
 
 ```text
 app/Features/Clients/
 └── Application/
-    ├── ListClients.php
+    ├── SearchClientHeaders.php
+    ├── ClientHeader.php
+    ├── ClientHeaderSearchResult.php
     ├── CreateClient.php
     ├── UpdateClient.php
     └── DeleteClient.php
 
 app/Http/Controllers/Admin/ClientController.php
-app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest}.php
+app/Http/Controllers/Api/ClientHeaderController.php
+app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest,SearchClientHeadersRequest}.php
 routes/admin.php
 ```
 
@@ -414,13 +446,14 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 
 #### Clientes — Parcial
 
-- Feature: `app/Features/Clients/Application/{ListClients,CreateClient,UpdateClient,DeleteClient}.php`
-- Controlador: `app/Http/Controllers/Admin/ClientController.php`
-- Requests: `app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest}.php`
-- Rutas: `routes/admin.php` (`clients.index|create|store|edit|update|destroy`)
+- Feature: `app/Features/Clients/Application/{SearchClientHeaders,ClientHeader,ClientHeaderSearchResult,CreateClient,UpdateClient,DeleteClient}.php`
+- Controlador web: `app/Http/Controllers/Admin/ClientController.php` (vistas y CRUD)
+- Controlador JSON: `app/Http/Controllers/Api/ClientHeaderController.php` (DataTables / app móvil)
+- Requests: `app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest,SearchClientHeadersRequest}.php`
+- Rutas: `routes/admin.php` (`clients.*`, `client-headers.index`)
 - Vistas: `resources/views/clients/{index,create,edit,_form}.blade.php`
 - Modelo y migración: `app/Models/Client.php`, `database/migrations/2026_07_25_022811_create_clients_table.php`
-- Pruebas: `tests/Feature/Clients/ClientCrudTest.php`, `tests/Feature/Clients/ListClientsTest.php`
+- Pruebas: `tests/Feature/Clients/ClientCrudTest.php`, `tests/Feature/Clients/SearchClientHeadersTest.php`, `tests/Feature/Clients/ClientHeaderControllerTest.php`
 - Campos actuales en migración: `name`, `parentarl_surname`, `email`, `phone`, `company` (sin RFC, direcciones, estados de aprobación ni vínculo a contratos/zonas)
 
 #### Contratos — Parcial

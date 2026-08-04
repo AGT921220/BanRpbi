@@ -134,6 +134,7 @@ class PermissionHandler
             PermissionTypes::CLIENTS_CREATE => 'Crear clientes',
             PermissionTypes::CLIENTS_UPDATE => 'Editar clientes',
             PermissionTypes::CLIENTS_DELETE => 'Eliminar clientes',
+            PermissionTypes::CLIENTS_ASSIGN_CONTRACTS => 'Asignar contratos a clientes',
             PermissionTypes::CLIENTS_SWITCH_STATUS => 'Activar o desactivar clientes',
 
             PermissionTypes::CONTRACTS_VIEW => 'Ver contratos',
