@@ -10,6 +10,9 @@ up-dev:
 	docker compose -f docker-compose-dev.yml up -d;
 down-dev:
 	@docker compose -f docker-compose-dev.yml down;
+server-enter:
+	@ssh root@${SERVER_IP}
+
 install:
 	echo "Docker Exec";\
 	docker exec -it php-ban composer install
