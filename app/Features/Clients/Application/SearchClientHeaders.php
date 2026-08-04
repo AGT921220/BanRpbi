@@ -32,6 +32,8 @@ final readonly class SearchClientHeaders
                 'email',
                 'phone',
                 'company',
+                'zone_id',
+                'configuration_status',
                 'created_at',
             ]),
             modifiers: $modifiers,
@@ -48,22 +50,36 @@ final readonly class SearchClientHeaders
 
         $canUpdate = Gate::allows(PermissionTypes::CLIENTS_UPDATE);
         $canDelete = Gate::allows(PermissionTypes::CLIENTS_DELETE);
+        $canAssignContracts = Gate::allows(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS);
 
         $data = $dataQuery
             ->withExists('contracts')
             ->get()
             ->map(
-                static fn (Client $client): ClientHeader => new ClientHeader(
-                    id: (int) $client->id,
-                    fullName: trim("{$client->name} {$client->parentarl_surname}"),
-                    email: $client->email,
-                    phone: $client->phone,
-                    company: $client->company,
-                    createdAt: $client->created_at?->format('d/m/Y H:i'),
-                    hasContract: (bool) $client->contracts_exists,
-                    canUpdate: $canUpdate,
-                    canDelete: $canDelete,
-                ),
+                static function (Client $client) use ($canUpdate, $canDelete, $canAssignContracts): ClientHeader {
+                    $status = (string) $client->configuration_status;
+
+                    return new ClientHeader(
+                        id: (int) $client->id,
+                        fullName: trim("{$client->name} {$client->parentarl_surname}"),
+                        email: $client->email,
+                        phone: $client->phone,
+                        company: $client->company,
+                        createdAt: $client->created_at?->format('d/m/Y H:i'),
+                        hasContract: (bool) $client->contracts_exists,
+                        hasCollectionZone: $client->zone_id !== null,
+                        configurationStatus: $status,
+                        canUpdate: $canUpdate,
+                        canDelete: $canDelete,
+                        canConfigure: $canAssignContracts
+                            && $status !== Client::STATUS_PENDING_APPROVAL
+                            && in_array($status, [
+                                Client::STATUS_CONFIGURATION_PENDING,
+                                Client::STATUS_REJECTED,
+                                Client::STATUS_APPROVED,
+                            ], true),
+                    );
+                },
             );
 
         $perPage = max($limit, 1);

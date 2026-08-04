@@ -83,6 +83,8 @@ return [
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'enable_send_mails' => env('ENABLE_SEND_MAILS', false),
+    'default_mail' => env('DEFAULT_MAIL', 'KlL1o@example.com'),
 
     /*
     |--------------------------------------------------------------------------

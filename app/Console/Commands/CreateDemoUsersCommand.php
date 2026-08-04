@@ -25,9 +25,14 @@ class CreateDemoUsersCommand extends Command
             'role' => 'Admin',
         ],
         [
-            'name' => 'Director 1',
-            'email' => 'director1@director.com',
-            'role' => 'Director',
+            'name' => 'Director Ventas',
+            'email' => 'director.ventas@director.com',
+            'role' => 'Director Ventas',
+        ],
+        [
+            'name' => 'Director General',
+            'email' => 'director.general@director.com',
+            'role' => 'Director General',
         ],
         [
             'name' => 'Vendedor 1',

@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Features\Approvals\Application\ApproveClientConfiguration;
+use App\Features\Approvals\Application\ListPendingApprovals;
+use App\Features\Approvals\Application\RejectClientConfiguration;
+use App\Features\Permissions\Constants\PermissionTypes;
+use App\Features\Permissions\Constants\RoleTypes;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\RejectClientConfigurationRequest;
+use App\Models\Client;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+
+final class ApprovalController extends Controller
+{
+    public function __construct(
+        private readonly ListPendingApprovals $listPendingApprovals,
+        private readonly ApproveClientConfiguration $approveClientConfiguration,
+        private readonly RejectClientConfiguration $rejectClientConfiguration,
+    ) {}
+
+    public function index(): View
+    {
+        $this->authorize(PermissionTypes::APPROVALS_VIEW);
+
+        return view('approvals.index', [
+            'clients' => ($this->listPendingApprovals)(),
+            'requiredApprovalRoles' => RoleTypes::APPROVAL_DIRECTOR_ROLES,
+        ]);
+    }
+
+    public function approve(Client $client): RedirectResponse
+    {
+        $this->authorize(PermissionTypes::CLIENT_CONTRACTS_APPROVE);
+
+        $client = ($this->approveClientConfiguration)(
+            client: $client,
+            user: request()->user(),
+        );
+
+        $message = $client->configuration_status === Client::STATUS_APPROVED
+            ? 'Cliente aprobado correctamente. El contrato quedó vigente.'
+            : 'Tu aprobación quedó registrada. Falta la del otro director.';
+
+        return redirect()
+            ->route('approvals.index')
+            ->with('success', $message);
+    }
+
+    public function reject(
+        RejectClientConfigurationRequest $request,
+        Client $client,
+    ): RedirectResponse {
+        $this->authorize(PermissionTypes::APPROVALS_REJECT);
+
+        ($this->rejectClientConfiguration)(
+            client: $client,
+            reason: $request->validated('reason'),
+        );
+
+        return redirect()
+            ->route('approvals.index')
+            ->with('success', 'Configuración rechazada. El contrato vigente no se modificó.');
+    }
+}

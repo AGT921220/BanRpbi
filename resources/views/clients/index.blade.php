@@ -45,6 +45,10 @@
             </div>
         </div>
     </div>
+    @include('clients.configure_client_modal', [
+        'contracts' => $contracts,
+        'zones' => $zones,
+    ])
 @endsection
 
 @push('scripts')

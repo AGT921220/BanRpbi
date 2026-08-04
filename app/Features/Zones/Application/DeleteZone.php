@@ -9,8 +9,11 @@ final class DeleteZone
 {
     public function __invoke(Zone $zone): void
     {
-        // Cuando existan relaciones (por ejemplo zone_id en clientes o recolecciones),
-        // validar aquí antes de eliminar. Hoy no hay dependencias registradas.
+        if ($zone->clients()->exists()) {
+            throw new RuntimeException(
+                'No se puede eliminar la zona porque tiene clientes asociados.',
+            );
+        }
 
         if (! $zone->delete()) {
             throw new RuntimeException('No fue posible eliminar la zona.');

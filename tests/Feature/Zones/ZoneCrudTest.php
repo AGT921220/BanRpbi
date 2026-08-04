@@ -3,6 +3,7 @@
 namespace Tests\Feature\Zones;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Models\Client;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -216,6 +217,23 @@ class ZoneCrudTest extends TestCase
 
         $response->assertRedirect(route('zones.index'));
         $this->assertDatabaseMissing('zones', ['id' => $zone->id]);
+    }
+
+    public function test_cannot_delete_zone_with_associated_clients(): void
+    {
+        $this->actingAsUserWithPermissions([
+            PermissionTypes::ZONES_VIEW,
+            PermissionTypes::ZONES_DELETE,
+        ]);
+
+        $zone = Zone::factory()->create();
+        Client::factory()->create(['zone_id' => $zone->id]);
+
+        $response = $this->delete(route('zones.destroy', $zone));
+
+        $response->assertRedirect(route('zones.index'));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('zones', ['id' => $zone->id]);
     }
 
     public function test_zones_index_can_be_filtered_by_name(): void

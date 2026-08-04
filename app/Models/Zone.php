@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\ZoneFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Zone extends Model
 {
@@ -31,5 +32,10 @@ class Zone extends Model
             'geometry' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function clients(): HasMany
+    {
+        return $this->hasMany(Client::class);
     }
 }

@@ -163,7 +163,7 @@
                                         @endcan
 
                                         @can(PermissionTypes::APPROVALS_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('approvals.index') }}" class="dropdown-item">
                                                 <i class="ti ti-circle-check me-2"></i>
                                                 Aprobaciones
                                             </a>

@@ -22,9 +22,11 @@ final class PermissionTypes
     public const CONTRACTS_DELETE = 'contracts.delete';
     public const CONTRACTS_RENEW = 'contracts.renew';
 
+    // Contratos de clientes
+    public const CLIENT_CONTRACTS_APPROVE = 'client_contracts.approve';
+
     // Aprobaciones
     public const APPROVALS_VIEW = 'approvals.view';
-    public const APPROVALS_APPROVE = 'approvals.approve';
     public const APPROVALS_REJECT = 'approvals.reject';
 
     // Recolecciones

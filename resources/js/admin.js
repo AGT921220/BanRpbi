@@ -2,6 +2,8 @@ import axios from "axios";
 import $ from "jquery";
 import { showLoader, hideLoader } from "./components/loader";
 
+window.$ = window.jQuery = $;
+
 const csrfToken = document
     .querySelector('meta[name="csrf-token"]')
     ?.getAttribute("content");
@@ -73,7 +75,40 @@ export async function post(
     }
 }
 
-window.BanHttp = { get, post };
+/**
+ * PUT
+ */
+export async function put(
+    url,
+    data = {},
+    loaderText = "Guardando...",
+    {
+        params = {},
+        headers = {},
+        loader = true,
+        timeout = 5000,
+    } = {},
+) {
+    if (loader) {
+        showLoader(loaderText);
+    }
+
+    try {
+        const response = await axios.put(url, data, {
+            params,
+            headers,
+            timeout,
+        });
+
+        return response.data;
+    } finally {
+        if (loader) {
+            hideLoader();
+        }
+    }
+}
+
+window.BanHttp = { get, post, put };
 
 export default window.BanHttp;
 

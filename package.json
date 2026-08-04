@@ -7,6 +7,7 @@
         "dev": "vite"
     },
     "devDependencies": {
+        "@rollup/plugin-inject": "^5.0.5",
         "@tailwindcss/vite": "^4.0.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.1",

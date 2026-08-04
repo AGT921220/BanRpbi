@@ -18,6 +18,7 @@ class PermissionHandler
             PermissionTypes::CLIENTS_CREATE,
             PermissionTypes::CLIENTS_UPDATE,
             PermissionTypes::CLIENTS_DELETE,
+            PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
             PermissionTypes::CLIENTS_SWITCH_STATUS,
 
             PermissionTypes::CONTRACTS_VIEW,
@@ -26,8 +27,9 @@ class PermissionHandler
             PermissionTypes::CONTRACTS_DELETE,
             PermissionTypes::CONTRACTS_RENEW,
 
+            PermissionTypes::CLIENT_CONTRACTS_APPROVE,
+
             PermissionTypes::APPROVALS_VIEW,
-            PermissionTypes::APPROVALS_APPROVE,
             PermissionTypes::APPROVALS_REJECT,
 
             PermissionTypes::COLLECTIONS_VIEW,
@@ -143,8 +145,9 @@ class PermissionHandler
             PermissionTypes::CONTRACTS_DELETE => 'Eliminar contratos',
             PermissionTypes::CONTRACTS_RENEW => 'Renovar contratos',
 
+            PermissionTypes::CLIENT_CONTRACTS_APPROVE => 'Aprobar contratos de clientes',
+
             PermissionTypes::APPROVALS_VIEW => 'Ver aprobaciones',
-            PermissionTypes::APPROVALS_APPROVE => 'Aprobar solicitudes',
             PermissionTypes::APPROVALS_REJECT => 'Rechazar solicitudes',
 
             PermissionTypes::COLLECTIONS_VIEW => 'Ver recolecciones',
@@ -295,6 +298,7 @@ class PermissionHandler
             'dashboard' => 'Dashboard',
             'clients' => 'Clientes',
             'contracts' => 'Contratos',
+            'client-contracts' => 'Contratos de clientes',
             'approvals' => 'Aprobaciones',
             'collections' => 'Recolecciones',
             'routes' => 'Rutas',

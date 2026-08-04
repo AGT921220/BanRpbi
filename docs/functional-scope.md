@@ -400,7 +400,7 @@ El controlador JSON del recurso se nombra en singular:
 
 - `ClientHeaderController`
 
-El envelope específico de DataTables (`draw`, `recordsTotal`, `recordsFiltered`) vive en el controlador JSON. El Caso de Uso expone datos (`has_contract`, `can_update`, `can_delete`); el HTML de acciones se renderiza en el frontend (DataTables).
+El envelope específico de DataTables (`draw`, `recordsTotal`, `recordsFiltered`) vive en el controlador JSON. El Caso de Uso expone datos (`has_contract`, `has_collection_zone`, `configuration_status`, `can_configure`, `can_update`, `can_delete`); el HTML de acciones se renderiza en el frontend (DataTables).
 
 Ejemplo de estructura del módulo Clients:
 
@@ -430,9 +430,10 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 
 | Módulo | Estado | Responsable | Prioridad | Dependencias pendientes | Notas |
 | ------ | ------ | ----------- | --------- | ----------------------- | ----- |
-| Clientes | Parcial | — | Alta | Aprobaciones, contratos, zonas, datos fiscales | CRUD web básico; no cubre aún el flujo funcional completo |
-| Contratos | Parcial | — | Alta | Asignación a clientes | Catálogo web (nombre, duración, frecuencia, notas) |
-| Ventas | No iniciado | — | Alta | Clientes, contratos, zonas | Sin feature ni pantallas |
+| Clientes | Parcial | — | Alta | Datos fiscales, recolecciones | CRUD + wizard configurar (contrato/zona) + estados de configuración |
+| Contratos | Parcial | — | Alta | Renovación, firma/PDF | Catálogo + asignación vía configuración de cliente |
+| Ventas | Parcial | — | Alta | Doble aprobación, recolecciones | Flujo comercial en listado de clientes + envío a aprobación |
+| Aprobaciones | Parcial | — | Alta | Doble aprobación de directores | Listado pendientes, aprobar/rechazar, correo al enviar |
 | Recolecciones | No iniciado | — | Alta | Clientes, contratos | Solo constantes de permiso definidas |
 | Captura de residuos | No iniciado | — | Alta | Recolecciones, rutas | Aplicación móvil; solo permisos |
 | Rutas | No iniciado | — | Alta | Zonas, recolecciones | Solo constantes de permiso definidas |
@@ -446,15 +447,29 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 
 #### Clientes — Parcial
 
-- Feature: `app/Features/Clients/Application/{SearchClientHeaders,ClientHeader,ClientHeaderSearchResult,CreateClient,UpdateClient,DeleteClient}.php`
-- Controlador web: `app/Http/Controllers/Admin/ClientController.php` (vistas y CRUD)
+- Feature: `app/Features/Clients/Application/{SearchClientHeaders,ClientHeader,ClientHeaderSearchResult,CreateClient,UpdateClient,DeleteClient,SaveClientConfiguration,FinalizeClientContractConfiguration}.php`
+- Controlador web: `app/Http/Controllers/Admin/ClientController.php` (CRUD + configuración)
 - Controlador JSON: `app/Http/Controllers/Api/ClientHeaderController.php` (DataTables / app móvil)
-- Requests: `app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest,SearchClientHeadersRequest}.php`
-- Rutas: `routes/admin.php` (`clients.*`, `client-headers.index`)
-- Vistas: `resources/views/clients/{index,create,edit,_form}.blade.php`
-- Modelo y migración: `app/Models/Client.php`, `database/migrations/2026_07_25_022811_create_clients_table.php`
-- Pruebas: `tests/Feature/Clients/ClientCrudTest.php`, `tests/Feature/Clients/SearchClientHeadersTest.php`, `tests/Feature/Clients/ClientHeaderControllerTest.php`
-- Campos actuales en migración: `name`, `parentarl_surname`, `email`, `phone`, `company` (sin RFC, direcciones, estados de aprobación ni vínculo a contratos/zonas)
+- Requests: `app/Http/Requests/Admin/{StoreClientRequest,UpdateClientRequest,SearchClientHeadersRequest,SaveClientConfigurationRequest,SubmitClientConfigurationRequest}.php`
+- Rutas: `routes/admin.php` (`clients.*`, `clients.configuration.*`, `client-headers.index`)
+- Vistas: `resources/views/clients/{index,create,edit,_form,configure_client_modal}.blade.php`
+- JS: `resources/js/modules/clients/index.js` (wizard Configurar cliente)
+- Modelo y migraciones: `app/Models/Client.php`, `client_contracts`, campos `configuration_status`, `zone_id`
+- Estados: `configuration_pending`, `pending_approval`, `approved`, `rejected`
+- Pruebas: `tests/Feature/Clients/{ClientCrud,SearchClientHeaders,ClientHeaderController,ClientConfiguration}Test.php`
+- Pendiente: RFC/direcciones, generación automática de recolecciones al aprobar
+
+#### Aprobaciones — Parcial
+
+- Feature: `app/Features/Approvals/Application/{ListPendingApprovals,ApproveClientConfiguration,RejectClientConfiguration}.php`
+- Controlador: `app/Http/Controllers/Admin/ApprovalController.php`
+- Vista: `resources/views/approvals/index.blade.php`
+- Aprobación dual: roles `Director Ventas` y `Director General` (tabla `client_configuration_approvals`)
+- Reemplazo de contrato: el PENDING se activa al completar ambas aprobaciones y cancela el ACTIVE previo
+- Correo: `app/Mail/ClientConfigurationSubmitted.php` (solo al enviar a aprobación)
+- Rutas: `approvals.index`, `approvals.approve`, `approvals.reject`
+- Pruebas: `tests/Feature/Approvals/ApprovalsTest.php`
+- Pendiente: generación automática de recolecciones y pasar vencidos a COMPLETED
 
 #### Contratos — Parcial
 
@@ -465,8 +480,8 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - Vistas: `resources/views/contracts/{index,create,edit,_form}.blade.php`
 - Modelo y migración: `app/Models/Contract.php`, `database/migrations/2026_07_25_050000_create_contracts_table.php`
 - Pruebas: `tests/Feature/Contracts/ContractCrudTest.php`
-- Alcance actual: catálogo de contratos (`name`, `notes`, `duration_months`, `frequency`)
-- Pendiente: asignación a clientes, renovación, firma/PDF y generación de recolecciones
+- Alcance actual: catálogo de contratos (`name`, `notes`, `duration_months`, `frequency`) + asignación en wizard de cliente (`client_contracts`)
+- Pendiente: renovación, firma/PDF y generación de recolecciones
 
 #### Zonas del mapa — Parcial
 
@@ -478,9 +493,9 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - Vistas: `resources/views/zones/{index,create,edit,_form}.blade.php`
 - JS: `resources/js/modules/zones/form.js` (Google Maps + Terra Draw)
 - Modelo y migración: `app/Models/Zone.php`, `database/migrations/2026_07_25_043000_create_zones_table.php`
+- Clientes vinculados mediante `clients.zone_id` (no se elimina zona con clientes asociados)
 - Pruebas: `tests/Feature/Zones/ZoneCrudTest.php`, `tests/Unit/Rules/ValidGeoJsonPolygonTest.php`
-- Pendiente: asignación de clientes a zonas, regla definitiva de superposición y validación visual del mapa con API key real
-
+- Pendiente: regla definitiva de superposición y validación visual del mapa con API key real
 #### Usuarios — Parcial
 
 - Autenticación: Laravel Fortify

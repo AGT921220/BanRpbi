@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\RoleController;
@@ -17,8 +18,22 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('clients', ClientController::class)
         ->except(['show']);
 
+    Route::get('clients/{client}/configuration', [ClientController::class, 'showConfiguration'])
+        ->name('clients.configuration.show');
+    Route::put('clients/{client}/configuration', [ClientController::class, 'saveConfiguration'])
+        ->name('clients.configuration.save');
+    Route::post('clients/{client}/configuration/submit', [ClientController::class, 'submitConfiguration'])
+        ->name('clients.configuration.submit');
+
     Route::get('client-headers', [ClientHeaderController::class, 'index'])
         ->name('client-headers.index');
+
+    Route::get('approvals', [ApprovalController::class, 'index'])
+        ->name('approvals.index');
+    Route::post('approvals/{client}/approve', [ApprovalController::class, 'approve'])
+        ->name('approvals.approve');
+    Route::post('approvals/{client}/reject', [ApprovalController::class, 'reject'])
+        ->name('approvals.reject');
 
     Route::patch(
         'zones/{zone}/toggle-status',

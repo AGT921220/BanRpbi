@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Features\Permissions\Constants\RoleTypes;
 use Illuminate\Console\Command;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -26,10 +27,21 @@ class CreateRolesCommand extends Command
                 'web'
             );
 
-            $director = Role::findOrCreate(
-                'Director',
+            $directorVentas = Role::findOrCreate(
+                RoleTypes::DIRECTOR_VENTAS,
                 'web'
             );
+
+            $directorGeneral = Role::findOrCreate(
+                RoleTypes::DIRECTOR_GENERAL,
+                'web'
+            );
+
+            // Compatibilidad: usuarios del rol legado "Director".
+            $legacyDirector = Role::query()
+                ->where('name', 'Director')
+                ->where('guard_name', 'web')
+                ->first();
 
             $sales = Role::findOrCreate(
                 'Ventas',
@@ -62,12 +74,12 @@ class CreateRolesCommand extends Command
                     ->get()
             );
 
-            $director->syncPermissions([
+            $directorPermissions = [
                 PermissionTypes::DASHBOARD_VIEW,
                 PermissionTypes::CLIENTS_VIEW,
                 PermissionTypes::CONTRACTS_VIEW,
                 PermissionTypes::APPROVALS_VIEW,
-                PermissionTypes::APPROVALS_APPROVE,
+                PermissionTypes::CLIENT_CONTRACTS_APPROVE,
                 PermissionTypes::APPROVALS_REJECT,
                 PermissionTypes::COLLECTIONS_VIEW,
                 PermissionTypes::ROUTES_VIEW,
@@ -85,13 +97,25 @@ class CreateRolesCommand extends Command
                 PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
                 PermissionTypes::PROFILE_VIEW,
                 PermissionTypes::PROFILE_UPDATE,
-            ]);
+            ];
+
+            $directorVentas->syncPermissions($directorPermissions);
+            $directorGeneral->syncPermissions($directorPermissions);
+
+            if ($legacyDirector !== null) {
+                \App\Models\User::role('Director')->each(function (\App\Models\User $user) use ($directorVentas): void {
+                    $user->removeRole('Director');
+                    $user->assignRole($directorVentas);
+                });
+                $legacyDirector->delete();
+            }
 
             $sales->syncPermissions([
                 PermissionTypes::DASHBOARD_VIEW,
                 PermissionTypes::CLIENTS_VIEW,
                 PermissionTypes::CLIENTS_CREATE,
                 PermissionTypes::CLIENTS_UPDATE,
+                PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
                 PermissionTypes::CONTRACTS_VIEW,
                 PermissionTypes::CONTRACTS_CREATE,
                 PermissionTypes::CONTRACTS_UPDATE,
