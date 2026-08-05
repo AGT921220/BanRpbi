@@ -7,91 +7,100 @@
     <title>Iniciar sesión | BAN RPBI</title>
     @vite([
         'resources/css/app.css',
+        'resources/css/pages/login.css',
         'resources/js/app.js',
     ])
 </head>
 
-<body class="bg-light">
-    <main class="min-vh-100 d-flex align-items-center justify-content-center">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
+<body class="login-page" style="--login-bg-image: url('{{ asset('images/background.jpeg') }}')">
+    <main class="login-shell">
+        <div class="login-backdrop" aria-hidden="true"></div>
 
-                    <div class="text-center mb-4">
-                        <h1 class="h2 mb-1">BAN RPBI</h1>
-                        <p class="text-secondary mb-0">
-                            Sistema de gestión de residuos
-                        </p>
-                    </div>
+        <div class="login-panel">
+            <div class="login-brand">
+                <img
+                    class="login-brand__logo"
+                    src="{{ asset('images/logo.png') }}"
+                    alt="BAN RPBI"
+                    width="72"
+                    height="72"
+                >
+                <h1 class="login-brand__title">BAN RPBI</h1>
+                <p class="login-brand__subtitle">
+                    Sistema de gestión de residuos
+                </p>
+            </div>
 
-                    <div class="card shadow-sm">
-                        <div class="card-body p-4">
-                            <h2 class="h4 text-center mb-4">
-                                <i class="ti ti-login me-1"></i>
-                                Iniciar sesión
-                            </h2>
+            <div class="login-card">
+                <div class="login-card__body">
+                    <h2 class="login-card__heading">
+                        <i class="ti ti-login" aria-hidden="true"></i>
+                        Iniciar sesión
+                    </h2>
 
-                            @if ($errors->any())
-                                <div class="alert alert-danger" role="alert">
-                                    <ul class="mb-0 ps-3">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-
-                            @if (session('status'))
-                                <div class="alert alert-success" role="alert">
-                                    {{ session('status') }}
-                                </div>
-                            @endif
-
-                            <form method="POST" action="{{ route('login') }}">
-                                @csrf
-
-                                <x-form.input
-                                    name="email"
-                                    label="Correo electrónico"
-                                    type="email"
-                                    icon="ti ti-mail"
-                                    :value="old('email')"
-                                    required
-                                    autofocus
-                                    autocomplete="email"
-                                />
-
-                                <x-form.input
-                                    name="password"
-                                    label="Contraseña"
-                                    type="password"
-                                    icon="ti ti-lock"
-                                    required
-                                    autocomplete="current-password"
-                                />
-
-                                <div class="form-check mb-4">
-                                    <input
-                                        id="remember"
-                                        type="checkbox"
-                                        name="remember"
-                                        class="form-check-input"
-                                    >
-                                    <label for="remember" class="form-check-label">
-                                        Mantener sesión iniciada
-                                    </label>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="ti ti-login me-1"></i>
-                                    Iniciar sesión
-                                </button>
-                            </form>
+                    @if ($errors->any())
+                        <div class="alert alert-danger" role="alert">
+                            <ul class="mb-0 ps-3">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                         </div>
-                    </div>
+                    @endif
 
+                    @if (session('status'))
+                        <div class="alert alert-success" role="alert">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('login') }}">
+                        @csrf
+
+                        <x-form.input
+                            name="email"
+                            label="Correo electrónico"
+                            type="email"
+                            icon="ti ti-mail"
+                            :value="old('email')"
+                            required
+                            autofocus
+                            autocomplete="email"
+                        />
+
+                        <x-form.input
+                            name="password"
+                            label="Contraseña"
+                            type="password"
+                            icon="ti ti-lock"
+                            required
+                            autocomplete="current-password"
+                        />
+
+                        <div class="form-check mb-4">
+                            <input
+                                id="remember"
+                                type="checkbox"
+                                name="remember"
+                                class="form-check-input"
+                                @checked(old('remember'))
+                            >
+                            <label for="remember" class="form-check-label">
+                                Mantener sesión iniciada
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 login-submit">
+                            <i class="ti ti-login me-1" aria-hidden="true"></i>
+                            Iniciar sesión
+                        </button>
+                    </form>
                 </div>
             </div>
+
+            <p class="login-footer">
+                Acceso seguro al panel administrativo
+            </p>
         </div>
     </main>
 </body>
