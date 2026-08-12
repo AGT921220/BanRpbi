@@ -41,7 +41,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rpbi_profiles', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
             $table->string('name');
             $table->string('code');
             $table->string('description');

@@ -13,18 +13,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('passkeys', function (Blueprint $table) {
-            $table->id();
-            $table->foreignIdFor(Passkeys::userModel(), 'user_id')->constrained()->cascadeOnDelete();
+            $table->increments('id');
+
+            $table->unsignedInteger('user_id');
+
             $table->string('name');
             $table->string('credential_id')->unique();
             $table->json('credential');
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
 
-            $table->index('user_id');
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->cascadeOnDelete();
         });
     }
-
     /**
      * Reverse the migrations.
      */

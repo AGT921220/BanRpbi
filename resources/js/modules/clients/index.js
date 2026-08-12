@@ -1,4 +1,4 @@
-import { Modal } from 'bootstrap';
+import { Modal } from '@tabler/core/dist/js/tabler.esm.js';
 import { createDataTable } from '../../shared/datatable.js';
 import { showToast } from '../../admin.js';
 

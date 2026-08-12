@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::create('client_contract_profiles', function (Blueprint $table): void {
             $table->id();
             $table->unsignedInteger('client_contract_id');
-            $table->foreignId('rpbi_profile_id')->constrained('rpbi_profiles')->cascadeOnDelete();
+
+            $table->unsignedInteger('rpbi_profile_id');
+            $table->foreign('rpbi_profile_id')->references('id')->on('rpbi_profiles');
             $table->timestamps();
 
             $table->foreign('client_contract_id')

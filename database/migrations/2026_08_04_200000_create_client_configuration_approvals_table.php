@@ -12,7 +12,11 @@ return new class extends Migration
             $table->increments('id');
             $table->unsignedInteger('client_id');
             $table->unsignedInteger('client_contract_id');
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedInteger('user_id');
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users');
+//            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('role_name');
             $table->timestamp('approved_at');
             $table->timestamps();

@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 final class ApproveClientConfiguration
 {
+    public function __construct() {}
     public function __invoke(Client $client, User $user): Client
     {
         if ($client->configuration_status !== Client::STATUS_PENDING_APPROVAL) {
@@ -78,6 +79,7 @@ final class ApproveClientConfiguration
             $client->configuration_reviewed_at = now();
             $client->configuration_rejection_reason = null;
             $client->save();
+
 
             return $client->fresh([
                 'pendingContract.contract',

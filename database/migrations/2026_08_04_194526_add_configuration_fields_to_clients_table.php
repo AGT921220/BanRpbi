@@ -14,11 +14,10 @@ return new class extends Migration
                 ->default(Client::STATUS_CONFIGURATION_PENDING)
                 ->after('company');
 
-            $table->foreignId('zone_id')
-                ->nullable()
-                ->after('configuration_status')
-                ->constrained('zones')
-                ->nullOnDelete();
+
+            $table->unsignedInteger('zone_id')->nullable();
+            $table->foreign('zone_id')->references('id')->on('zones');
+
 
             $table->timestamp('configuration_submitted_at')
                 ->nullable()

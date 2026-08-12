@@ -149,7 +149,7 @@
 
                                     <div class="dropdown-menu">
                                         @can(PermissionTypes::CLIENTS_VIEW)
-                                            <a href="clients" class="dropdown-item">
+                                            <a href="{{ route('clients.index') }}" class="dropdown-item">
                                                 <i class="ti ti-building me-2"></i>
                                                 Clientes
                                             </a>

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('zones', function (Blueprint $table): void {
-            $table->id();
+            $table->increments('id');
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('color', 20)->nullable();

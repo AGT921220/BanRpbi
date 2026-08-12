@@ -7,6 +7,7 @@ use App\Features\Approvals\Application\ListPendingApprovals;
 use App\Features\Approvals\Application\RejectClientConfiguration;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Permissions\Constants\RoleTypes;
+use App\Features\Services\Application\BulkCreateServices;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectClientConfigurationRequest;
 use App\Models\Client;
@@ -19,6 +20,7 @@ final class ApprovalController extends Controller
         private readonly ListPendingApprovals $listPendingApprovals,
         private readonly ApproveClientConfiguration $approveClientConfiguration,
         private readonly RejectClientConfiguration $rejectClientConfiguration,
+        private readonly BulkCreateServices $bulkCreateServices,
     ) {}
 
     public function index()
@@ -40,6 +42,12 @@ final class ApprovalController extends Controller
             client: $client,
             user: request()->user(),
         );
+
+        if ($client->configuration_status === Client::STATUS_APPROVED) {
+            ($this->bulkCreateServices)(
+                client: $client,
+            );
+        }
 
         $message = $client->configuration_status === Client::STATUS_APPROVED
             ? 'Cliente aprobado correctamente. El contrato quedó vigente.'

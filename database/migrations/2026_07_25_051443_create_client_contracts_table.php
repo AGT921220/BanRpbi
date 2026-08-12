@@ -13,19 +13,18 @@ return new class extends Migration
     {
         Schema::create('client_contracts', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('client_id')->unsigned()->nullable();
-            $table->integer('contract_id')->unsigned()->nullable();
             $table->text('notes')->nullable();
             $table->integer('status')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->unsignedInteger('client_id')->nullable();
+            $table->unsignedInteger('contract_id')->nullable();
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('set null');
             $table->foreign('contract_id')->references('id')->on('contracts')->onDelete('set null');
 
-            $table->foreignId('user_id')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+
+            $table->unsignedInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users');
 
             $table->softDeletes();
             $table->timestamps();
