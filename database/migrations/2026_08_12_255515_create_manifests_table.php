@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('manifest_details', function (Blueprint $table) {
-            $table->id();
-            // $table->unsignedInteger('manifest_id');
-            $table->foreignId('manifest_id')->constrained('manifests');
+        Schema::create('manifests', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('service_id');
+            $table->foreign('service_id')->references('id')->on('services');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('manifest_details');
+        Schema::dropIfExists('manifests');
     }
 };

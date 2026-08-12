@@ -23,6 +23,7 @@ public function up(): void
         $table->string('status')->default('pending');
 
         $table->timestamps();
+        $table->softDeletes();
 
         $table->foreign('zone_id')->references('id')->on('zones');
         $table->foreign('client_id')->references('id')->on('clients');

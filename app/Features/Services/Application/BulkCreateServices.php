@@ -19,10 +19,13 @@ class BulkCreateServices
     {
         $clientContract = $client->activeContract;
         $contract = $clientContract->contract;
+        $clientContractProfiles = $clientContract->clientContractProfiles;
+        $clientProfileIds = $clientContractProfiles->pluck('rpbi_profile_id')->toArray();
         $frequency = $contract->frequency;
         foreach ($this->serviceDateGenerator->__invoke($clientContract->start_date, $clientContract->end_date, $frequency) as $serviceDate) {
-            $serviceId = $this->createServiceForContract($client, $contract, $serviceDate);createServiceDetails
-            $this->createServiceDetails($serviceId);
+            $serviceId = $this->createServiceForContract($client, $contract, $serviceDate);
+            $this->createServiceDetails($serviceId, $clientProfileIds);
+            $this->createManifestForService($serviceId);
         }
     }
     private function createServiceForContract(Client $client, Contract $contract, Carbon $serviceDate): int
@@ -36,9 +39,19 @@ class BulkCreateServices
         $service->save();
         return $service->id;
     }
-    private function createServiceDetails(int $serviceId)
+    private function createServiceDetails(int $serviceId, array $clientProfileIds)
     {
         $dataToInsert = [];
-        
+        $now = Carbon::now()->toDateTimeString();
+        foreach ($clientProfileIds as $profileId) {
+            $dataToInsert[] = [
+                'service_id' => $serviceId,
+                'rpbi_profile_id' => $profileId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+
     }
 }

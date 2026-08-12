@@ -234,7 +234,7 @@
                                 PermissionTypes::WASTE_CAPTURE_VIEW,
                                 PermissionTypes::DRIVER_SHIFTS_VIEW,
                             ])
-                                <li class="nav-item dropdown">
+                                {{-- <li class="nav-item dropdown">
                                     <a
                                         class="nav-link dropdown-toggle"
                                         href="#navbar-operacion"
@@ -267,7 +267,7 @@
                                             </a>
                                         @endcan
                                     </div>
-                                </li>
+                                </li> --}}
                             @endcanany
 
                             {{-- PROCESOS AMBIENTALES --}}
@@ -291,7 +291,7 @@
                                         </span>
 
                                         <span class="nav-link-title">
-                                            Procesos ambientales
+                                            Procesos
                                         </span>
                                     </a>
 
