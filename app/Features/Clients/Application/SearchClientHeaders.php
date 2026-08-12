@@ -53,7 +53,10 @@ final readonly class SearchClientHeaders
         $canAssignContracts = Gate::allows(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS);
 
         $data = $dataQuery
-            ->withExists('contracts')
+            ->withExists([
+                'contracts',
+                'activeContract as active_contract_exists',
+            ])
             ->get()
             ->map(
                 static function (Client $client) use ($canUpdate, $canDelete, $canAssignContracts): ClientHeader {
@@ -67,6 +70,7 @@ final readonly class SearchClientHeaders
                         company: $client->company,
                         createdAt: $client->created_at?->format('d/m/Y H:i'),
                         hasContract: (bool) $client->contracts_exists,
+                        hasActiveContract: (bool) $client->active_contract_exists,
                         hasCollectionZone: $client->zone_id !== null,
                         configurationStatus: $status,
                         canUpdate: $canUpdate,

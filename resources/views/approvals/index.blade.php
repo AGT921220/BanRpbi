@@ -80,17 +80,17 @@
                                 <td>
                                     <div class="btn-list flex-nowrap">
                                         @if($client->can_approve)
-                                            <form
-                                                method="POST"
-                                                action="{{ route('approvals.approve', $client) }}"
-                                                onsubmit="return confirm('¿Registrar tu aprobación como director?')"
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-success js-approve-client"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#approve-client-modal"
+                                                data-client-id="{{ $client->id }}"
+                                                data-client-name="{{ $client->fullName() }}"
                                             >
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    <i class="ti ti-check me-1"></i>
-                                                    Aprobar
-                                                </button>
-                                            </form>
+                                                <i class="ti ti-check me-1"></i>
+                                                Aprobar
+                                            </button>
                                         @endif
 
                                         @if($client->can_reject)
@@ -178,4 +178,117 @@
             @endif
         </div>
     </div>
+
+    <div
+        class="modal modal-blur fade"
+        id="approve-client-modal"
+        tabindex="-1"
+        aria-labelledby="approve-client-modal-title"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form
+                    id="approve-client-form"
+                    method="POST"
+                    action="#"
+                    data-action-template="{{ route('approvals.approve', ['client' => '__CLIENT_ID__']) }}"
+                >
+                    @csrf
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <div class="modal-status bg-success"></div>
+                    <div class="modal-body text-center py-4">
+                        <i class="ti ti-circle-check icon icon-lg text-success mb-2"></i>
+                        <h3 id="approve-client-modal-title">Aprobar configuración</h3>
+                        <div class="text-secondary" id="approve-client-message">
+                            ¿Registrar tu aprobación como director?
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="w-100">
+                            <div class="row">
+                                <div class="col">
+                                    <button type="button" class="btn w-100" data-bs-dismiss="modal">
+                                        Cancelar
+                                    </button>
+                                </div>
+                                <div class="col">
+                                    <button type="submit" class="btn btn-success w-100" id="approve-client-submit">
+                                        <i class="ti ti-check me-1"></i>
+                                        Sí, aprobar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalEl = document.getElementById('approve-client-modal');
+            const form = document.getElementById('approve-client-form');
+            const messageEl = document.getElementById('approve-client-message');
+            const submitBtn = document.getElementById('approve-client-submit');
+
+            if (!modalEl || !form || !messageEl || !submitBtn) {
+                return;
+            }
+
+            const urlTemplate = form.dataset.actionTemplate || '';
+            const defaultMessage = '¿Registrar tu aprobación como director?';
+            const submitDefaultHtml = submitBtn.innerHTML;
+
+            const updateApproveModal = (clientId, clientName = '') => {
+                form.action = urlTemplate.replace('__CLIENT_ID__', encodeURIComponent(clientId));
+                messageEl.replaceChildren();
+
+                if (clientName) {
+                    const strong = document.createElement('strong');
+                    strong.textContent = clientName;
+                    messageEl.append('¿Registrar tu aprobación como director para ', strong, '?');
+                    return;
+                }
+
+                messageEl.textContent = defaultMessage;
+            };
+
+            document.querySelectorAll('.js-approve-client').forEach((button) => {
+                button.addEventListener('click', () => {
+                    updateApproveModal(
+                        button.dataset.clientId || '',
+                        (button.dataset.clientName || '').trim(),
+                    );
+                });
+            });
+
+            modalEl.addEventListener('show.bs.modal', (event) => {
+                const trigger = event.relatedTarget;
+
+                if (!trigger?.getAttribute) {
+                    return;
+                }
+
+                updateApproveModal(
+                    trigger.getAttribute('data-client-id') || '',
+                    (trigger.getAttribute('data-client-name') || '').trim(),
+                );
+            });
+
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = submitDefaultHtml;
+            });
+
+            form.addEventListener('submit', () => {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Aprobando...';
+            });
+        });
+    </script>
+@endpush

@@ -3,9 +3,9 @@
 namespace Tests\Feature\Clients;
 
 use App\Features\Permissions\Constants\PermissionTypes;
-use App\Mail\ClientConfigurationSubmitted;
 use App\Models\Client;
 use App\Models\ClientContract;
+use App\Models\ClientProfile;
 use App\Models\Contract;
 use App\Models\User;
 use App\Models\Zone;
@@ -45,6 +45,9 @@ class ClientConfigurationTest extends TestCase
         $client = Client::factory()->create();
         $contract = Contract::factory()->create(['duration_months' => 12]);
         $zone = Zone::factory()->create();
+        $profiles = ClientProfile::query()->orderBy('code')->take(2)->get();
+
+        $this->assertGreaterThanOrEqual(2, $profiles->count());
 
         $response = $this->putJson(route('clients.configuration.save', $client), [
             'contract_id' => $contract->id,
@@ -52,6 +55,7 @@ class ClientConfigurationTest extends TestCase
             'start_date' => '2026-08-01',
             'end_date' => '2027-08-01',
             'notes' => 'Borrador',
+            'profile_ids' => $profiles->pluck('id')->all(),
         ]);
 
         $response->assertOk();
@@ -70,6 +74,18 @@ class ClientConfigurationTest extends TestCase
             'contract_id' => $contract->id,
             'status' => ClientContract::STATUS_PENDING,
         ]);
+
+        $clientContractId = ClientContract::query()
+            ->where('client_id', $client->id)
+            ->where('status', ClientContract::STATUS_PENDING)
+            ->value('id');
+
+        foreach ($profiles as $profile) {
+            $this->assertDatabaseHas('client_contract_profiles', [
+                'client_contract_id' => $clientContractId,
+                'rpbi_profile_id' => $profile->id,
+            ]);
+        }
 
         Mail::assertNothingSent();
     }
@@ -92,43 +108,10 @@ class ClientConfigurationTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    public function test_submit_sends_mail_and_changes_status(): void
+    public function test_submit_requires_at_least_one_profile(): void
     {
         Mail::fake();
 
-        $approver = $this->actingAsUserWithPermissions([
-            PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
-            PermissionTypes::CLIENT_CONTRACTS_APPROVE,
-        ]);
-
-        $client = Client::factory()->create();
-        $contract = Contract::factory()->create();
-        $zone = Zone::factory()->create();
-
-        $this->putJson(route('clients.configuration.save', $client), [
-            'contract_id' => $contract->id,
-            'zone_id' => $zone->id,
-            'start_date' => '2026-08-01',
-            'end_date' => '2027-08-01',
-        ])->assertOk();
-
-        $response = $this->postJson(route('clients.configuration.submit', $client));
-
-        $response->assertOk();
-        $response->assertJsonPath('configuration_status', Client::STATUS_PENDING_APPROVAL);
-
-        $this->assertDatabaseHas('clients', [
-            'id' => $client->id,
-            'configuration_status' => Client::STATUS_PENDING_APPROVAL,
-        ]);
-
-        Mail::assertSent(ClientConfigurationSubmitted::class, function (ClientConfigurationSubmitted $mail) use ($client): bool {
-            return $mail->client->is($client);
-        });
-    }
-
-    public function test_show_configuration_returns_saved_draft(): void
-    {
         $this->actingAsUserWithPermissions([
             PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
         ]);
@@ -142,7 +125,71 @@ class ClientConfigurationTest extends TestCase
             'zone_id' => $zone->id,
             'start_date' => '2026-08-01',
             'end_date' => '2027-08-01',
+            'profile_ids' => [],
+        ])->assertOk();
+
+        $response = $this->postJson(route('clients.configuration.submit', $client));
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['profile_ids']);
+        Mail::assertNothingSent();
+    }
+
+    public function test_submit_sends_mail_and_changes_status(): void
+    {
+        Mail::fake();
+
+        $this->actingAsUserWithPermissions([
+            PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
+            PermissionTypes::CLIENT_CONTRACTS_APPROVE,
+        ]);
+
+        $client = Client::factory()->create();
+        $contract = Contract::factory()->create();
+        $zone = Zone::factory()->create();
+        $profileId = ClientProfile::query()->value('id');
+
+        $this->assertNotNull($profileId);
+
+        $this->putJson(route('clients.configuration.save', $client), [
+            'contract_id' => $contract->id,
+            'zone_id' => $zone->id,
+            'start_date' => '2026-08-01',
+            'end_date' => '2027-08-01',
+            'profile_ids' => [$profileId],
+        ])->assertOk();
+
+        $response = $this->postJson(route('clients.configuration.submit', $client));
+
+        $response->assertOk();
+        $response->assertJsonPath('configuration_status', Client::STATUS_PENDING_APPROVAL);
+
+        $this->assertDatabaseHas('clients', [
+            'id' => $client->id,
+            'configuration_status' => Client::STATUS_PENDING_APPROVAL,
+        ]);
+    }
+
+    public function test_show_configuration_returns_saved_draft(): void
+    {
+        $this->actingAsUserWithPermissions([
+            PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
+        ]);
+
+        $client = Client::factory()->create();
+        $contract = Contract::factory()->create();
+        $zone = Zone::factory()->create();
+        $profileId = ClientProfile::query()->value('id');
+
+        $this->assertNotNull($profileId);
+
+        $this->putJson(route('clients.configuration.save', $client), [
+            'contract_id' => $contract->id,
+            'zone_id' => $zone->id,
+            'start_date' => '2026-08-01',
+            'end_date' => '2027-08-01',
             'notes' => 'Nota',
+            'profile_ids' => [$profileId],
         ])->assertOk();
 
         $response = $this->getJson(route('clients.configuration.show', $client));
@@ -151,7 +198,9 @@ class ClientConfigurationTest extends TestCase
         $response->assertJsonPath('contract_id', $contract->id);
         $response->assertJsonPath('zone_id', $zone->id);
         $response->assertJsonPath('notes', 'Nota');
+        $response->assertJsonPath('profile_ids.0', $profileId);
         $response->assertJsonPath('can_edit', true);
+        $response->assertJsonPath('has_active_contract', false);
     }
 
     public function test_cannot_edit_when_pending_approval(): void

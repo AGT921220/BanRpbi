@@ -3,6 +3,8 @@
     $contracts ??= collect();
     /** @var \Illuminate\Support\Collection<int, \App\Models\Zone> $zones */
     $zones ??= collect();
+    /** @var \Illuminate\Support\Collection<int, \App\Models\ClientProfile> $rpbiProfiles */
+    $rpbiProfiles ??= collect();
     $frequencyLabels = \App\Models\Contract::frequencyLabels();
 @endphp
 
@@ -24,8 +26,8 @@
                     <div class="modal-header">
                         <div>
                             <h5 class="modal-title" id="configure-client-modal-title">
-                                <i class="ti ti-settings me-2"></i>
-                                Configurar cliente
+                                <i class="ti ti-file-plus me-2" id="configure-client-modal-icon"></i>
+                                <span id="configure-client-modal-title-text">Asignar contrato</span>
                             </h5>
                             <div class="text-secondary" id="configure-client-name"></div>
                         </div>
@@ -36,7 +38,8 @@
                         <ul class="steps steps-counter steps-yellow my-3" id="configure-client-steps">
                             <li class="step-item active" data-step="1">Contrato</li>
                             <li class="step-item" data-step="2">Zona</li>
-                            <li class="step-item" data-step="3">Resumen</li>
+                            <li class="step-item" data-step="3">Perfiles</li>
+                            <li class="step-item" data-step="4">Resumen</li>
                         </ul>
 
                         <div class="alert alert-warning d-none" id="configure-client-rejection"></div>
@@ -163,6 +166,42 @@
                         </div>
 
                         <div class="configure-step d-none" data-step-panel="3">
+                            <p class="text-secondary mb-3">
+                                Selecciona los tipos de residuos RPBI que aplican a este contrato.
+                            </p>
+
+                            <div class="divide-y" id="configure-profiles-list">
+                                @forelse ($rpbiProfiles as $profile)
+                                    <label class="row align-items-center py-2 cursor-pointer" for="configure-profile-{{ $profile->id }}">
+                                        <span class="col-auto">
+                                            <input
+                                                type="checkbox"
+                                                class="form-check-input configure-profile-checkbox"
+                                                name="profile_ids[]"
+                                                id="configure-profile-{{ $profile->id }}"
+                                                value="{{ $profile->id }}"
+                                                data-profile-code="{{ $profile->code }}"
+                                                data-profile-name="{{ $profile->name }}"
+                                            >
+                                        </span>
+                                        <span class="col">
+                                            <span class="fw-bold">
+                                                {{ $profile->code }} — {{ $profile->name }}
+                                            </span>
+                                            <span class="d-block text-secondary">
+                                                {{ $profile->description }}
+                                            </span>
+                                        </span>
+                                    </label>
+                                @empty
+                                    <div class="text-secondary py-3">
+                                        No hay perfiles RPBI configurados.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        <div class="configure-step d-none" data-step-panel="4">
                             <div class="alert alert-info d-none" id="summary-active-contract-alert"></div>
                             <div class="datagrid">
                                 <div class="datagrid-item">
@@ -180,6 +219,10 @@
                                 <div class="datagrid-item">
                                     <div class="datagrid-title">Zona de recolección</div>
                                     <div class="datagrid-content" id="summary-zone">—</div>
+                                </div>
+                                <div class="datagrid-item">
+                                    <div class="datagrid-title">Perfiles RPBI</div>
+                                    <div class="datagrid-content" id="summary-profiles">—</div>
                                 </div>
                                 <div class="datagrid-item">
                                     <div class="datagrid-title">Estado</div>

@@ -9,6 +9,8 @@ const STATUS_LABELS = {
     rejected: 'Rechazado',
 };
 
+const TOTAL_STEPS = 4;
+
 document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = document
         .querySelector('meta[name="csrf-token"]')
@@ -30,14 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 let actions = '';
 
                 if (row.can_configure) {
+                    const label = row.has_active_contract
+                        ? 'Actualizar contrato'
+                        : 'Asignar contrato';
+                    const icon = row.has_active_contract
+                        ? 'ti ti-file-pencil'
+                        : 'ti ti-file-plus';
+
                     actions += `
                         <button
                             type="button"
                             class="btn btn-sm btn-success configure-client-btn"
                             data-client-id="${row.id}"
                         >
-                            <i class="ti ti-settings me-1"></i>
-                            Configurar cliente
+                            <i class="${icon} me-1"></i>
+                            ${label}
                         </button>
                     `;
                 }
@@ -91,11 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = Modal.getOrCreateInstance(modalElement);
     const clientIdInput = document.getElementById('configure-client-id');
     const clientNameLabel = document.getElementById('configure-client-name');
+    const modalTitleText = document.getElementById('configure-client-modal-title-text');
+    const modalIcon = document.getElementById('configure-client-modal-icon');
     const contractSelect = document.getElementById('configure-contract-id');
     const zoneSelect = document.getElementById('configure-zone-id');
     const startDateInput = document.getElementById('configure-start-date');
     const endDateInput = document.getElementById('configure-end-date');
     const notesInput = document.getElementById('configure-notes');
+    const profileCheckboxes = () => [
+        ...document.querySelectorAll('.configure-profile-checkbox'),
+    ];
     const rejectionAlert = document.getElementById('configure-client-rejection');
     const readonlyAlert = document.getElementById('configure-client-readonly');
     const prevBtn = document.getElementById('configure-prev-btn');
@@ -107,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let canEdit = true;
     let configurationStatus = 'configuration_pending';
     let activeContract = null;
+    let hasActiveContract = false;
 
     $(document).on('click', '.configure-client-btn', async function () {
         const clientId = $(this).data('client-id');
@@ -137,6 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSubmitButton();
     });
 
+    $(document).on('change', '.configure-profile-checkbox', () => {
+        updateSummary();
+        updateSubmitButton();
+    });
+
     $(startDateInput).on('change', updateEndDate);
 
     $(prevBtn).on('click', () => {
@@ -152,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (currentStep < 3) {
+        if (currentStep < TOTAL_STEPS) {
             goToStep(currentStep + 1);
         }
     });
@@ -193,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canEdit = data.can_edit !== false;
         configurationStatus = data.configuration_status || 'configuration_pending';
         activeContract = data.active_contract || null;
+        hasActiveContract = Boolean(data.has_active_contract);
         clientIdInput.value = data.id;
         clientNameLabel.textContent = data.full_name || '';
         contractSelect.value = data.contract_id ?? '';
@@ -200,6 +221,16 @@ document.addEventListener('DOMContentLoaded', () => {
         startDateInput.value = data.start_date || new Date().toISOString().slice(0, 10);
         endDateInput.value = data.end_date || '';
         notesInput.value = data.notes || '';
+
+        const selectedProfileIds = new Set(
+            (data.profile_ids || []).map((id) => String(id)),
+        );
+
+        profileCheckboxes().forEach((checkbox) => {
+            checkbox.checked = selectedProfileIds.has(checkbox.value);
+        });
+
+        updateModalTitle(hasActiveContract);
 
         if (data.rejection_reason) {
             rejectionAlert.textContent = `Rechazado: ${data.rejection_reason}`;
@@ -221,15 +252,39 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSubmitButton();
     }
 
+    function updateModalTitle(isUpdate) {
+        if (modalTitleText) {
+            modalTitleText.textContent = isUpdate
+                ? 'Actualizar contrato'
+                : 'Asignar contrato';
+        }
+
+        if (modalIcon) {
+            modalIcon.className = isUpdate
+                ? 'ti ti-file-pencil me-2'
+                : 'ti ti-file-plus me-2';
+        }
+    }
+
     function setFormEditable(editable) {
         [contractSelect, zoneSelect, startDateInput, endDateInput, notesInput]
             .forEach((el) => {
                 el.disabled = !editable;
             });
 
+        profileCheckboxes().forEach((checkbox) => {
+            checkbox.disabled = !editable;
+        });
+
         saveCloseBtn.classList.toggle('d-none', !editable);
         nextBtn.classList.toggle('d-none', !editable);
-        submitBtn.classList.toggle('d-none', !editable || currentStep !== 3);
+        submitBtn.classList.toggle('d-none', !editable || currentStep !== TOTAL_STEPS);
+    }
+
+    function selectedProfileIds() {
+        return profileCheckboxes()
+            .filter((checkbox) => checkbox.checked)
+            .map((checkbox) => Number(checkbox.value));
     }
 
     async function saveConfiguration(closeAfter) {
@@ -243,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
             start_date: startDateInput.value || null,
             end_date: endDateInput.value || null,
             notes: notesInput.value || null,
+            profile_ids: selectedProfileIds(),
         };
 
         try {
@@ -281,8 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         prevBtn.classList.toggle('d-none', step === 1 || !canEdit);
-        nextBtn.classList.toggle('d-none', step === 3 || !canEdit);
-        submitBtn.classList.toggle('d-none', step !== 3 || !canEdit);
+        nextBtn.classList.toggle('d-none', step === TOTAL_STEPS || !canEdit);
+        submitBtn.classList.toggle('d-none', step !== TOTAL_STEPS || !canEdit);
         updateSummary();
         updateSubmitButton();
     }
@@ -337,6 +393,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const contractOption = contractSelect.selectedOptions[0];
         const zoneOption = zoneSelect.selectedOptions[0];
         const activeAlert = document.getElementById('summary-active-contract-alert');
+        const selectedProfiles = profileCheckboxes()
+            .filter((checkbox) => checkbox.checked)
+            .map((checkbox) => `${checkbox.dataset.profileCode} — ${checkbox.dataset.profileName}`);
 
         document.getElementById('summary-client-name').textContent =
             clientNameLabel.textContent || '—';
@@ -348,6 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 : '—';
         document.getElementById('summary-zone').textContent =
             zoneOption?.value ? zoneOption.textContent.trim() : 'Sin seleccionar';
+        document.getElementById('summary-profiles').textContent =
+            selectedProfiles.length > 0 ? selectedProfiles.join(', ') : 'Sin seleccionar';
         document.getElementById('summary-status').textContent =
             STATUS_LABELS[configurationStatus] || configurationStatus;
 
@@ -363,7 +424,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateSubmitButton() {
-        const ready = Boolean(contractSelect.value && zoneSelect.value && canEdit);
+        const ready = Boolean(
+            contractSelect.value
+            && zoneSelect.value
+            && selectedProfileIds().length > 0
+            && canEdit,
+        );
         submitBtn.disabled = !ready;
     }
 

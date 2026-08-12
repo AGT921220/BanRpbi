@@ -48,6 +48,7 @@
     @include('clients.configure_client_modal', [
         'contracts' => $contracts,
         'zones' => $zones,
+        'rpbiProfiles' => $rpbiProfiles,
     ])
 @endsection
 

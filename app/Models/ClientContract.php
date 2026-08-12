@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientContract extends Model
@@ -56,5 +58,20 @@ class ClientContract extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function clientContractProfiles(): HasMany
+    {
+        return $this->hasMany(ClientContractProfile::class);
+    }
+
+    public function rpbiProfiles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ClientProfile::class,
+            'client_contract_profiles',
+            'client_contract_id',
+            'rpbi_profile_id',
+        )->withTimestamps();
     }
 }

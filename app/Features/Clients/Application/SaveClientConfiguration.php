@@ -15,7 +15,8 @@ final class SaveClientConfiguration
      *     zone_id?: int|null,
      *     start_date?: string|null,
      *     end_date?: string|null,
-     *     notes?: string|null
+     *     notes?: string|null,
+     *     profile_ids?: list<int>|null
      * }  $data
      */
     public function __invoke(Client $client, array $data, ?int $userId = null): Client
@@ -35,6 +36,12 @@ final class SaveClientConfiguration
             $client->configuration_status = Client::STATUS_CONFIGURATION_PENDING;
             $client->configuration_rejection_reason = null;
             $client->save();
+
+            $pending = $client->contracts()
+                ->where('status', ClientContract::STATUS_PENDING)
+                ->latest('id')
+                ->first();
+
             if (! empty($data['contract_id'])) {
                 $payload = [
                     'contract_id' => $data['contract_id'],
@@ -45,22 +52,32 @@ final class SaveClientConfiguration
                     'user_id' => $userId,
                 ];
 
-                $pending = $client->contracts()
-                    ->where('status', ClientContract::STATUS_PENDING)
-                    ->latest('id')
-                    ->first();
-
                 if ($pending) {
                     $pending->update($payload);
                 } else {
                     // Si hay ACTIVE, esto crea el contrato de reemplazo sin tocarlo.
-                    $client->contracts()->create($payload);
+                    $pending = $client->contracts()->create($payload);
                 }
 
                 $client->configurationApprovals()->delete();
             }
 
-            return $client->fresh(['zone', 'pendingContract.contract', 'activeContract.contract']) ?? $client;
+            if (array_key_exists('profile_ids', $data)) {
+                if ($pending !== null) {
+                    $pending->rpbiProfiles()->sync($data['profile_ids'] ?? []);
+                } elseif (! empty($data['profile_ids'])) {
+                    throw ValidationException::withMessages([
+                        'profile_ids' => 'Debe asignar un contrato antes de seleccionar perfiles.',
+                    ]);
+                }
+            }
+
+            return $client->fresh([
+                'zone',
+                'pendingContract.contract',
+                'pendingContract.rpbiProfiles',
+                'activeContract.contract',
+            ]) ?? $client;
         });
     }
 }

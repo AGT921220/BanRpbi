@@ -72,6 +72,7 @@ class ClientHeaderControllerTest extends TestCase
                     'company',
                     'created_at',
                     'has_contract',
+                    'has_active_contract',
                     'has_collection_zone',
                     'configuration_status',
                     'can_update',
@@ -88,6 +89,7 @@ class ClientHeaderControllerTest extends TestCase
             ],
         ]);
         $response->assertJsonPath('data.0.has_contract', false);
+        $response->assertJsonPath('data.0.has_active_contract', false);
         $response->assertJsonPath('data.0.has_collection_zone', false);
         $response->assertJsonPath('data.0.configuration_status', 'configuration_pending');
         $response->assertJsonPath('data.0.can_update', true);

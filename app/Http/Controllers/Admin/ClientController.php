@@ -14,6 +14,7 @@ use App\Http\Requests\Admin\StoreClientRequest;
 use App\Http\Requests\Admin\SubmitClientConfigurationRequest;
 use App\Http\Requests\Admin\UpdateClientRequest;
 use App\Models\Client;
+use App\Models\ClientProfile;
 use App\Models\Contract;
 use App\Models\Zone;
 use Illuminate\Http\JsonResponse;
@@ -42,6 +43,9 @@ final class ClientController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'description']),
+            'rpbiProfiles' => ClientProfile::query()
+                ->orderBy('code')
+                ->get(['id', 'code', 'name', 'description']),
         ]);
     }
 
@@ -98,13 +102,32 @@ final class ClientController extends Controller
     {
         $this->authorize(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS);
 
-        $client->load(['zone', 'pendingContract.contract', 'activeContract.contract']);
+        $client->load([
+            'zone',
+            'pendingContract.contract',
+            'pendingContract.rpbiProfiles',
+            'activeContract.contract',
+            'activeContract.rpbiProfiles',
+        ]);
         $draft = $client->pendingContract ?? (
             $client->configuration_status === Client::STATUS_APPROVED
                 ? null
                 : $client->activeContract
         );
         $active = $client->activeContract;
+        $selectedProfileIds = $draft?->rpbiProfiles
+            ?->pluck('id')
+            ->map(static fn ($id): int => (int) $id)
+            ->values()
+            ->all() ?? [];
+
+        if ($selectedProfileIds === [] && $active?->rpbiProfiles) {
+            $selectedProfileIds = $active->rpbiProfiles
+                ->pluck('id')
+                ->map(static fn ($id): int => (int) $id)
+                ->values()
+                ->all();
+        }
 
         return response()->json([
             'id' => $client->id,
@@ -124,6 +147,7 @@ final class ClientController extends Controller
             'start_date' => $draft?->start_date?->format('Y-m-d'),
             'end_date' => $draft?->end_date?->format('Y-m-d'),
             'notes' => $draft?->notes,
+            'profile_ids' => $selectedProfileIds,
             'contract' => $draft?->contract ? [
                 'id' => $draft->contract->id,
                 'name' => $draft->contract->name,

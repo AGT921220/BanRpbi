@@ -151,6 +151,7 @@ class SearchClientHeadersTest extends TestCase
             'company' => 'Acme',
             'created_at' => $header->createdAt,
             'has_contract' => false,
+            'has_active_contract' => false,
             'has_collection_zone' => false,
             'configuration_status' => 'configuration_pending',
             'can_update' => false,

@@ -38,6 +38,12 @@ final class FinalizeClientContractConfiguration
             ]);
         }
 
+        if (! $pending->rpbiProfiles()->exists()) {
+            throw ValidationException::withMessages([
+                'profile_ids' => 'Debe seleccionar al menos un perfil RPBI antes de enviar a aprobación.',
+            ]);
+        }
+
         $client->configuration_status = Client::STATUS_PENDING_APPROVAL;
         $client->configuration_submitted_at = now();
         $client->configuration_reviewed_at = null;
