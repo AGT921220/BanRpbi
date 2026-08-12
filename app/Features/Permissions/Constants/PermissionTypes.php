@@ -24,6 +24,7 @@ final class PermissionTypes
 
     // Contratos de clientes
     public const CLIENT_CONTRACTS_APPROVE = 'client_contracts.approve';
+    public const CLIENT_CONTRACTS_REJECT = 'client_contracts.reject';
 
     // Aprobaciones
     public const APPROVALS_VIEW = 'approvals.view';

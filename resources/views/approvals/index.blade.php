@@ -79,7 +79,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-list flex-nowrap">
-                                        @can(\App\Features\Permissions\Constants\PermissionTypes::CLIENT_CONTRACTS_APPROVE)
+                                        @if($client->can_approve)
                                             <form
                                                 method="POST"
                                                 action="{{ route('approvals.approve', $client) }}"
@@ -91,9 +91,9 @@
                                                     Aprobar
                                                 </button>
                                             </form>
-                                        @endcan
+                                        @endif
 
-                                        @can(\App\Features\Permissions\Constants\PermissionTypes::APPROVALS_REJECT)
+                                        @if($client->can_reject)
                                             <button
                                                 type="button"
                                                 class="btn btn-sm btn-outline-danger"
@@ -108,7 +108,7 @@
                                 </td>
                             </tr>
 
-                            @can(\App\Features\Permissions\Constants\PermissionTypes::APPROVALS_REJECT)
+                            @if($client->can_reject)
                                 <div
                                     class="modal modal-blur fade"
                                     id="reject-client-modal-{{ $client->id }}"
@@ -159,7 +159,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            @endcan
+                            @endif
                         @empty
                             <tr>
                                 <td colspan="7" class="text-secondary text-center py-4">

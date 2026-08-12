@@ -80,7 +80,7 @@ class CreateRolesCommand extends Command
                 PermissionTypes::CONTRACTS_VIEW,
                 PermissionTypes::APPROVALS_VIEW,
                 PermissionTypes::CLIENT_CONTRACTS_APPROVE,
-                PermissionTypes::APPROVALS_REJECT,
+                PermissionTypes::CLIENT_CONTRACTS_REJECT,
                 PermissionTypes::COLLECTIONS_VIEW,
                 PermissionTypes::ROUTES_VIEW,
                 PermissionTypes::ZONES_VIEW,

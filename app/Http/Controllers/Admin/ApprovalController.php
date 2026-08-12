@@ -21,10 +21,11 @@ final class ApprovalController extends Controller
         private readonly RejectClientConfiguration $rejectClientConfiguration,
     ) {}
 
-    public function index(): View
+    public function index()
     {
         $this->authorize(PermissionTypes::APPROVALS_VIEW);
 
+        // return ($this->listPendingApprovals)();
         return view('approvals.index', [
             'clients' => ($this->listPendingApprovals)(),
             'requiredApprovalRoles' => RoleTypes::APPROVAL_DIRECTOR_ROLES,

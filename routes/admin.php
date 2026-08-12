@@ -28,12 +28,6 @@ Route::middleware('auth')->group(function (): void {
     Route::get('client-headers', [ClientHeaderController::class, 'index'])
         ->name('client-headers.index');
 
-    Route::get('approvals', [ApprovalController::class, 'index'])
-        ->name('approvals.index');
-    Route::post('approvals/{client}/approve', [ApprovalController::class, 'approve'])
-        ->name('approvals.approve');
-    Route::post('approvals/{client}/reject', [ApprovalController::class, 'reject'])
-        ->name('approvals.reject');
 
     Route::patch(
         'zones/{zone}/toggle-status',
