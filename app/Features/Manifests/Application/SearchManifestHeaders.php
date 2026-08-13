@@ -18,7 +18,8 @@ class SearchManifestHeaders
     public function __invoke(array $filters = [], int $draw = 1): array
     {
         $data = $this->builderFilter->paginate(
-            builder: Manifest::select('manifests.id', 'manifests.status', 'clients.company')
+            builder: Manifest::select('manifests.id', 'manifests.status', 'clients.company',
+            'service_date')
             ->join('services', 'manifests.service_id', '=', 'services.id')
             ->join('clients', 'services.client_id', '=', 'clients.id'),
             modifiers: $filters,
@@ -31,6 +32,7 @@ class SearchManifestHeaders
                     'id' => $manifest->id,
                     'status' => $this->resolveManifestStatus($manifest->status),
                     'client' => $manifest->company,
+                    'date'  => $manifest->service_date,
                 ];
         });
         return $data;
