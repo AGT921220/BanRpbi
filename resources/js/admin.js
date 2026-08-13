@@ -23,7 +23,6 @@ export async function get(
     loaderText = "Cargando...",
     params = {}, headers = {}, loader = true, timeout = 500,
 ) {
-    console.log('loader', loader);
     if (loader) {
         showLoader(loaderText);
     }

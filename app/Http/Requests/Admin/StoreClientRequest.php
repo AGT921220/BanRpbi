@@ -23,6 +23,11 @@ final class StoreClientRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:clients,email'],
             'phone' => ['required', 'string', 'max:30'],
             'company' => ['required', 'string', 'max:255'],
+            'rfc' => ['required', 'string', 'max:13', 'regex:/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/'],
+            'street' => ['required', 'string', 'max:255'],
+            'num_ext' => ['nullable', 'string', 'max:30'],
+            'num_int' => ['nullable', 'string', 'max:30'],
+            'postal_code' => ['required', 'string', 'max:10'],
         ];
     }
 
@@ -37,6 +42,11 @@ final class StoreClientRequest extends FormRequest
             'email' => 'correo electrónico',
             'phone' => 'teléfono',
             'company' => 'empresa',
+            'rfc' => 'RFC',
+            'street' => 'calle',
+            'num_ext' => 'número exterior',
+            'num_int' => 'número interior',
+            'postal_code' => 'código postal',
         ];
     }
 
@@ -47,6 +57,16 @@ final class StoreClientRequest extends FormRequest
     {
         return [
             'email.unique' => 'El correo electrónico ya está registrado.',
+            'rfc.regex' => 'El RFC no tiene un formato válido.',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('rfc')) {
+            $this->merge([
+                'rfc' => strtoupper(trim((string) $this->input('rfc'))),
+            ]);
+        }
     }
 }

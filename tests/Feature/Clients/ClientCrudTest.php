@@ -70,6 +70,11 @@ class ClientCrudTest extends TestCase
             'email' => 'carlos.lopez@example.com',
             'phone' => '5512345678',
             'company' => 'Acme SA',
+            'rfc' => 'LOPC800101ABC',
+            'street' => 'Av. Reforma',
+            'num_ext' => '123',
+            'num_int' => '4B',
+            'postal_code' => '06600',
         ];
 
         $response = $this->post(route('clients.store'), $payload);
@@ -93,6 +98,10 @@ class ClientCrudTest extends TestCase
                 'email' => 'duplicado@example.com',
                 'phone' => '5598765432',
                 'company' => 'Otra SA',
+                'rfc' => 'OCLC900202XYZ',
+                'street' => 'Calle Norte',
+                'num_ext' => '10',
+                'postal_code' => '64000',
             ]);
 
         $response->assertRedirect(route('clients.create'));
@@ -118,6 +127,11 @@ class ClientCrudTest extends TestCase
             'email' => 'actualizado@example.com',
             'phone' => '5511111111',
             'company' => 'Nueva Empresa',
+            'rfc' => 'PEXA850101AB1',
+            'street' => 'Calle Sur',
+            'num_ext' => '55',
+            'num_int' => null,
+            'postal_code' => '03100',
         ];
 
         $response = $this->put(route('clients.update', $client), $payload);
@@ -144,6 +158,10 @@ class ClientCrudTest extends TestCase
             'email' => 'mismo@example.com',
             'phone' => '5522222222',
             'company' => 'Empresa',
+            'rfc' => 'NOMA900101XXX',
+            'street' => 'Calle Centro',
+            'num_ext' => '1',
+            'postal_code' => '01000',
         ]);
 
         $response->assertRedirect(route('clients.index'));
@@ -193,6 +211,9 @@ class ClientCrudTest extends TestCase
                 'email' => 'no-es-email',
                 'phone' => '',
                 'company' => '',
+                'rfc' => 'BAD',
+                'street' => '',
+                'postal_code' => '',
             ]);
 
         $response->assertRedirect(route('clients.create'));
@@ -202,6 +223,9 @@ class ClientCrudTest extends TestCase
             'email',
             'phone',
             'company',
+            'rfc',
+            'street',
+            'postal_code',
         ]);
     }
 }

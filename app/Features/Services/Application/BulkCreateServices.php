@@ -4,6 +4,7 @@ namespace App\Features\Services\Application;
 
 use App\Models\Client;
 use App\Models\Contract;
+use App\Models\Manifest;
 use App\Models\Service;
 use Illuminate\Support\Carbon;
 
@@ -51,7 +52,13 @@ class BulkCreateServices
                 'updated_at' => $now,
             ];
         }
-
-
+    }
+    private function createManifestForService(int $serviceId)
+    {
+        // Implement the logic to create a manifest for the service
+        // This could involve creating a new Manifest model and associating it with the service
+        $manifest = new Manifest();
+        $manifest->service_id = $serviceId;
+        $manifest->save();
     }
 }

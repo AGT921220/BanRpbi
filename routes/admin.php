@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Admin\ManifestHeadersController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ZoneController;
@@ -10,6 +11,14 @@ use App\Http\Controllers\Api\ClientHeaderController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function (): void {
+
+Route::group(['prefix' => 'admin'], function (): void {
+Route::get('manifest-headers', [ManifestHeadersController::class, 'index'])
+        ->name('manifest-headers.index');
+    
+});
+
+
     Route::resource('users', UserController::class);
 
     Route::resource('roles', RoleController::class)

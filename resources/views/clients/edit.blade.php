@@ -13,7 +13,7 @@
 @section('content')
     <div class="container-xl">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+            <div class="col-lg-10">
                 <form
                     method="POST"
                     action="{{ route('clients.update', $client) }}"
@@ -48,3 +48,7 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    @vite('resources/js/modules/clients/form.js')
+@endpush

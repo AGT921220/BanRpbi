@@ -36,15 +36,15 @@ No imprimir la clave en consola ni confirmarla en el repositorio. `.env` ya est�
 
 1. Crear o seleccionar un proyecto en Google Cloud.
 2. Habilitar facturación para producción.
-3. Habilitar únicamente **Maps JavaScript API**.
+3. Habilitar **Maps JavaScript API** y **Places API** (autocomplete de direcciones en clientes).
 4. Crear una API Key.
 5. Restringir la llave por referentes HTTP, por ejemplo:
    - `http://localhost/*`
    - `http://localhost:8080/*`
    - `https://dominio-produccion.com/*`
-6. Restringir la llave para que solo pueda utilizar **Maps JavaScript API**.
+6. Restringir la llave para que solo pueda utilizar **Maps JavaScript API** y **Places API**.
 
-En esta primera implementación **no** se usan Geocoding API, Places API ni Routes API.
+El formulario de clientes usa Places Autocomplete para llenar calle, número y código postal.
 
 ## Assets frontend
 

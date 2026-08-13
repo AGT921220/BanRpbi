@@ -12,7 +12,12 @@ final class UpdateClient
      *     parentarl_surname: string,
      *     email: string,
      *     phone: string,
-     *     company: string
+     *     company: string,
+     *     rfc: string,
+     *     street: string,
+     *     num_ext?: string|null,
+     *     num_int?: string|null,
+     *     postal_code: string
      * }  $data
      */
     public function __invoke(Client $client, array $data): Client

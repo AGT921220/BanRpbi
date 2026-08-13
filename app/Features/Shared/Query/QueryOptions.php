@@ -24,6 +24,10 @@ final readonly class QueryOptions implements QueryModifierInterface
         );
     }
 
+    public function getType(): string
+    {
+        return $this->type;
+    }
     public static function offset(int $offset): self
     {
         return new self(

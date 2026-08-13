@@ -220,7 +220,7 @@
                                         @endcan
 
                                         @can(PermissionTypes::MANIFESTS_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('manifests.index') }}" class="dropdown-item">
                                                 <i class="ti ti-file-certificate me-2"></i>
                                                 Manifiestos
                                             </a>

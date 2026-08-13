@@ -255,6 +255,11 @@ class GenerateTestDataCommand extends Command
                 'email' => "cliente{$i}.{$this->batch}@".self::EMAIL_DOMAIN,
                 'phone' => '81'.str_pad((string) mt_rand(0, 99_999_999), 8, '0', STR_PAD_LEFT),
                 'company' => fake()->company(),
+                'rfc' => strtoupper(fake()->lexify('????').fake()->numerify('######').fake()->bothify('???')),
+                'street' => fake()->streetName(),
+                'num_ext' => (string) mt_rand(1, 9999),
+                'num_int' => mt_rand(1, 100) <= 40 ? (string) mt_rand(1, 50) : null,
+                'postal_code' => str_pad((string) mt_rand(1000, 99999), 5, '0', STR_PAD_LEFT),
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ];
