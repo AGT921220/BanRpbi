@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Features\Permissions\Constants\RoleTypes;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Spatie\Permission\Models\Role;
@@ -22,47 +23,47 @@ class CreateDemoUsersCommand extends Command
         [
             'name' => 'Administrador',
             'email' => 'admin@admin.com',
-            'role' => 'Admin',
+            'role' => RoleTypes::ADMIN,
         ],
         [
-            'name' => 'Director Ventas',
+            'name' => 'Director de Ventas',
             'email' => 'director.ventas@director.com',
-            'role' => 'Director Ventas',
+            'role' => RoleTypes::DIRECTOR_VENTAS,
         ],
         [
             'name' => 'Director General',
             'email' => 'director.general@director.com',
-            'role' => 'Director General',
+            'role' => RoleTypes::DIRECTOR_GENERAL,
         ],
         [
             'name' => 'Vendedor 1',
             'email' => 'vendedor1@ventas.com',
-            'role' => 'Ventas',
+            'role' => RoleTypes::VENTAS,
         ],
         [
             'name' => 'Vendedor 2',
             'email' => 'vendedor2@ventas.com',
-            'role' => 'Ventas',
+            'role' => RoleTypes::VENTAS,
         ],
         [
             'name' => 'Logística 1',
             'email' => 'logistica1@logistica.com',
-            'role' => 'Logística',
+            'role' => RoleTypes::LOGISTICA,
         ],
         [
             'name' => 'Chofer 1',
             'email' => 'chofer1@chofer.com',
-            'role' => 'Chofer',
+            'role' => RoleTypes::CHOFER,
         ],
         [
-            'name' => 'Facturación 1',
+            'name' => 'Administración / Facturación 1',
             'email' => 'facturacion1@facturacion.com',
-            'role' => 'Facturación',
+            'role' => RoleTypes::FACTURACION,
         ],
         [
-            'name' => 'Consulta 1',
-            'email' => 'consulta1@consulta.com',
-            'role' => 'Consulta',
+            'name' => 'Cliente 1',
+            'email' => 'cliente1@cliente.com',
+            'role' => RoleTypes::CLIENTE,
         ],
     ];
 

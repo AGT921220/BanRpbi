@@ -7,7 +7,7 @@ Se ha enviado a aprobación la configuración del cliente **{{ $client->fullName
 **Duración:** {{ $clientContract?->contract?->duration_months ?? '—' }} meses  
 **Zona:** {{ $zone?->name ?? 'Sin zona' }}
 
-Se requieren las aprobaciones de Director Ventas y Director General.
+Se requieren las aprobaciones de Director de Ventas y Director General.
 
 <x-mail::button :url="$approvalsUrl">
 Revisar aprobaciones

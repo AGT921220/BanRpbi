@@ -149,7 +149,7 @@ class PermissionHandler
             PermissionTypes::CLIENT_CONTRACTS_APPROVE => 'Aprobar contratos de clientes',
             PermissionTypes::CLIENT_CONTRACTS_REJECT => 'Rechazar contratos de clientes',
             PermissionTypes::APPROVALS_VIEW => 'Ver aprobaciones',
-            // PermissionTypes::APPROVALS_REJECT => 'Rechazar solicitudes',
+            PermissionTypes::APPROVALS_REJECT => 'Rechazar solicitudes',
 
             PermissionTypes::COLLECTIONS_VIEW => 'Ver recolecciones',
             PermissionTypes::COLLECTIONS_CREATE => 'Crear recolecciones',

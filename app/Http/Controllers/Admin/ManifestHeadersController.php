@@ -3,80 +3,36 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Features\Manifests\Application\SearchManifestHeaders;
-use App\Features\Shared\Query\QueryFilter;
 use App\Features\Shared\Query\QueryOptions;
 use App\Http\Controllers\Controller;
-use App\Models\Manifest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ManifestHeadersController extends Controller
 {
+    public function __construct(
+        private readonly SearchManifestHeaders $searchManifestHeaders,
+    ) {}
 
-    public function __construct(private readonly SearchManifestHeaders $searchManifestHeaders)
+    public function index(Request $request): JsonResponse
     {
-    }
+        $offset = max($request->integer('offset', 0), 0);
+        $limit = $request->integer('limit', 20);
 
+        if ($limit <= 0) {
+            $limit = 20;
+        }
 
-    public function index()
-    {
+        $draw = max($request->integer('draw', 1), 1);
 
-    $filters = [
-        // QueryFilter::WHERE(field: "id", value: 1),
-        // QueryOptions::orderBy(field: "id", direction: "desc"),
-        QueryOptions::limit(limit: 10),
-        QueryOptions::offset(offset: 0),
-    ];
-    return ($this->searchManifestHeaders)(
-        $filters
-    );
-    return Manifest::all();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json(
+            ($this->searchManifestHeaders)(
+                filters: [
+                    $request->input('order_by')?QueryOptions::orderBy($request->input('order_by'),
+                    $request->input('order_direction')):'asc',
+                ],
+                draw: $draw,
+            ),
+        );
     }
 }

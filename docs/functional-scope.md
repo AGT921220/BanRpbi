@@ -464,7 +464,7 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - Feature: `app/Features/Approvals/Application/{ListPendingApprovals,ApproveClientConfiguration,RejectClientConfiguration}.php`
 - Controlador: `app/Http/Controllers/Admin/ApprovalController.php`
 - Vista: `resources/views/approvals/index.blade.php`
-- Aprobación dual: roles `Director Ventas` y `Director General` (tabla `client_configuration_approvals`)
+- Aprobación dual: roles `Director de Ventas` y `Director General` (tabla `client_configuration_approvals`)
 - Reemplazo de contrato: el PENDING se activa al completar ambas aprobaciones y cancela el ACTIVE previo
 - Correo: `app/Mail/ClientConfigurationSubmitted.php` (solo al enviar a aprobación)
 - Rutas: `approvals.index`, `approvals.approve`, `approvals.reject`

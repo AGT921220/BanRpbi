@@ -37,7 +37,7 @@ final readonly class SearchClientHeaders
                 'created_at',
             ]),
             modifiers: $modifiers,
-            category: QueryModifierCategory::FILTER,
+            // category: QueryModifierCategory::FILTER,
         );
 
         $filtered = (clone $filteredQuery)->count();
@@ -45,7 +45,7 @@ final readonly class SearchClientHeaders
         $dataQuery = ($this->builderFilter)(
             builder: $filteredQuery,
             modifiers: $modifiers,
-            category: QueryModifierCategory::OPTION,
+            // category: QueryModifierCategory::OPTION,
         );
 
         $canUpdate = Gate::allows(PermissionTypes::CLIENTS_UPDATE);

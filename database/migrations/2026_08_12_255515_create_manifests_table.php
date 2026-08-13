@@ -15,6 +15,8 @@ return new class extends Migration
             $table->increments('id');
             $table->unsignedInteger('service_id');
             $table->foreign('service_id')->references('id')->on('services');
+            $table->string('status')->default('pending');
+
             $table->softDeletes();
             $table->timestamps();
         });

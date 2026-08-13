@@ -6,19 +6,19 @@ final class RoleTypes
 {
     public const ADMIN = 'Admin';
 
-    public const DIRECTOR_VENTAS = 'Director Ventas';
-
-    public const DIRECTOR_GENERAL = 'Director General';
-
     public const VENTAS = 'Ventas';
 
     public const LOGISTICA = 'Logística';
 
     public const CHOFER = 'Chofer';
 
-    public const FACTURACION = 'Facturación';
+    public const DIRECTOR_GENERAL = 'Director General';
 
-    public const CONSULTA = 'Consulta';
+    public const DIRECTOR_VENTAS = 'Director de Ventas';
+
+    public const FACTURACION = 'Administración / Facturación';
+
+    public const CLIENTE = 'Cliente';
 
     /**
      * Roles required for dual client-configuration approval.

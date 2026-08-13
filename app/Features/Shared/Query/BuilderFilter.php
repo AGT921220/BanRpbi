@@ -95,7 +95,7 @@ final class BuilderFilter
         );
 
         return [
-            'data' => $data->toArray(),
+            'data' => $data,
 
             'total' => $total,
 

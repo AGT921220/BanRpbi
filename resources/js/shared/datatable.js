@@ -47,6 +47,9 @@ const DEFAULT_LANGUAGE = {
  *   (p. ej. `'clientes'` → "Mostrando 1 a 15 de 100 clientes").
  * @param {object} [options.language={}]
  *   Sobrescrituras parciales del idioma de DataTables.
+ * @param {function} [options.ajax]
+ *   Función AJAX personalizada de DataTables `(data, callback)`.
+ *   Si se omite, se usa `get()` contra `url` / `data-url`.
  * @param {...*} options.dataTableOptions
  *   Cualquier otra opción se pasa directamente a DataTables
  *   (`pageLength`, `order`, `dom`, etc.).
@@ -69,11 +72,26 @@ export function createDataTable(target, columns, options = {}) {
         loaderText = 'Cargando',
         entityName = 'registros',
         language = {},
+        ajax,
         ...dataTableOptions
     } = options;
 
-    if (!url) {
-        console.warn('DataTable: la tabla no tiene una URL configurada.', table);
+    const ajaxFn = typeof ajax === 'function'
+        ? ajax
+        : url
+            ? (request, callback) => {
+                fetchTableData(url, request, {
+                    requestHeaders,
+                    requestParams,
+                    loader,
+                    loaderText,
+                    entityName,
+                }).then(callback);
+            }
+            : null;
+
+    if (!ajaxFn) {
+        console.warn('DataTable: la tabla no tiene una URL ni una función ajax configurada.', table);
         return null;
     }
 
@@ -84,15 +102,7 @@ export function createDataTable(target, columns, options = {}) {
         order: [[0, 'asc']],
         columns,
         language: buildLanguage(entityName, language),
-        ajax: (request, callback) => {
-            fetchTableData(url, request, {
-                requestHeaders,
-                requestParams,
-                loader,
-                loaderText,
-                entityName,
-            }).then(callback);
-        },
+        ajax: ajaxFn,
         ...dataTableOptions,
     });
 }

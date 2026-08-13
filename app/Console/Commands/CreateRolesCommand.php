@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Permissions\Constants\RoleTypes;
+use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -22,51 +24,25 @@ class CreateRolesCommand extends Command
         try {
             $permissionRegistrar->forgetCachedPermissions();
 
-            $admin = Role::findOrCreate(
-                'Admin',
-                'web'
-            );
-
-            $directorVentas = Role::findOrCreate(
-                RoleTypes::DIRECTOR_VENTAS,
-                'web'
-            );
-
-            $directorGeneral = Role::findOrCreate(
-                RoleTypes::DIRECTOR_GENERAL,
-                'web'
-            );
-
-            // Compatibilidad: usuarios del rol legado "Director".
-            $legacyDirector = Role::query()
-                ->where('name', 'Director')
-                ->where('guard_name', 'web')
-                ->first();
-
-            $sales = Role::findOrCreate(
-                'Ventas',
-                'web'
-            );
-
-            $logistics = Role::findOrCreate(
-                'Logística',
-                'web'
-            );
-
-            $driver = Role::findOrCreate(
-                'Chofer',
-                'web'
-            );
-
-            $billing = Role::findOrCreate(
+            $admin = $this->resolveRole(RoleTypes::ADMIN);
+            $ventas = $this->resolveRole(RoleTypes::VENTAS);
+            $logistica = $this->resolveRole(RoleTypes::LOGISTICA);
+            $chofer = $this->resolveRole(RoleTypes::CHOFER);
+            $directorGeneral = $this->resolveRole(RoleTypes::DIRECTOR_GENERAL);
+            $directorVentas = $this->resolveRole(RoleTypes::DIRECTOR_VENTAS, [
+                'Director Ventas',
+                'Director',
+            ]);
+            $facturacion = $this->resolveRole(RoleTypes::FACTURACION, [
                 'Facturación',
-                'web'
-            );
-
-            $query = Role::findOrCreate(
+            ]);
+            $cliente = $this->resolveRole(RoleTypes::CLIENTE, [
                 'Consulta',
-                'web'
-            );
+            ]);
+
+            $this->migrateApprovalRoleNames([
+                'Director Ventas' => RoleTypes::DIRECTOR_VENTAS,
+            ]);
 
             $admin->syncPermissions(
                 Permission::query()
@@ -74,134 +50,13 @@ class CreateRolesCommand extends Command
                     ->get()
             );
 
-            $directorPermissions = [
-                PermissionTypes::DASHBOARD_VIEW,
-                PermissionTypes::CLIENTS_VIEW,
-                PermissionTypes::CONTRACTS_VIEW,
-                PermissionTypes::APPROVALS_VIEW,
-                PermissionTypes::CLIENT_CONTRACTS_APPROVE,
-                PermissionTypes::CLIENT_CONTRACTS_REJECT,
-                PermissionTypes::COLLECTIONS_VIEW,
-                PermissionTypes::ROUTES_VIEW,
-                PermissionTypes::ZONES_VIEW,
-                PermissionTypes::MANIFESTS_VIEW,
-                PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
-                PermissionTypes::BATCHES_VIEW,
-                PermissionTypes::CERTIFICATES_VIEW,
-                PermissionTypes::LOGBOOKS_VIEW,
-                PermissionTypes::INVOICES_VIEW,
-                PermissionTypes::PAYMENTS_VIEW,
-                PermissionTypes::REPORTS_VIEW,
-                PermissionTypes::REPORTS_EXPORT,
-                PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
-                PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
-                PermissionTypes::PROFILE_VIEW,
-                PermissionTypes::PROFILE_UPDATE,
-            ];
-
-            $directorVentas->syncPermissions($directorPermissions);
-            $directorGeneral->syncPermissions($directorPermissions);
-
-            if ($legacyDirector !== null) {
-                \App\Models\User::role('Director')->each(function (\App\Models\User $user) use ($directorVentas): void {
-                    $user->removeRole('Director');
-                    $user->assignRole($directorVentas);
-                });
-                $legacyDirector->delete();
-            }
-
-            $sales->syncPermissions([
-                PermissionTypes::DASHBOARD_VIEW,
-                PermissionTypes::CLIENTS_VIEW,
-                PermissionTypes::CLIENTS_CREATE,
-                PermissionTypes::CLIENTS_UPDATE,
-                PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
-                PermissionTypes::CONTRACTS_VIEW,
-                PermissionTypes::CONTRACTS_CREATE,
-                PermissionTypes::CONTRACTS_UPDATE,
-                PermissionTypes::CONTRACTS_DELETE,
-                PermissionTypes::CONTRACTS_RENEW,
-                PermissionTypes::APPROVALS_VIEW,
-                PermissionTypes::ZONES_VIEW,
-                PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
-                PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
-                PermissionTypes::PROFILE_VIEW,
-                PermissionTypes::PROFILE_UPDATE,
-            ]);
-
-            $logistics->syncPermissions([
-                PermissionTypes::DASHBOARD_VIEW,
-                PermissionTypes::COLLECTIONS_VIEW,
-                PermissionTypes::COLLECTIONS_CREATE,
-                PermissionTypes::COLLECTIONS_UPDATE,
-                PermissionTypes::ROUTES_VIEW,
-                PermissionTypes::ROUTES_CREATE,
-                PermissionTypes::ROUTES_UPDATE,
-                PermissionTypes::ROUTES_ASSIGN,
-                PermissionTypes::ZONES_VIEW,
-                PermissionTypes::ZONES_CREATE,
-                PermissionTypes::ZONES_UPDATE,
-                PermissionTypes::ZONES_DELETE,
-                PermissionTypes::MANIFESTS_VIEW,
-                PermissionTypes::MANIFESTS_CREATE,
-                PermissionTypes::MANIFESTS_UPDATE,
-                PermissionTypes::MANIFESTS_DOWNLOAD,
-                PermissionTypes::MANIFESTS_PRINT,
-                PermissionTypes::PROFILE_VIEW,
-                PermissionTypes::PROFILE_UPDATE,
-            ]);
-
-            $driver->syncPermissions([
-                PermissionTypes::DASHBOARD_VIEW,
-                PermissionTypes::COLLECTIONS_VIEW,
-                PermissionTypes::COLLECTIONS_COMPLETE,
-                PermissionTypes::ROUTES_VIEW,
-                PermissionTypes::WASTE_CAPTURE_VIEW,
-                PermissionTypes::WASTE_CAPTURE_CREATE,
-                PermissionTypes::WASTE_CAPTURE_UPDATE,
-                PermissionTypes::WASTE_CAPTURE_UPLOAD_PHOTOS,
-                PermissionTypes::DRIVER_SHIFTS_VIEW,
-                PermissionTypes::DRIVER_SHIFTS_START,
-                PermissionTypes::DRIVER_SHIFTS_FINISH,
-                PermissionTypes::PROFILE_VIEW,
-                PermissionTypes::PROFILE_UPDATE,
-            ]);
-
-            $billing->syncPermissions([
-                PermissionTypes::DASHBOARD_VIEW,
-                PermissionTypes::CLIENTS_VIEW,
-                PermissionTypes::MANIFESTS_VIEW,
-                PermissionTypes::CERTIFICATES_VIEW,
-                PermissionTypes::CERTIFICATES_DOWNLOAD,
-                PermissionTypes::INVOICES_VIEW,
-                PermissionTypes::INVOICES_CREATE,
-                PermissionTypes::INVOICES_CANCEL,
-                PermissionTypes::INVOICES_DOWNLOAD_PDF,
-                PermissionTypes::INVOICES_DOWNLOAD_XML,
-                PermissionTypes::PAYMENTS_VIEW,
-                PermissionTypes::PAYMENTS_CREATE,
-                PermissionTypes::PAYMENTS_UPDATE,
-                PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
-                PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
-                PermissionTypes::PROFILE_VIEW,
-                PermissionTypes::PROFILE_UPDATE,
-            ]);
-
-            $query->syncPermissions([
-                PermissionTypes::DASHBOARD_VIEW,
-                PermissionTypes::CLIENTS_VIEW,
-                PermissionTypes::CONTRACTS_VIEW,
-                PermissionTypes::COLLECTIONS_VIEW,
-                PermissionTypes::ROUTES_VIEW,
-                PermissionTypes::MANIFESTS_VIEW,
-                PermissionTypes::CERTIFICATES_VIEW,
-                PermissionTypes::LOGBOOKS_VIEW,
-                PermissionTypes::REPORTS_VIEW,
-                PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
-                PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
-                PermissionTypes::PROFILE_VIEW,
-                PermissionTypes::PROFILE_UPDATE,
-            ]);
+            $directorGeneral->syncPermissions($this->directorGeneralPermissions());
+            $directorVentas->syncPermissions($this->directorVentasPermissions());
+            $ventas->syncPermissions($this->ventasPermissions());
+            $logistica->syncPermissions($this->logisticaPermissions());
+            $chofer->syncPermissions($this->choferPermissions());
+            $facturacion->syncPermissions($this->facturacionPermissions());
+            $cliente->syncPermissions($this->clientePermissions());
 
             $permissionRegistrar->forgetCachedPermissions();
 
@@ -220,5 +75,223 @@ class CreateRolesCommand extends Command
 
             return self::FAILURE;
         }
+    }
+
+    /**
+     * @param  list<string>  $legacyNames
+     */
+    private function resolveRole(string $name, array $legacyNames = []): Role
+    {
+        $role = Role::findOrCreate($name, 'web');
+
+        foreach ($legacyNames as $legacyName) {
+            if ($legacyName === $name) {
+                continue;
+            }
+
+            $legacy = Role::query()
+                ->where('name', $legacyName)
+                ->where('guard_name', 'web')
+                ->first();
+
+            if ($legacy === null) {
+                continue;
+            }
+
+            User::role($legacyName)->each(function (User $user) use ($role, $legacyName): void {
+                $user->removeRole($legacyName);
+                $user->assignRole($role);
+            });
+
+            $legacy->delete();
+            $this->components->info("Rol \"{$legacyName}\" migrado a \"{$name}\".");
+        }
+
+        return $role;
+    }
+
+    /**
+     * @param  array<string, string>  $renames
+     */
+    private function migrateApprovalRoleNames(array $renames): void
+    {
+        if (! DB::getSchemaBuilder()->hasTable('client_configuration_approvals')) {
+            return;
+        }
+
+        foreach ($renames as $legacyName => $newName) {
+            DB::table('client_configuration_approvals')
+                ->where('role_name', $legacyName)
+                ->update(['role_name' => $newName]);
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function directorGeneralPermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::CLIENTS_VIEW,
+            PermissionTypes::CONTRACTS_VIEW,
+            PermissionTypes::APPROVALS_VIEW,
+            PermissionTypes::APPROVALS_REJECT,
+            PermissionTypes::CLIENT_CONTRACTS_APPROVE,
+            PermissionTypes::CLIENT_CONTRACTS_REJECT,
+            PermissionTypes::COLLECTIONS_VIEW,
+            PermissionTypes::ROUTES_VIEW,
+            PermissionTypes::ZONES_VIEW,
+            PermissionTypes::MANIFESTS_VIEW,
+            PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
+            PermissionTypes::BATCHES_VIEW,
+            PermissionTypes::CERTIFICATES_VIEW,
+            PermissionTypes::LOGBOOKS_VIEW,
+            PermissionTypes::INVOICES_VIEW,
+            PermissionTypes::PAYMENTS_VIEW,
+            PermissionTypes::REPORTS_VIEW,
+            PermissionTypes::REPORTS_EXPORT,
+            PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
+            PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function directorVentasPermissions(): array
+    {
+        return array_values(array_unique([
+            ...$this->directorGeneralPermissions(),
+            ...$this->ventasPermissions(),
+        ]));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function ventasPermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::CLIENTS_VIEW,
+            PermissionTypes::CLIENTS_CREATE,
+            PermissionTypes::CLIENTS_UPDATE,
+            PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
+            PermissionTypes::CONTRACTS_VIEW,
+            PermissionTypes::CONTRACTS_CREATE,
+            PermissionTypes::CONTRACTS_UPDATE,
+            PermissionTypes::CONTRACTS_DELETE,
+            PermissionTypes::CONTRACTS_RENEW,
+            PermissionTypes::APPROVALS_VIEW,
+            PermissionTypes::ZONES_VIEW,
+            PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
+            PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function logisticaPermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::COLLECTIONS_VIEW,
+            PermissionTypes::COLLECTIONS_CREATE,
+            PermissionTypes::COLLECTIONS_UPDATE,
+            PermissionTypes::COLLECTIONS_DELETE,
+            PermissionTypes::ROUTES_VIEW,
+            PermissionTypes::ROUTES_CREATE,
+            PermissionTypes::ROUTES_UPDATE,
+            PermissionTypes::ROUTES_ASSIGN,
+            PermissionTypes::ZONES_VIEW,
+            PermissionTypes::ZONES_CREATE,
+            PermissionTypes::ZONES_UPDATE,
+            PermissionTypes::ZONES_DELETE,
+            PermissionTypes::MANIFESTS_VIEW,
+            PermissionTypes::MANIFESTS_CREATE,
+            PermissionTypes::MANIFESTS_UPDATE,
+            PermissionTypes::MANIFESTS_DOWNLOAD,
+            PermissionTypes::MANIFESTS_PRINT,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function choferPermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::COLLECTIONS_VIEW,
+            PermissionTypes::COLLECTIONS_UPDATE,
+            PermissionTypes::COLLECTIONS_COMPLETE,
+            PermissionTypes::ROUTES_VIEW,
+            PermissionTypes::WASTE_CAPTURE_VIEW,
+            PermissionTypes::WASTE_CAPTURE_CREATE,
+            PermissionTypes::WASTE_CAPTURE_UPDATE,
+            PermissionTypes::WASTE_CAPTURE_UPLOAD_PHOTOS,
+            PermissionTypes::DRIVER_SHIFTS_VIEW,
+            PermissionTypes::DRIVER_SHIFTS_START,
+            PermissionTypes::DRIVER_SHIFTS_FINISH,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function facturacionPermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::CLIENTS_VIEW,
+            PermissionTypes::MANIFESTS_VIEW,
+            PermissionTypes::MANIFESTS_DOWNLOAD,
+            PermissionTypes::CERTIFICATES_VIEW,
+            PermissionTypes::CERTIFICATES_DOWNLOAD,
+            PermissionTypes::INVOICES_VIEW,
+            PermissionTypes::INVOICES_CREATE,
+            PermissionTypes::INVOICES_CANCEL,
+            PermissionTypes::INVOICES_DOWNLOAD_PDF,
+            PermissionTypes::INVOICES_DOWNLOAD_XML,
+            PermissionTypes::PAYMENTS_VIEW,
+            PermissionTypes::PAYMENTS_CREATE,
+            PermissionTypes::PAYMENTS_UPDATE,
+            PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
+            PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function clientePermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::CONTRACTS_VIEW,
+            PermissionTypes::MANIFESTS_VIEW,
+            PermissionTypes::MANIFESTS_DOWNLOAD,
+            PermissionTypes::CERTIFICATES_VIEW,
+            PermissionTypes::CERTIFICATES_DOWNLOAD,
+            PermissionTypes::INVOICES_VIEW,
+            PermissionTypes::INVOICES_DOWNLOAD_PDF,
+            PermissionTypes::INVOICES_DOWNLOAD_XML,
+            PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
+            PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
     }
 }

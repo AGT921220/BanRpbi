@@ -15,7 +15,7 @@
 
             <div class="card-body border-bottom">
                 <p class="text-secondary mb-0">
-                    Se requieren las aprobaciones de <strong>Director Ventas</strong> y
+                    Se requieren las aprobaciones de <strong>Director de Ventas</strong> y
                     <strong>Director General</strong>. Al completar ambas, el contrato pendiente
                     reemplaza al vigente (si existe).
                 </p>

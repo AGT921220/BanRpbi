@@ -73,7 +73,7 @@ class ApprovalsTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('approvals.index');
         $response->assertSee('Clientes pendientes de aprobación');
-        $response->assertSee('Director Ventas');
+        $response->assertSee('Director de Ventas');
         $response->assertSee('Director General');
     }
 

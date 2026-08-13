@@ -3,10 +3,6 @@
 @section('title', 'Manifiestos')
 @section('page-title', 'Manifiestos')
 
-@section('page-actions')
-
-@endsection
-
 @section('content')
     <div class="container-xl">
         <div class="card">
@@ -20,17 +16,15 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table
-                        id="clients-table"
+                        id="manifests-table"
                         class="table table-vcenter card-table w-100"
-                        data-url="{{ route('client-headers.index') }}"
+                        data-url="{{ route('manifest-headers.index') }}"
                     >
                         <thead>
                             <tr>
-                                <th>Nombre</th>
-                                <th>Correo</th>
-                                <th>Teléfono</th>
-                                <th>Empresa</th>
-                                <th>Creado</th>
+                                <th>N° Manifiesto</th>
+                                <th>Status</th>
+                                <th>Cliente</th>
                                 <th class="w-1">Acciones</th>
                             </tr>
                         </thead>
@@ -40,8 +34,6 @@
             </div>
         </div>
     </div>
-
-
 @endsection
 
 @push('scripts')

@@ -25,7 +25,7 @@ final class ApproveClientConfiguration
 
         if ($approverRole === null) {
             throw ValidationException::withMessages([
-                'role' => 'Solo Director Ventas o Director General pueden aprobar.',
+                'role' => 'Solo Director de Ventas o Director General pueden aprobar.',
             ]);
         }
 
