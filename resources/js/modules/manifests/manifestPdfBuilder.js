@@ -66,7 +66,6 @@ export function buildManifest(doc, manifest, img) {
     doc.setFont("bold")
     let page = i + 1
     doc.text(185, 40, page + '/4');
-    return doc
     
     doc.setFont("normal")
     doc.text(22, 44, '4- NOMBRE O RAZÓN SOCIAL DEL GENERADOR:');
@@ -107,7 +106,7 @@ export function buildManifest(doc, manifest, img) {
 
 
     doc.setFont("bold")
-    doc.text(40, 48, client.cp);
+    doc.text(40, 48, client.postal_code);
     doc.text(60, 48, client.street);
 
     doc.setFontSize(6);
@@ -129,17 +128,17 @@ export function buildManifest(doc, manifest, img) {
 
     doc.setFont("bold")
 
-    if (client.colonia.length > 35) {
+    if (client.colony.length > 35) {
       doc.setFontSize(6);
     }
-    if (client.colonia.length > 42) {
+    if (client.colony.length > 42) {
       doc.setFontSize(5.5);
     }
-    doc.text(35, 52, client.colonia);
+    doc.text(35, 52, client.colony);
     doc.setFontSize(7);
 
-    doc.text(125, 52, client.city.name);
-    doc.text(175, 52, client.city.state.name);
+    doc.text(125, 52, client.city);
+    doc.text(175, 52, client.city.state);
     doc.rect(19, 53, 180, 0, 'S');
 
 
@@ -218,6 +217,7 @@ export function buildManifest(doc, manifest, img) {
     doc.rect(124, 66, 0, 5, 'S');
     // doc.rect(129, 66, 0, 5, 'S');
 
+    return doc
 
 
     var initialPosition = 75

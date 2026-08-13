@@ -84,6 +84,9 @@ function fillAddressFields(place) {
     const numExtInput = document.getElementById('client-num-ext');
     const numIntInput = document.getElementById('client-num-int');
     const postalCodeInput = document.getElementById('client-postal-code');
+    const colonyInput = document.getElementById('client-colony');
+    const cityInput = document.getElementById('client-city');
+    const stateInput = document.getElementById('client-state');
 
     if (!streetInput || !numExtInput || !numIntInput || !postalCodeInput) {
         return;
@@ -101,6 +104,18 @@ function fillAddressFields(place) {
         'sublocality',
         'colloquial_area',
     ]);
+    const colony = firstComponentValue(components, [
+        'neighborhood',
+        'sublocality_level_1',
+        'sublocality',
+        'colloquial_area',
+    ]);
+    const city = firstComponentValue(components, [
+        'locality',
+        'postal_town',
+        'administrative_area_level_2',
+    ]);
+    const state = componentValue(components, 'administrative_area_level_1');
 
     // Residenciales / fraccionamientos a menudo no traen "route".
     streetInput.value = route
@@ -118,10 +133,25 @@ function fillAddressFields(place) {
         postalCodeInput.value = postalCode;
     }
 
+    if (colony && colonyInput) {
+        colonyInput.value = colony;
+    }
+
+    if (city && cityInput) {
+        cityInput.value = city;
+    }
+
+    if (state && stateInput) {
+        stateInput.value = state;
+    }
+
     streetInput.dispatchEvent(new Event('input', { bubbles: true }));
     numExtInput.dispatchEvent(new Event('input', { bubbles: true }));
     numIntInput.dispatchEvent(new Event('input', { bubbles: true }));
     postalCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+    colonyInput?.dispatchEvent(new Event('input', { bubbles: true }));
+    cityInput?.dispatchEvent(new Event('input', { bubbles: true }));
+    stateInput?.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 async function initAddressAutocomplete() {

@@ -177,6 +177,7 @@
                                 PermissionTypes::COLLECTIONS_VIEW,
                                 PermissionTypes::ROUTES_VIEW,
                                 PermissionTypes::ZONES_VIEW,
+                                PermissionTypes::DRIVERS_VIEW,
                                 PermissionTypes::MANIFESTS_VIEW,
                             ])
                                 <li class="nav-item dropdown">
@@ -218,6 +219,11 @@
                                                 Zonas
                                             </a>
                                         @endcan
+
+                                        <a href="{{ route('drivers.index') }}" class="dropdown-item">
+                                            <i class="ti ti-steering-wheel me-2"></i>
+                                            Choferes
+                                        </a>
 
                                         @can(PermissionTypes::MANIFESTS_VIEW)
                                             <a href="{{ route('manifests.index') }}" class="dropdown-item">

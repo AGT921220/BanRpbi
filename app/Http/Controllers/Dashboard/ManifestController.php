@@ -22,16 +22,28 @@ class ManifestController extends Controller
     private function getManifest(int $manifestId): array
     {
         $manifest = Manifest::with(['service' => function ($q) {
-                $q->select(['id', 'client_id']);
-                $q->with(['client' => function ($q) {
-                    $q->select(['id', 'nra']);
-                }]);
-            }])
+            $q->select(['id', 'client_id']);
+            $q->with(['client' => function ($q) {
+                $q->select([
+                    'id',
+                    'company as name',
+                    'nra',
+                    'postal_code',
+                    'street',
+                    'num_ext',
+                    'num_int',
+                    'colony',
+                    'state',
+                    'city'
+                ]);
+            }]);
+        }])
             ->findOrFail($manifestId);
         return [
             'folio' => $manifest->id,
             'client' => $manifest->service->client,
             'driver' => 'TEST',
+            'test' => config('business'),
             'transportista' => 'TEST',
         ];
     }

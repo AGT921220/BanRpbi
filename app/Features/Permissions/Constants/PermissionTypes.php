@@ -49,6 +49,12 @@ final class PermissionTypes
     public const ZONES_UPDATE = 'zones.update';
     public const ZONES_DELETE = 'zones.delete';
 
+    // Choferes
+    public const DRIVERS_VIEW = 'drivers.view';
+    public const DRIVERS_CREATE = 'drivers.create';
+    public const DRIVERS_UPDATE = 'drivers.update';
+    public const DRIVERS_DELETE = 'drivers.delete';
+
     // Manifiestos
     public const MANIFESTS_VIEW = 'manifests.view';
     public const MANIFESTS_CREATE = 'manifests.create';

@@ -147,3 +147,27 @@
     maxlength="10"
     required
 />
+
+<x-form.input
+    name="colony"
+    id="client-colony"
+    label="Colonia"
+    icon="ti ti-building-community"
+    :value="old('colony', $client?->colony)"
+/>
+
+<x-form.input
+    name="city"
+    id="client-city"
+    label="Ciudad"
+    icon="ti ti-building"
+    :value="old('city', $client?->city)"
+/>
+
+<x-form.input
+    name="state"
+    id="client-state"
+    label="Estado"
+    icon="ti ti-map-2"
+    :value="old('state', $client?->state)"
+/>

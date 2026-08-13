@@ -38,4 +38,9 @@ class Zone extends Model
     {
         return $this->hasMany(Client::class);
     }
+
+    public function drivers(): HasMany
+    {
+        return $this->hasMany(Driver::class);
+    }
 }

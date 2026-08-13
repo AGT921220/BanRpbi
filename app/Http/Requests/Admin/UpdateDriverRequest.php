@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use App\Features\Permissions\Constants\PermissionTypes;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+final class UpdateDriverRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()?->can(PermissionTypes::DRIVERS_UPDATE) ?? false;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'parentarl_surname' => ['required', 'string', 'max:255'],
+            'maternal_surname' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:30'],
+            'zone_id' => ['required', 'integer', Rule::exists('zones', 'id')],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'nombre',
+            'parentarl_surname' => 'apellido paterno',
+            'maternal_surname' => 'apellido materno',
+            'phone' => 'teléfono',
+            'zone_id' => 'zona',
+        ];
+    }
+}

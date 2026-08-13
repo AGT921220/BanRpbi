@@ -19,7 +19,16 @@ return new class extends Migration
             $table->string('email');
             $table->string('phone');
             $table->string('company');
-            $table->timestamps();            
+            $table->string('rfc', 13)->nullable()->after('company');
+            $table->string('street')->nullable()->after('rfc');
+            $table->string('num_ext', 30)->nullable()->after('street');
+            $table->string('num_int', 30)->nullable()->after('num_ext');
+            $table->string('postal_code', 10)->nullable()->after('num_int');
+            $table->string('colony')->nullable()->after('postal_code');
+            $table->string('city')->nullable()->after('colony');
+            $table->string('state')->nullable()->after('city');
+
+            $table->timestamps();
         });
     }
 

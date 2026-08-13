@@ -1,0 +1,26 @@
+---
+description: Vistas index con DataTable server-side como manifiestos
+alwaysApply: true
+---
+
+# Index DataTable (patrón manifiestos)
+
+Cuando pidan una vista **index**, copia la **estructura y sintaxis** de manifiestos. No reutilices `manifests-table` ni `manifests/index.js`; crea los de la entidad. No uses `LengthAwarePaginator` ni Blade `@forelse`.
+
+## Frontend
+
+- Vista como `dashboard/manifests/index.blade.php`: card + `#entidad-table` + `data-url` al headers + `<tbody>` vacío.
+- JS propio (`resources/js/modules/{entidad}/index.js`) con la misma forma que `manifests/index.js`:
+  - `$(function () { createDataTable(...) })`
+  - columnas con `data`, `name`, `orderSequence`
+  - `ajax` custom: `fetch` con `offset`, `limit`, `draw`; orden → `order_by` + `order_direction`
+  - callback `{ draw, recordsTotal, recordsFiltered, data }`
+- Registrar el JS en `vite.config.js`.
+
+## Backend
+
+- `{Entity}HeadersController` en **Admin** (`app/Http/Controllers/Admin/`), como `ManifestHeadersController`: `offset`, `limit`, `draw` + `QueryOptions::orderBy`. Admin es solo para fetch del portal, no de la app.
+- El CRUD (páginas) vive en **Dashboard** (`Dashboard\DriverController`).
+- `Search{Entity}Headers` + `BuilderFilter::paginate` (no `List*` con paginator).
+- Ruta headers en `web.php` (p. ej. `driver-headers`).
+- Solo columnas reales. No correr migraciones salvo que lo pidan.

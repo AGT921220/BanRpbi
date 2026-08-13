@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/modules/zones/form.js',
                 'resources/js/modules/clients/index.js',
                 'resources/js/modules/clients/form.js',
+                'resources/js/modules/drivers/index.js',
                 'resources/js/modules/manifests/index.js',
                 'resources/js/modules/manifests/manifestPdf.js',
                 'resources/js/modules/manifests/manifestPdfBuilder.js',

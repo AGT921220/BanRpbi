@@ -49,6 +49,11 @@ class PermissionHandler
             PermissionTypes::ZONES_UPDATE,
             PermissionTypes::ZONES_DELETE,
 
+            PermissionTypes::DRIVERS_VIEW,
+            PermissionTypes::DRIVERS_CREATE,
+            PermissionTypes::DRIVERS_UPDATE,
+            PermissionTypes::DRIVERS_DELETE,
+
             PermissionTypes::MANIFESTS_VIEW,
             PermissionTypes::MANIFESTS_CREATE,
             PermissionTypes::MANIFESTS_UPDATE,
@@ -166,6 +171,11 @@ class PermissionHandler
             PermissionTypes::ZONES_CREATE => 'Crear zonas',
             PermissionTypes::ZONES_UPDATE => 'Editar zonas',
             PermissionTypes::ZONES_DELETE => 'Eliminar zonas',
+
+            PermissionTypes::DRIVERS_VIEW => 'Ver choferes',
+            PermissionTypes::DRIVERS_CREATE => 'Crear choferes',
+            PermissionTypes::DRIVERS_UPDATE => 'Editar choferes',
+            PermissionTypes::DRIVERS_DELETE => 'Eliminar choferes',
 
             PermissionTypes::MANIFESTS_VIEW => 'Ver manifiestos',
             PermissionTypes::MANIFESTS_CREATE => 'Crear manifiestos',
@@ -304,6 +314,7 @@ class PermissionHandler
             'collections' => 'Recolecciones',
             'routes' => 'Rutas',
             'zones' => 'Zonas',
+            'drivers' => 'Choferes',
             'manifests' => 'Manifiestos',
             'waste_capture' => 'Captura de residuos',
             'driver_shifts' => 'Jornadas de chofer',

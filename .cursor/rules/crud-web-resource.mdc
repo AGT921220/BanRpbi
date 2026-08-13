@@ -1,0 +1,45 @@
+---
+description: CRUDs nuevos como clients, Route::resource en web.php
+alwaysApply: true
+---
+
+# CRUD resource en web.php
+
+Todo CRUD nuevo sigue el de **clients** y se registra en `routes/web.php`.
+
+## Controllers
+
+- **Dashboard** (`app/Http/Controllers/Dashboard/`): CRUD de páginas del portal (index/create/edit/store/update/destroy). Ejemplo: `Dashboard\DriverController`.
+- **Admin** (`app/Http/Controllers/Admin/`): solo peticiones **fetch** del portal (headers/DataTable), no de la app móvil. Ejemplo: `Admin\DriverHeadersController`.
+
+No pongas el resource CRUD en `Admin`.
+
+## Rutas
+
+Dentro del grupo `auth` de `web.php`:
+
+```php
+use App\Http\Controllers\Admin\DriverHeadersController;
+use App\Http\Controllers\Dashboard\DriverController;
+
+Route::get('driver-headers', [DriverHeadersController::class, 'index'])
+    ->name('driver-headers.index');
+Route::resource('drivers', DriverController::class)->except(['show']);
+```
+
+No uses `admin.php` para resources nuevos.
+
+## Estructura
+
+- Use cases en `app/Features/{Entity}/Application/` (`Create`, `Update`, `Delete`).
+- El index usa `Search{Entity}Headers` + `{Entity}HeadersController` en **Admin** (mismo patrón que manifiestos), no `List*` con paginator.
+- `Store{Entity}Request` / `Update{Entity}Request` con `authorize()` + `PermissionTypes`.
+- Vistas Blade: `index`, `create`, `edit`, `_form` con `x-form.input` e iconos Tabler (`ti ti-*`).
+- Modelo: `$fillable` y relaciones solo de la migración. Factory + test Feature.
+- Permisos: `{entities}.view|create|update|delete` en `PermissionTypes` y `PermissionHandler`.
+
+## Alcance
+
+- Solo los campos de la migración/modelo. No inventar.
+- El index del CRUD sigue la regla de manifiestos (headers + `createDataTable` + fetch).
+- No correr migraciones ni setup extra salvo que lo pidan.
