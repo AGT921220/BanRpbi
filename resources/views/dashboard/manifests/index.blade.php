@@ -38,4 +38,6 @@
 
 @push('scripts')
     @vite('resources/js/modules/manifests/index.js')
+    @vite('resources/js/modules/manifests/manifestPdf.js')
+    @vite('resources/js/modules/manifests/manifestPdfBuilder.js')
 @endpush

@@ -13,11 +13,16 @@ final class UpdateClient
      *     email: string,
      *     phone: string,
      *     company: string,
+     *     nra: string,
      *     rfc: string,
      *     street: string,
      *     num_ext?: string|null,
      *     num_int?: string|null,
-     *     postal_code: string
+     *     postal_code: string,
+     *     maps_url?: string|null,
+     *     maps_place_id?: string|null,
+     *     latitude?: float|null,
+     *     longitude?: float|null
      * }  $data
      */
     public function __invoke(Client $client, array $data): Client

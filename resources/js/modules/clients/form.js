@@ -53,6 +53,32 @@ function firstComponentValue(components, types) {
     return '';
 }
 
+function fillMapsLocation(place) {
+    const mapsUrlInput = document.getElementById('client-maps-url');
+    const placeIdInput = document.getElementById('client-maps-place-id');
+    const latitudeInput = document.getElementById('client-latitude');
+    const longitudeInput = document.getElementById('client-longitude');
+
+    if (!mapsUrlInput || !placeIdInput || !latitudeInput || !longitudeInput) {
+        return;
+    }
+
+    const location = place?.geometry?.location;
+    const latitude = typeof location?.lat === 'function' ? location.lat() : location?.lat;
+    const longitude = typeof location?.lng === 'function' ? location.lng() : location?.lng;
+    const mapsUrl = place?.url
+        || (Number.isFinite(latitude) && Number.isFinite(longitude)
+            ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+            : (place?.place_id
+                ? `https://www.google.com/maps/search/?api=1&query=place_id:${place.place_id}`
+                : ''));
+
+    mapsUrlInput.value = mapsUrl;
+    placeIdInput.value = place?.place_id || '';
+    latitudeInput.value = Number.isFinite(latitude) ? String(latitude) : '';
+    longitudeInput.value = Number.isFinite(longitude) ? String(longitude) : '';
+}
+
 function fillAddressFields(place) {
     const streetInput = document.getElementById('client-street');
     const numExtInput = document.getElementById('client-num-ext');
@@ -125,7 +151,7 @@ async function initAddressAutocomplete() {
 
         // Sin types: ['address'] para incluir residenciales, fraccionamientos y POIs.
         const autocomplete = new Autocomplete(searchInput, {
-            fields: ['address_components', 'formatted_address', 'name', 'geometry'],
+            fields: ['address_components', 'formatted_address', 'name', 'geometry', 'place_id', 'url'],
             componentRestrictions: { country: 'mx' },
         });
 
@@ -140,6 +166,7 @@ async function initAddressAutocomplete() {
 
             hideAddressError();
             fillAddressFields(place);
+            fillMapsLocation(place);
 
             if (place.formatted_address) {
                 searchInput.value = place.formatted_address;

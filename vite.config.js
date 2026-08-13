@@ -15,6 +15,9 @@ export default defineConfig({
                 'resources/js/modules/clients/index.js',
                 'resources/js/modules/clients/form.js',
                 'resources/js/modules/manifests/index.js',
+                'resources/js/modules/manifests/manifestPdf.js',
+                'resources/js/modules/manifests/manifestPdfBuilder.js',
+                'resources/js/test.js'
             ],
             refresh: true,
             fonts: [

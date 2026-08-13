@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Dashboard\ManifestController;
+use App\Http\Controllers\Dashboard\TestController;
 use Illuminate\Support\Facades\Route;
+
+        Route::resource('test', TestController::class)->only(['index']);
 
 Route::redirect('/', '/dashboard');
 

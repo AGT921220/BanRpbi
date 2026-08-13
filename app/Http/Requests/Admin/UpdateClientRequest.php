@@ -29,11 +29,16 @@ final class UpdateClientRequest extends FormRequest
             ],
             'phone' => ['required', 'string', 'max:30'],
             'company' => ['required', 'string', 'max:255'],
+            'nra' => ['required', 'string', 'max:255'],
             'rfc' => ['required', 'string', 'max:13', 'regex:/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/'],
             'street' => ['required', 'string', 'max:255'],
             'num_ext' => ['nullable', 'string', 'max:30'],
             'num_int' => ['nullable', 'string', 'max:30'],
             'postal_code' => ['required', 'string', 'max:10'],
+            'maps_url' => ['nullable', 'string', 'max:2048'],
+            'maps_place_id' => ['nullable', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ];
     }
 
@@ -48,11 +53,16 @@ final class UpdateClientRequest extends FormRequest
             'email' => 'correo electrónico',
             'phone' => 'teléfono',
             'company' => 'empresa',
+            'nra' => 'NRA',
             'rfc' => 'RFC',
             'street' => 'calle',
             'num_ext' => 'número exterior',
             'num_int' => 'número interior',
             'postal_code' => 'código postal',
+            'maps_url' => 'enlace de Google Maps',
+            'maps_place_id' => 'lugar de Google Maps',
+            'latitude' => 'latitud',
+            'longitude' => 'longitud',
         ];
     }
 

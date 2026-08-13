@@ -48,6 +48,15 @@
 />
 
 <x-form.input
+    name="nra"
+    label="NRA"
+    icon="ti ti-license"
+    :value="old('nra', $client?->nra)"
+    help="(Número de registro ambiental)"
+    required
+/>
+
+<x-form.input
     name="rfc"
     label="RFC"
     icon="ti ti-id"
@@ -85,7 +94,19 @@
     </div>
     <div class="form-hint">Puedes buscar calles, colonias o residenciales. Al seleccionar una sugerencia se llenarán los campos de dirección.</div>
     <div id="client-address-search-error" class="alert alert-warning mt-2 d-none" role="alert"></div>
+    @if (old('maps_url', $client?->maps_url))
+        <div class="form-hint mt-1">
+            <a href="{{ old('maps_url', $client?->maps_url) }}" target="_blank" rel="noopener noreferrer">
+                Ver ubicación en Google Maps
+            </a>
+        </div>
+    @endif
 </div>
+
+<input type="hidden" name="maps_url" id="client-maps-url" value="{{ old('maps_url', $client?->maps_url) }}">
+<input type="hidden" name="maps_place_id" id="client-maps-place-id" value="{{ old('maps_place_id', $client?->maps_place_id) }}">
+<input type="hidden" name="latitude" id="client-latitude" value="{{ old('latitude', $client?->latitude) }}">
+<input type="hidden" name="longitude" id="client-longitude" value="{{ old('longitude', $client?->longitude) }}">
 
 <x-form.input
     name="street"

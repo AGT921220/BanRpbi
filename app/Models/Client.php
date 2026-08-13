@@ -31,11 +31,16 @@ class Client extends Model
         'email',
         'phone',
         'company',
+        'nra',
         'rfc',
         'street',
         'num_ext',
         'num_int',
         'postal_code',
+        'maps_url',
+        'maps_place_id',
+        'latitude',
+        'longitude',
         'zone_id',
         'configuration_status',
         'configuration_submitted_at',
@@ -51,6 +56,8 @@ class Client extends Model
         return [
             'configuration_submitted_at' => 'datetime',
             'configuration_reviewed_at' => 'datetime',
+            'latitude' => 'float',
+            'longitude' => 'float',
         ];
     }
 

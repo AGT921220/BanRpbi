@@ -15,6 +15,16 @@ if (csrfToken) {
     axios.defaults.headers.common["X-CSRF-TOKEN"] = csrfToken;
 }
 
+export function readViteEnv(name, fallback = '') {
+    const value = import.meta.env[name];
+
+    if (value === undefined || value === null || value === '') {
+        return fallback;
+    }
+
+    return String(value);
+}
+
 /**
  * GET
  */
