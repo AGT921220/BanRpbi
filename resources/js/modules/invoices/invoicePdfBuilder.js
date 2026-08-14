@@ -313,7 +313,8 @@ function stampBlock(doc, y, title, value) {
     const boxHeight = Math.max(textY + endY - y + 2, 14);
 
     fillRect(doc, 10, y, 189, boxHeight, COLORS.stampTitleFill, COLORS.stampTitleBorder);
-    fillRect(doc, 10, y, 189, 6, COLORS.stampTitleFill, COLORS.stampTitleBorder);
+    doc.setFillColor(...COLORS.stampTitleFill);
+    doc.rect(10, y, 189, 6, "F");
 
     doc.setTextColor(...COLORS.stampTitleText);
     doc.setFont("helvetica", "bold");

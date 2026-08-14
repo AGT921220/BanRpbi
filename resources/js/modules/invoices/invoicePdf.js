@@ -21,7 +21,7 @@ $(document).on("click", ".btn-invoice-pdf", async function (e) {
 });
 
 async function getInvoice(url) {
-    return get(url, "Creando Factura!", {}, {}, true, 15000).then((response) => {
+    return get(url, "Creando Factura!").then((response) => {
         if (response && response.data) {
             return response.data;
         }
