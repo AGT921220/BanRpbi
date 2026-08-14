@@ -16,7 +16,7 @@ class FacturapiClient
     public function __construct(Client $client)
     {
         $this->httpClient = $client;
-        $this->token = config('app.facturapi_key');
+        $this->token = config('app.facturapi_secret_key');
         $this->baseUri = config('app.facturapi_uri');
     }
 

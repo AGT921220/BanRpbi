@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd5c94f81f166ce0a63e4bf187e9184d",
+    "content-hash": "c47ecede9a72862b8c3724c88b945fb5",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -659,6 +659,80 @@
                 }
             ],
             "time": "2025-03-06T22:45:56+00:00"
+        },
+        {
+            "name": "f9webltd/simple-qrcode",
+            "version": "5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/f9webltd/simple-qrcode.git",
+                "reference": "910fbd3f0dde8aec04dddc9aa0edae37806cd082"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/f9webltd/simple-qrcode/zipball/910fbd3f0dde8aec04dddc9aa0edae37806cd082",
+                "reference": "910fbd3f0dde8aec04dddc9aa0edae37806cd082",
+                "shasum": ""
+            },
+            "require": {
+                "bacon/bacon-qr-code": "^3.0",
+                "ext-gd": "*",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "mockery/mockery": "~1",
+                "phpunit/phpunit": "^11.5.3|^12.5.0"
+            },
+            "suggest": {
+                "ext-imagick": "Allows the generation of PNG QrCodes.",
+                "illuminate/support": "Allows for use within Laravel."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "QrCode": "F9WebLtd\\QrCode\\Facades\\QrCode"
+                    },
+                    "providers": [
+                        "F9WebLtd\\QrCode\\QrCodeServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "F9WebLtd\\QrCode\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Simple Software LLC",
+                    "email": "support@simplesoftware.io"
+                },
+                {
+                    "name": "Rob Allport",
+                    "email": "rob@f9web.co.uk",
+                    "homepage": "https://www.f9web.co.uk",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple QrCode is a QR code generator made for Laravel.",
+            "keywords": [
+                "Simple",
+                "generator",
+                "laravel",
+                "laravel qr code",
+                "qrcode",
+                "wrapper"
+            ],
+            "support": {
+                "source": "https://github.com/f9webltd/simple-qrcode/tree/5.0.0"
+            },
+            "time": "2026-03-19T12:19:59+00:00"
         },
         {
             "name": "fruitcake/php-cors",

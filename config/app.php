@@ -99,6 +99,8 @@ return [
     'enable_send_mails' => env('ENABLE_SEND_MAILS', false),
     'default_mail' => env('DEFAULT_MAIL', 'KlL1o@example.com'),
     'facturapi_enabled' => env('FACTURAPI_ENABLED', false),
+    'facturapi_secret_key' => env('FACTURAPI_SECRET_KEY', ''),
+    'facturapi_uri' => env('FACTURAPI_URI', ''),
 
     /*
     |--------------------------------------------------------------------------
