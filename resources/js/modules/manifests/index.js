@@ -27,8 +27,14 @@ $(function () {
                 className: "text-end",
                 render(_data, _type, row) {
                     let hasInvoice = !!row.invoice_id;
-                    console.log(hasInvoice);
 
+                    let testInvoice =     `<a
+        class="btn btn-sm btn-outline-warning btn-invoice-pdf-test"
+        title="Factura Test"
+    >
+        <i class="ti ti-file-type-pdf me-1"></i>
+        Factura Test
+    </a>`
                     let invoiceButton = hasInvoice
                         ? `<a
         data-id="${row.invoice_id}"
@@ -50,6 +56,7 @@ $(function () {
         Manifiesto
     </a>
     ${invoiceButton}
+
 `;
                 },
             },

@@ -379,7 +379,7 @@
                                 PermissionTypes::REPORTS_VIEW,
                                 PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
                             ])
-                                <li class="nav-item dropdown">
+                                <li class="nav-item dropdown" style="display: none">
                                     <a
                                         class="nav-link dropdown-toggle"
                                         href="#navbar-consultas"

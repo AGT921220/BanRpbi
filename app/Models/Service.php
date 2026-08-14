@@ -19,4 +19,9 @@ class Service extends Model
     {
         return $this->hasMany(ServiceDetail::class);
     }
+
+    public function manifests(): HasMany
+    {
+        return $this->hasMany(Manifest::class);
+    }
 }

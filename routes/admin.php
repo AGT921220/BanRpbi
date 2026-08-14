@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ServiceHeadersController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ZoneController;
 use App\Http\Controllers\Api\ClientHeaderController;
+use App\Http\Controllers\Dashboard\InvoiceController;
 use App\Http\Controllers\Dashboard\ManifestController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,9 @@ Route::get('manifest-headers', [ManifestHeadersController::class, 'index'])
         
 Route::get('manifests/{id}', [ManifestController::class, 'show'])
         ->name('manifests.show');
+
+Route::get('invoices/{id}', [InvoiceController::class, 'show'])
+        ->name('invoices.show');
     
                 Route::resource('service-headers', ServiceHeadersController::class)
         ->only(['index']);

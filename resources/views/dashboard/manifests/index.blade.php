@@ -5,6 +5,7 @@
 
 @section('content')
     <div class="container-xl">
+        @include('dashboard.manifests.filters')
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
@@ -40,4 +41,7 @@
     @vite('resources/js/modules/manifests/index.js')
     @vite('resources/js/modules/manifests/manifestPdf.js')
     @vite('resources/js/modules/manifests/manifestPdfBuilder.js')
+    @vite('resources/js/modules/invoices/invoicePdf.js')
+    @vite('resources/js/modules/invoices/invoicePdfBuilder.js')
+    @vite('resources/js/modules/invoices/invoicePdfTest.js')
 @endpush
