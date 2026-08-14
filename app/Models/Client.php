@@ -38,8 +38,8 @@ class Client extends Model
         'num_int',
         'postal_code',
         'colony',
-        'city',
-        'state',
+        'state_id',
+        'city_id',
         'maps_url',
         'maps_place_id',
         'latitude',
@@ -99,6 +99,16 @@ class Client extends Model
     public function zone(): BelongsTo
     {
         return $this->belongsTo(Zone::class);
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function isConfigurable(): bool

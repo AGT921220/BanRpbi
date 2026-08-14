@@ -1,6 +1,7 @@
 import { get, showToast, readViteEnv } from "../../admin";
 import { jsPDF } from "jspdf";
 import { buildManifest } from "./manifestPdfBuilder";
+import QRCode from 'qrcode';
 
 const semarnatLogo = readViteEnv("VITE_SEMARNAT_LOGO");
 
@@ -31,12 +32,17 @@ async function getManifest(url) {
     });
 }
 
-function createManifest(manifest) {
+async function createManifest(manifest) {
     var doc = new jsPDF();
+
+        const qrImage = await QRCode.toDataURL(String(manifest.folio), {
+        width: 300,
+        margin: 1,
+    });
 
     var img = new Image();
     img.onload = function () {
-        doc = buildManifest(doc, manifest, img);
+        doc = buildManifest(doc, manifest, img, qrImage);
 
         doc.setProperties({
             title: "Manifiesto " + manifest.folio,

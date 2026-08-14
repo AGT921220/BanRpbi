@@ -53,6 +53,83 @@ function firstComponentValue(components, types) {
     return '';
 }
 
+function normalizePlaceName(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function readStatesCitiesCatalog() {
+    const catalogElement = document.getElementById('states-cities-catalog');
+
+    if (!catalogElement?.textContent) {
+        return [];
+    }
+
+    try {
+        const catalog = JSON.parse(catalogElement.textContent);
+
+        return Array.isArray(catalog) ? catalog : [];
+    } catch (error) {
+        console.error(error);
+
+        return [];
+    }
+}
+
+function findCatalogMatch(stateName, cityName) {
+    const catalog = readStatesCitiesCatalog();
+    const normalizedState = normalizePlaceName(stateName);
+    const normalizedCity = normalizePlaceName(cityName);
+
+    if (!normalizedState || !normalizedCity) {
+        return null;
+    }
+
+    const state = catalog.find((item) => normalizePlaceName(item.name) === normalizedState);
+
+    if (!state) {
+        return null;
+    }
+
+    const city = (state.cities || []).find(
+        (item) => normalizePlaceName(item.name) === normalizedCity,
+    );
+
+    if (!city) {
+        return null;
+    }
+
+    return {
+        state,
+        city,
+    };
+}
+
+function validateCatalogLocation(stateName, cityName) {
+    if (!stateName && !cityName) {
+        hideAddressError();
+        return;
+    }
+
+    if (findCatalogMatch(stateName, cityName)) {
+        hideAddressError();
+        return;
+    }
+
+    if (cityName) {
+        showAddressError(
+            `El municipio "${cityName}" no pertenece al catálogo de ${stateName || 'el estado seleccionado'}.`,
+        );
+        return;
+    }
+
+    showAddressError(`El estado "${stateName}" no está en el catálogo permitido.`);
+}
+
 function fillMapsLocation(place) {
     const mapsUrlInput = document.getElementById('client-maps-url');
     const placeIdInput = document.getElementById('client-maps-place-id');
@@ -111,9 +188,9 @@ function fillAddressFields(place) {
         'colloquial_area',
     ]);
     const city = firstComponentValue(components, [
+        'administrative_area_level_2',
         'locality',
         'postal_town',
-        'administrative_area_level_2',
     ]);
     const state = componentValue(components, 'administrative_area_level_1');
 
@@ -144,6 +221,8 @@ function fillAddressFields(place) {
     if (state && stateInput) {
         stateInput.value = state;
     }
+
+    validateCatalogLocation(stateInput?.value || state, cityInput?.value || city);
 
     streetInput.dispatchEvent(new Event('input', { bubbles: true }));
     numExtInput.dispatchEvent(new Event('input', { bubbles: true }));

@@ -3,7 +3,7 @@
     $contracts ??= collect();
     /** @var \Illuminate\Support\Collection<int, \App\Models\Zone> $zones */
     $zones ??= collect();
-    /** @var \Illuminate\Support\Collection<int, \App\Models\ClientProfile> $rpbiProfiles */
+    /** @var \Illuminate\Support\Collection<int, \App\Models\RpbiProfile> $rpbiProfiles */
     $rpbiProfiles ??= collect();
     $frequencyLabels = \App\Models\Contract::frequencyLabels();
 @endphp

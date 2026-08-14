@@ -68,7 +68,7 @@ class ClientContract extends Model
     public function rpbiProfiles(): BelongsToMany
     {
         return $this->belongsToMany(
-            ClientProfile::class,
+            RpbiProfile::class,
             'client_contract_profiles',
             'client_contract_id',
             'rpbi_profile_id',

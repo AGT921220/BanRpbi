@@ -3,11 +3,15 @@
 namespace App\Http\Requests\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Http\Requests\Admin\Concerns\ResolvesClientStateCity;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 final class UpdateClientRequest extends FormRequest
 {
+    use ResolvesClientStateCity;
+
     public function authorize(): bool
     {
         return $this->user()?->can(PermissionTypes::CLIENTS_UPDATE) ?? false;
@@ -36,8 +40,7 @@ final class UpdateClientRequest extends FormRequest
             'num_int' => ['nullable', 'string', 'max:30'],
             'postal_code' => ['required', 'string', 'max:10'],
             'colony' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
+            ...$this->stateCityRules(),
             'maps_url' => ['nullable', 'string', 'max:2048'],
             'maps_place_id' => ['nullable', 'string', 'max:255'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
@@ -63,8 +66,7 @@ final class UpdateClientRequest extends FormRequest
             'num_int' => 'número interior',
             'postal_code' => 'código postal',
             'colony' => 'colonia',
-            'city' => 'ciudad',
-            'state' => 'estado',
+            ...$this->stateCityAttributes(),
             'maps_url' => 'enlace de Google Maps',
             'maps_place_id' => 'lugar de Google Maps',
             'latitude' => 'latitud',
@@ -80,6 +82,7 @@ final class UpdateClientRequest extends FormRequest
         return [
             'email.unique' => 'El correo electrónico ya está registrado.',
             'rfc.regex' => 'El RFC no tiene un formato válido.',
+            ...$this->stateCityMessages(),
         ];
     }
 
@@ -90,5 +93,14 @@ final class UpdateClientRequest extends FormRequest
                 'rfc' => strtoupper(trim((string) $this->input('rfc'))),
             ]);
         }
+
+        $this->resolveStateCityFromCatalog();
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $this->validateStateCityCatalog($validator);
+        });
     }
 }

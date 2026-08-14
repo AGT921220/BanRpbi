@@ -15,10 +15,10 @@ if (csrfToken) {
     axios.defaults.headers.common["X-CSRF-TOKEN"] = csrfToken;
 }
 
-export function readViteEnv(name, fallback = '') {
+export function readViteEnv(name, fallback = "") {
     const value = import.meta.env[name];
 
-    if (value === undefined || value === null || value === '') {
+    if (value === undefined || value === null || value === "") {
         return fallback;
     }
 
@@ -31,7 +31,10 @@ export function readViteEnv(name, fallback = '') {
 export async function get(
     url,
     loaderText = "Cargando...",
-    params = {}, headers = {}, loader = true, timeout = 500,
+    params = {},
+    headers = {},
+    loader = true,
+    timeout = 500,
 ) {
     if (loader) {
         showLoader(loaderText);
@@ -58,12 +61,7 @@ export async function post(
     url,
     data = {},
     loaderText = "Guardando...",
-    {
-        params = {},
-        headers = {},
-        loader = true,
-        timeout = 5000,
-    } = {},
+    { params = {}, headers = {}, loader = true, timeout = 5000 } = {},
 ) {
     if (loader) {
         showLoader(loaderText);
@@ -91,12 +89,7 @@ export async function put(
     url,
     data = {},
     loaderText = "Guardando...",
-    {
-        params = {},
-        headers = {},
-        loader = true,
-        timeout = 5000,
-    } = {},
+    { params = {}, headers = {}, loader = true, timeout = 5000 } = {},
 ) {
     if (loader) {
         showLoader(loaderText);
@@ -121,12 +114,18 @@ window.BanHttp = { get, post, put };
 
 export default window.BanHttp;
 
-export function showToast(type, text, textType = null, time = 5000, persist = false) {
+export function showToast(
+    type,
+    text,
+    textType = null,
+    time = 5000,
+    persist = false,
+) {
     if (type != "success" && type != "danger") {
         type = "success";
     }
     let typeText = type == "success" ? "Éxito" : "Error";
-    if(textType){
+    if (textType) {
         typeText = textType;
     }
     let toast = $(
@@ -149,4 +148,41 @@ export function showToast(type, text, textType = null, time = 5000, persist = fa
                 $(this).remove();
             });
     }
+}
+
+export function splitTextAndAddToDocument(
+    doc,
+    text,
+    initialPosition,
+    maxLength = 50,
+    initialX = 25,
+    spacing = 2,
+) {
+    let start = 0;
+    let end = maxLength;
+    let lineIndex = 0;
+
+    while (start < text.length) {
+        if (end < text.length) {
+            while (text[end] !== " " && end > start) {
+                end--;
+            }
+        }
+        addTextLine(
+            doc,
+            text.substring(start, end).trim(),
+            initialPosition,
+            lineIndex,
+            initialX,
+            spacing,
+        );
+        start = end + 1; // Move the start to the next character after the space
+        end = start + maxLength;
+        lineIndex++;
+    }
+}
+
+
+function addTextLine(doc, text, initialPosition, lineIndex, initialX, spacing) {
+  doc.text(initialX, initialPosition + lineIndex * spacing, text);
 }

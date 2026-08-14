@@ -159,9 +159,9 @@
 <x-form.input
     name="city"
     id="client-city"
-    label="Ciudad"
+    label="Municipio"
     icon="ti ti-building"
-    :value="old('city', $client?->city)"
+    :value="old('city', $client?->city?->name)"
 />
 
 <x-form.input
@@ -169,5 +169,9 @@
     id="client-state"
     label="Estado"
     icon="ti ti-map-2"
-    :value="old('state', $client?->state)"
+    :value="old('state', $client?->state?->name)"
 />
+
+<script type="application/json" id="states-cities-catalog">
+    @json($statesCities ?? [])
+</script>

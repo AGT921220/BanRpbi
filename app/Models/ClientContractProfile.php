@@ -15,6 +15,7 @@ class ClientContractProfile extends Model
         'rpbi_profile_id',
     ];
 
+
     public function clientContract(): BelongsTo
     {
         return $this->belongsTo(ClientContract::class);
@@ -22,6 +23,6 @@ class ClientContractProfile extends Model
 
     public function rpbiProfile(): BelongsTo
     {
-        return $this->belongsTo(ClientProfile::class, 'rpbi_profile_id');
+        return $this->belongsTo(RpbiProfile::class, 'rpbi_profile_id');
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Contract;
 use App\Models\Manifest;
 use App\Models\Service;
+use App\Models\ServiceDetail;
 use Illuminate\Support\Carbon;
 
 class BulkCreateServices
@@ -21,11 +22,11 @@ class BulkCreateServices
         $clientContract = $client->activeContract;
         $contract = $clientContract->contract;
         $clientContractProfiles = $clientContract->clientContractProfiles;
-        $clientProfileIds = $clientContractProfiles->pluck('rpbi_profile_id')->toArray();
+        $rpbiProfileIds = $clientContractProfiles->pluck('rpbi_profile_id')->toArray();
         $frequency = $contract->frequency;
         foreach ($this->serviceDateGenerator->__invoke($clientContract->start_date, $clientContract->end_date, $frequency) as $serviceDate) {
             $serviceId = $this->createServiceForContract($client, $contract, $serviceDate);
-            $this->createServiceDetails($serviceId, $clientProfileIds);
+            $this->createServiceDetails($serviceId, $rpbiProfileIds);
             $this->createManifestForService($serviceId);
         }
     }
@@ -40,11 +41,11 @@ class BulkCreateServices
         $service->save();
         return $service->id;
     }
-    private function createServiceDetails(int $serviceId, array $clientProfileIds)
+    private function createServiceDetails(int $serviceId, array $rpbiProfileIds)
     {
         $dataToInsert = [];
         $now = Carbon::now()->toDateTimeString();
-        foreach ($clientProfileIds as $profileId) {
+        foreach ($rpbiProfileIds as $profileId) {
             $dataToInsert[] = [
                 'service_id' => $serviceId,
                 'rpbi_profile_id' => $profileId,
@@ -52,6 +53,7 @@ class BulkCreateServices
                 'updated_at' => $now,
             ];
         }
+        $serviceDetails = ServiceDetail::insert($dataToInsert);
     }
     private function createManifestForService(int $serviceId)
     {

@@ -14,8 +14,9 @@ use App\Http\Requests\Admin\StoreClientRequest;
 use App\Http\Requests\Admin\SubmitClientConfigurationRequest;
 use App\Http\Requests\Admin\UpdateClientRequest;
 use App\Models\Client;
-use App\Models\ClientProfile;
+use App\Models\RpbiProfile;
 use App\Models\Contract;
+use App\Models\State;
 use App\Models\Zone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -43,7 +44,7 @@ final class ClientController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'description']),
-            'rpbiProfiles' => ClientProfile::query()
+            'rpbiProfiles' => RpbiProfile::query()
                 ->orderBy('code')
                 ->get(['id', 'code', 'name', 'description']),
         ]);
@@ -53,7 +54,9 @@ final class ClientController extends Controller
     {
         $this->authorize(PermissionTypes::CLIENTS_CREATE);
 
-        return view('clients.create');
+        return view('clients.create', [
+            'statesCities' => $this->statesCitiesCatalog(),
+        ]);
     }
 
     public function store(StoreClientRequest $request): RedirectResponse
@@ -72,7 +75,8 @@ final class ClientController extends Controller
         $this->authorize(PermissionTypes::CLIENTS_UPDATE);
 
         return view('clients.edit', [
-            'client' => $client,
+            'client' => $client->load(['state', 'city']),
+            'statesCities' => $this->statesCitiesCatalog(),
         ]);
     }
 
@@ -196,5 +200,29 @@ final class ClientController extends Controller
             'message' => 'Configuración enviada a aprobación.',
             'configuration_status' => $client->configuration_status,
         ]);
+    }
+
+    /**
+     * @return list<array{id: int, name: string, cities: list<array{id: int, name: string}>}>
+     */
+    private function statesCitiesCatalog(): array
+    {
+        return State::query()
+            ->with(['cities' => static fn ($query) => $query->orderBy('name')])
+            ->orderBy('name')
+            ->get()
+            ->map(static fn (State $state): array => [
+                'id' => (int) $state->id,
+                'name' => (string) $state->name,
+                'cities' => $state->cities
+                    ->map(static fn ($city): array => [
+                        'id' => (int) $city->id,
+                        'name' => (string) $city->name,
+                    ])
+                    ->values()
+                    ->all(),
+            ])
+            ->values()
+            ->all();
     }
 }

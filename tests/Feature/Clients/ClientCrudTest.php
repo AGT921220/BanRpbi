@@ -3,7 +3,9 @@
 namespace Tests\Feature\Clients;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Models\City;
 use App\Models\Client;
+use App\Models\State;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
@@ -77,8 +79,8 @@ class ClientCrudTest extends TestCase
             'num_int' => '4B',
             'postal_code' => '06600',
             'colony' => 'Juárez',
-            'city' => 'Ciudad de México',
-            'state' => 'Ciudad de México',
+            'city' => 'Tijuana',
+            'state' => 'Baja California',
             'maps_url' => 'https://www.google.com/maps/search/?api=1&query=19.432608,-99.133209',
             'maps_place_id' => 'ChIJB3Uh6w0AzYURQPE0TGlQONQ',
             'latitude' => '19.4326080',
@@ -90,7 +92,19 @@ class ClientCrudTest extends TestCase
         $response->assertRedirect(route('clients.index'));
         $response->assertSessionHas('success', 'Cliente creado correctamente.');
 
-        $this->assertDatabaseHas('clients', $payload);
+        $state = State::query()->where('name', 'Baja California')->firstOrFail();
+        $city = City::query()
+            ->where('state_id', $state->id)
+            ->where('name', 'Tijuana')
+            ->firstOrFail();
+
+        unset($payload['city'], $payload['state']);
+
+        $this->assertDatabaseHas('clients', [
+            ...$payload,
+            'state_id' => $state->id,
+            'city_id' => $city->id,
+        ]);
     }
 
     public function test_client_email_must_be_unique(): void
@@ -143,8 +157,8 @@ class ClientCrudTest extends TestCase
             'num_int' => null,
             'postal_code' => '03100',
             'colony' => 'Del Valle',
-            'city' => 'Ciudad de México',
-            'state' => 'Ciudad de México',
+            'city' => 'Mexicali',
+            'state' => 'Baja California',
             'maps_url' => 'https://www.google.com/maps/search/?api=1&query=19.390000,-99.140000',
             'maps_place_id' => 'ChIJb8AwRWkBzoUR4nR2x6WZq7E',
             'latitude' => '19.3900000',
@@ -155,10 +169,45 @@ class ClientCrudTest extends TestCase
 
         $response->assertRedirect(route('clients.index'));
         $response->assertSessionHas('success', 'Cliente actualizado correctamente.');
+
+        $state = State::query()->where('name', 'Baja California')->firstOrFail();
+        $city = City::query()
+            ->where('state_id', $state->id)
+            ->where('name', 'Mexicali')
+            ->firstOrFail();
+
+        unset($payload['city'], $payload['state']);
+
         $this->assertDatabaseHas('clients', [
             'id' => $client->id,
             ...$payload,
+            'state_id' => $state->id,
+            'city_id' => $city->id,
         ]);
+    }
+
+    public function test_client_city_must_belong_to_catalog_state(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_CREATE]);
+
+        $response = $this->from(route('clients.create'))
+            ->post(route('clients.store'), [
+                'name' => 'Carlos',
+                'parentarl_surname' => 'López',
+                'email' => 'fuera.catalogo@example.com',
+                'phone' => '5512345678',
+                'company' => 'Acme SA',
+                'nra' => 'NRA-12345678',
+                'rfc' => 'LOPC800101ABC',
+                'street' => 'Av. Reforma',
+                'postal_code' => '06600',
+                'city' => 'Guadalajara',
+                'state' => 'Baja California',
+            ]);
+
+        $response->assertRedirect(route('clients.create'));
+        $response->assertSessionHasErrors('city');
+        $this->assertDatabaseCount('clients', 0);
     }
 
     public function test_client_can_keep_own_email_when_updating(): void

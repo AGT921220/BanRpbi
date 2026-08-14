@@ -5,7 +5,7 @@ namespace Tests\Feature\Clients;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Models\Client;
 use App\Models\ClientContract;
-use App\Models\ClientProfile;
+use App\Models\RpbiProfile;
 use App\Models\Contract;
 use App\Models\User;
 use App\Models\Zone;
@@ -45,7 +45,7 @@ class ClientConfigurationTest extends TestCase
         $client = Client::factory()->create();
         $contract = Contract::factory()->create(['duration_months' => 12]);
         $zone = Zone::factory()->create();
-        $profiles = ClientProfile::query()->orderBy('code')->take(2)->get();
+        $profiles = RpbiProfile::query()->orderBy('code')->take(2)->get();
 
         $this->assertGreaterThanOrEqual(2, $profiles->count());
 
@@ -147,7 +147,7 @@ class ClientConfigurationTest extends TestCase
         $client = Client::factory()->create();
         $contract = Contract::factory()->create();
         $zone = Zone::factory()->create();
-        $profileId = ClientProfile::query()->value('id');
+        $profileId = RpbiProfile::query()->value('id');
 
         $this->assertNotNull($profileId);
 
@@ -179,7 +179,7 @@ class ClientConfigurationTest extends TestCase
         $client = Client::factory()->create();
         $contract = Contract::factory()->create();
         $zone = Zone::factory()->create();
-        $profileId = ClientProfile::query()->value('id');
+        $profileId = RpbiProfile::query()->value('id');
 
         $this->assertNotNull($profileId);
 
