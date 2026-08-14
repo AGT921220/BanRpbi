@@ -35,7 +35,7 @@ final class BuilderFilter
         }
 
         if (! $hasLimit) {
-            $builder->limit(100);
+            $builder->limit(10);
         }
 
         if (! $hasOffset) {
@@ -83,7 +83,7 @@ final class BuilderFilter
 
         $query = $dataBuilder->getQuery();
 
-        $limit = max((int) ($query->limit ?? 100), 1);
+        $limit = max((int) ($query->limit ?? 10), 1);
         $offset = max((int) ($query->offset ?? 0), 0);
 
         $data = $dataBuilder->get();

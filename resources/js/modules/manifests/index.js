@@ -26,6 +26,20 @@ $(function () {
                 searchable: false,
                 className: "text-end",
                 render(_data, _type, row) {
+                    let hasInvoice = !!row.invoice_id;
+                    console.log(hasInvoice);
+
+                    let invoiceButton = hasInvoice
+                        ? `<a
+        data-id="${row.invoice_id}"
+        class="btn btn-sm btn-outline-primary btn-invoice-pdf"
+        title="Descargar Factura"
+    >
+        <i class="ti ti-file-type-pdf me-1"></i>
+        Factura
+    </a>
+`
+                        : "";
                     return `
     <a
         data-id="${row.id}"
@@ -33,8 +47,9 @@ $(function () {
         title="Descargar PDF"
     >
         <i class="ti ti-file-type-pdf me-1"></i>
-        PDF
+        Manifiesto
     </a>
+    ${invoiceButton}
 `;
                 },
             },

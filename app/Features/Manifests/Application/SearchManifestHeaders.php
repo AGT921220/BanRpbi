@@ -19,9 +19,11 @@ class SearchManifestHeaders
     {
         $data = $this->builderFilter->paginate(
             builder: Manifest::select('manifests.id', 'manifests.status', 'clients.company',
-            'service_date')
+            'service_date','invoices.id as invoice')
             ->join('services', 'manifests.service_id', '=', 'services.id')
-            ->join('clients', 'services.client_id', '=', 'clients.id'),
+            ->join('clients', 'services.client_id', '=', 'clients.id')
+            ->leftJoin('invoices','invoices.service_id','services.id')
+            ,
             modifiers: $filters,
             draw: $draw,
         );
@@ -33,6 +35,7 @@ class SearchManifestHeaders
                     'status' => $this->resolveManifestStatus($manifest->status),
                     'client' => $manifest->company,
                     'date'  => $manifest->service_date,
+                    'invoice_id'=>$manifest->invoice
                 ];
         });
         return $data;
