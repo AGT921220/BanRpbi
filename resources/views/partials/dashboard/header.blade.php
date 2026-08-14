@@ -200,7 +200,7 @@
 
                                     <div class="dropdown-menu">
                                         @can(PermissionTypes::COLLECTIONS_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('services.index') }}" class="dropdown-item">
                                                 <i class="ti ti-calendar-event me-2"></i>
                                                 Recolecciones
                                             </a>

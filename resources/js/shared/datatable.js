@@ -217,3 +217,63 @@ async function fetchTableData(url, request, {
         return emptyAjaxResponse(request.draw);
     }
 }
+
+
+export async function getDataTableData(
+    data,
+    callback,
+    {
+        url,
+        loaderText = "Cargando...",
+        params = {},
+    },
+) {
+    try {
+        const requestParams = {
+            offset: data.start,
+            limit: data.length,
+            draw: data.draw,
+            ...params,
+        };
+
+        const order = data.order?.[0];
+
+        if (order) {
+            const column = data.columns?.[order.column];
+
+            if (
+                column?.name &&
+                column.name !== "actions" &&
+                ["asc", "desc"].includes(order.dir)
+            ) {
+                requestParams.order_by = column.name;
+                requestParams.order_direction = order.dir;
+            }
+        }
+
+        const payload = await get(
+            url,
+            loaderText,
+            requestParams,
+            {
+                Accept: "application/json",
+            },
+        );
+
+        callback({
+            draw: payload.draw ?? data.draw,
+            recordsTotal: payload.recordsTotal ?? 0,
+            recordsFiltered: payload.recordsFiltered ?? 0,
+            data: payload.data ?? [],
+        });
+    } catch (error) {
+        console.error(error);
+
+        callback({
+            draw: data.draw,
+            recordsTotal: 0,
+            recordsFiltered: 0,
+            data: [],
+        });
+    }
+}

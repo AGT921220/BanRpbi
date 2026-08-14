@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\DriverHeadersController;
 use App\Http\Controllers\Dashboard\DriverController;
 use App\Http\Controllers\Dashboard\ManifestController;
+use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\TestController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,4 +30,6 @@ Route::middleware('auth')->group(function (): void {
 
     Route::resource('drivers', DriverController::class)
         ->except(['show']);
+    Route::resource('services', ServiceController::class)
+        ->only(['index']);
 });

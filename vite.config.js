@@ -18,6 +18,7 @@ export default defineConfig({
                 'resources/js/modules/manifests/index.js',
                 'resources/js/modules/manifests/manifestPdf.js',
                 'resources/js/modules/manifests/manifestPdfBuilder.js',
+                'resources/js/modules/services/index.js',
                 'resources/js/test.js'
             ],
             refresh: true,

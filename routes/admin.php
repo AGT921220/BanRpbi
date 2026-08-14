@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\ManifestHeadersController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\ServiceHeadersController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ZoneController;
 use App\Http\Controllers\Api\ClientHeaderController;
@@ -19,6 +21,8 @@ Route::get('manifest-headers', [ManifestHeadersController::class, 'index'])
 Route::get('manifests/{id}', [ManifestController::class, 'show'])
         ->name('manifests.show');
     
+                Route::resource('service-headers', ServiceHeadersController::class)
+        ->only(['index']);
 });
 
 
