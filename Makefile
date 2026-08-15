@@ -24,6 +24,10 @@ clear:
 	@docker exec -it php-ban /bin/bash -c \
 "php artisan config:cache && php artisan config:clear && php artisan horizon:terminate && php artisan queue:restart && php artisan route:clear && php artisan route:cache"
 
+ngrok:
+	@ngrok http --host-header=rewrite http://localhost:8080;
+
+
 import-db:
 	@docker exec -i ${DB_HOST} mysql -u user -ppassword -e "DROP DATABASE IF EXISTS ${DB_DATABASE}; CREATE DATABASE ${DB_DATABASE};"
 	@docker exec -i ${DB_HOST} mysql -u user -ppassword ${DB_DATABASE} < storage/app/gan.sql
