@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Rules\UserIsChofer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,6 +25,13 @@ final class StoreDriverRequest extends FormRequest
             'maternal_surname' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
             'zone_id' => ['required', 'integer', Rule::exists('zones', 'id')],
+            'user_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id'),
+                Rule::unique('drivers', 'user_id'),
+                new UserIsChofer,
+            ],
         ];
     }
 
@@ -38,6 +46,7 @@ final class StoreDriverRequest extends FormRequest
             'maternal_surname' => 'apellido materno',
             'phone' => 'teléfono',
             'zone_id' => 'zona',
+            'user_id' => 'usuario',
         ];
     }
 }

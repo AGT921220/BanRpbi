@@ -3,11 +3,13 @@
 namespace Tests\Feature\Drivers;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Features\Permissions\Constants\RoleTypes;
 use App\Models\Driver;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DriverCrudTest extends TestCase
@@ -27,6 +29,19 @@ class DriverCrudTest extends TestCase
         $user->givePermissionTo($permissions);
 
         $this->actingAs($user);
+
+        return $user;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function createChoferUser(array $attributes = []): User
+    {
+        Role::findOrCreate(RoleTypes::CHOFER, 'web');
+
+        $user = User::factory()->create($attributes);
+        $user->assignRole(RoleTypes::CHOFER);
 
         return $user;
     }
@@ -53,6 +68,36 @@ class DriverCrudTest extends TestCase
         $this->get(route('drivers.index'))->assertForbidden();
     }
 
+    public function test_create_form_lists_available_chofer_users(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::DRIVERS_CREATE]);
+
+        $availableChofer = $this->createChoferUser([
+            'name' => 'Pedro Chofer',
+            'email' => 'pedro.chofer@example.com',
+        ]);
+        $assignedChofer = $this->createChoferUser([
+            'name' => 'Luis Asignado',
+            'email' => 'luis.asignado@example.com',
+        ]);
+        $notChofer = User::factory()->create([
+            'name' => 'Ana Ventas',
+            'email' => 'ana.ventas@example.com',
+        ]);
+
+        Driver::factory()->create(['user_id' => $assignedChofer->id]);
+
+        $response = $this->get(route('drivers.create'));
+
+        $response->assertOk();
+        $response->assertSee('Pedro Chofer');
+        $response->assertSee('pedro.chofer@example.com');
+        $response->assertDontSee('Luis Asignado');
+        $response->assertDontSee('Ana Ventas');
+        $response->assertSee('value="'.$availableChofer->id.'"', false);
+        $response->assertDontSee('value="'.$notChofer->id.'"', false);
+    }
+
     public function test_authorized_user_can_create_a_driver(): void
     {
         $this->actingAsUserWithPermissions([
@@ -61,6 +106,7 @@ class DriverCrudTest extends TestCase
         ]);
 
         $zone = Zone::factory()->create();
+        $chofer = $this->createChoferUser();
 
         $payload = [
             'name' => 'Carlos',
@@ -68,6 +114,7 @@ class DriverCrudTest extends TestCase
             'maternal_surname' => 'Martínez',
             'phone' => '5512345678',
             'zone_id' => $zone->id,
+            'user_id' => $chofer->id,
         ];
 
         $response = $this->post(route('drivers.store'), $payload);
@@ -88,6 +135,7 @@ class DriverCrudTest extends TestCase
                 'maternal_surname' => '',
                 'phone' => '',
                 'zone_id' => '',
+                'user_id' => '',
             ]);
 
         $response->assertRedirect(route('drivers.create'));
@@ -97,8 +145,54 @@ class DriverCrudTest extends TestCase
             'maternal_surname',
             'phone',
             'zone_id',
+            'user_id',
         ]);
         $this->assertDatabaseCount('drivers', 0);
+    }
+
+    public function test_cannot_create_a_driver_with_a_user_that_is_not_chofer(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::DRIVERS_CREATE]);
+
+        $zone = Zone::factory()->create();
+        $user = User::factory()->create();
+
+        $response = $this->from(route('drivers.create'))
+            ->post(route('drivers.store'), [
+                'name' => 'Carlos',
+                'parentarl_surname' => 'López',
+                'maternal_surname' => 'Martínez',
+                'phone' => '5512345678',
+                'zone_id' => $zone->id,
+                'user_id' => $user->id,
+            ]);
+
+        $response->assertRedirect(route('drivers.create'));
+        $response->assertSessionHasErrors('user_id');
+        $this->assertDatabaseCount('drivers', 0);
+    }
+
+    public function test_cannot_assign_the_same_user_to_two_drivers(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::DRIVERS_CREATE]);
+
+        $chofer = $this->createChoferUser();
+        Driver::factory()->create(['user_id' => $chofer->id]);
+        $zone = Zone::factory()->create();
+
+        $response = $this->from(route('drivers.create'))
+            ->post(route('drivers.store'), [
+                'name' => 'Carlos',
+                'parentarl_surname' => 'López',
+                'maternal_surname' => 'Martínez',
+                'phone' => '5512345678',
+                'zone_id' => $zone->id,
+                'user_id' => $chofer->id,
+            ]);
+
+        $response->assertRedirect(route('drivers.create'));
+        $response->assertSessionHasErrors('user_id');
+        $this->assertDatabaseCount('drivers', 1);
     }
 
     public function test_authorized_user_can_update_a_driver(): void
@@ -110,8 +204,10 @@ class DriverCrudTest extends TestCase
 
         $driver = Driver::factory()->create([
             'name' => 'Original',
+            'user_id' => $this->createChoferUser()->id,
         ]);
         $zone = Zone::factory()->create();
+        $chofer = $this->createChoferUser();
 
         $payload = [
             'name' => 'Actualizado',
@@ -119,6 +215,7 @@ class DriverCrudTest extends TestCase
             'maternal_surname' => 'Sánchez',
             'phone' => '5511111111',
             'zone_id' => $zone->id,
+            'user_id' => $chofer->id,
         ];
 
         $response = $this->put(route('drivers.update', $driver), $payload);
@@ -129,6 +226,24 @@ class DriverCrudTest extends TestCase
             'id' => $driver->id,
             ...$payload,
         ]);
+    }
+
+    public function test_edit_form_includes_the_currently_assigned_user(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::DRIVERS_UPDATE]);
+
+        $assignedChofer = $this->createChoferUser([
+            'name' => 'Luis Asignado',
+            'email' => 'luis.asignado@example.com',
+        ]);
+        $driver = Driver::factory()->create(['user_id' => $assignedChofer->id]);
+
+        $response = $this->get(route('drivers.edit', $driver));
+
+        $response->assertOk();
+        $response->assertSee('Luis Asignado');
+        $response->assertSee('luis.asignado@example.com');
+        $response->assertSee('value="'.$assignedChofer->id.'"', false);
     }
 
     public function test_authorized_user_can_delete_a_driver(): void

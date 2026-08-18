@@ -21,11 +21,17 @@ class Driver extends Model
         'maternal_surname',
         'phone',
         'zone_id',
+        'user_id',
     ];
 
     public function zone(): BelongsTo
     {
         return $this->belongsTo(Zone::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function fullName(): string

@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="card-body">
-                        @include('drivers._form', ['zones' => $zones])
+                        @include('drivers._form', ['zones' => $zones, 'users' => $users])
                     </div>
 
                     <div class="card-footer d-flex justify-content-end gap-2">

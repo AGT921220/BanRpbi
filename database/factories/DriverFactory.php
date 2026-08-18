@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Driver;
+use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -24,6 +25,7 @@ class DriverFactory extends Factory
             'maternal_surname' => fake()->lastName(),
             'phone' => fake()->numerify('##########'),
             'zone_id' => Zone::factory(),
+            'user_id' => User::factory(),
         ];
     }
 }

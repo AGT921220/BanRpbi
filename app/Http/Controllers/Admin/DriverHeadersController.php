@@ -30,10 +30,10 @@ class DriverHeadersController extends Controller
                 filters: [
                     QueryOptions::offset($offset),
                     QueryOptions::limit($limit),
-                    $request->input('order_by') ? QueryOptions::orderBy(
-                        $request->input('order_by'),
-                        $request->input('order_direction'),
-                    ) : 'asc',
+                    QueryOptions::orderBy(
+                        $request->input('order_by') ?: 'drivers.id',
+                        $request->input('order_direction') ?: 'desc',
+                    ),
                 ],
                 draw: $draw,
             ),

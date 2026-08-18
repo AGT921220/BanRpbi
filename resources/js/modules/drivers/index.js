@@ -14,6 +14,11 @@ $(function () {
                 orderSequence: ["asc", "desc"],
             },
             {
+                data: "user",
+                name: "users.name",
+                orderSequence: ["asc", "desc"],
+            },
+            {
                 data: "phone",
                 name: "drivers.phone",
                 orderSequence: ["asc", "desc"],

@@ -3,7 +3,37 @@
     $driver ??= null;
     /** @var \Illuminate\Support\Collection<int, \App\Models\Zone> $zones */
     $zones ??= collect();
+    /** @var \Illuminate\Support\Collection<int, \App\Models\User> $users */
+    $users ??= collect();
 @endphp
+
+<div class="mb-3">
+    <label class="form-label required" for="driver-user-id">Usuario</label>
+    <div class="input-icon">
+        <span class="input-icon-addon">
+            <i class="ti ti-user-circle"></i>
+        </span>
+        <select
+            name="user_id"
+            id="driver-user-id"
+            class="form-select @error('user_id') is-invalid @enderror"
+            required
+        >
+            <option value="">Selecciona un usuario</option>
+            @foreach ($users as $user)
+                <option
+                    value="{{ $user->id }}"
+                    @selected((string) old('user_id', $driver?->user_id) === (string) $user->id)
+                >
+                    {{ $user->name }} ({{ $user->email }})
+                </option>
+            @endforeach
+        </select>
+    </div>
+    @error('user_id')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
+</div>
 
 <x-form.input
     name="name"

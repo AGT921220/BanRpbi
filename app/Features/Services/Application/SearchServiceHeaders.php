@@ -31,6 +31,7 @@ class SearchServiceHeaders
                 'clients.company',
                 'service_date',
                 'zones.name as zone',
+                'clients.maps_url as client_maps_url',
             )
                 ->join('services', 'manifests.service_id', '=', 'services.id')
                 ->join('clients', 'services.client_id', '=', 'clients.id')
@@ -47,6 +48,7 @@ class SearchServiceHeaders
                     'client' => $manifest->company,
                     'zone' => $manifest->zone,
                     'date'  => $manifest->service_date,
+                    'client_maps_url' => $manifest->client_maps_url
                 ];
         });
         return $data;

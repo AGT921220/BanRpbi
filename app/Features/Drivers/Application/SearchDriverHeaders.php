@@ -25,9 +25,12 @@ class SearchDriverHeaders
                 'drivers.maternal_surname',
                 'drivers.phone',
                 'drivers.zone_id',
+                'drivers.user_id',
                 'zones.name as zone_name',
+                'users.name as user_name',
             )
-                ->join('zones', 'drivers.zone_id', '=', 'zones.id'),
+                ->join('zones', 'drivers.zone_id', '=', 'zones.id')
+                ->join('users', 'drivers.user_id', '=', 'users.id'),
             modifiers: $filters,
             draw: $draw,
         );
@@ -36,6 +39,7 @@ class SearchDriverHeaders
             return [
                 'id' => $driver->id,
                 'name' => $driver->fullName(),
+                'user' => $driver->user_name,
                 'phone' => $driver->phone,
                 'zone' => $driver->zone_name,
             ];

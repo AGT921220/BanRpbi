@@ -12,7 +12,8 @@ final class CreateDriver
      *     parentarl_surname: string,
      *     maternal_surname: string,
      *     phone: string,
-     *     zone_id: int
+     *     zone_id: int,
+     *     user_id: int
      * }  $data
      */
     public function __invoke(array $data): Driver
