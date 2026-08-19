@@ -10,6 +10,7 @@
 | [Configuración de Google Maps](google-maps.md) | API key, variables Vite, restricciones, centro del mapa, yarn y costos |
 | [Modificadores de consultas Eloquent](query-modifiers.md) | `QueryFilter`, `QueryOptions` y `BuilderFilter`: filtros y opciones tipados para consultas Eloquent |
 | [DataTables (`createDataTable`)](frontend/datatables.md) | Helper frontend para tablas server-side: opciones, filtros dinámicos, `data-url` y formato de respuesta |
+| [Arquitectura para clonar el sistema](prompt-arquitectura-sistema-similar.txt) | Docker, Redis, Horizon, Features, Headers/DataTables, auth y prompt listo para un sistema similar |
 
 ## Uso recomendado
 

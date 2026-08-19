@@ -1,0 +1,1146 @@
+================================================================================
+DOCUMENTO DE ARQUITECTURA — BAN RPBI
+Uso: blueprint técnico para clonar la estructura en otro modelo de negocio.
+Fecha de captura: 2026-08-18
+================================================================================
+
+Este archivo describe CÓMO está diseñado el sistema (infraestructura + convenciones),
+no el dominio RPBI. El negocio (residuos, manifiestos, SAT, etc.) es intercambiable.
+La estructura de Docker, colas, Features, Headers/DataTables, auth y permisos se
+reutiliza tal cual.
+
+Al final hay un PROMPT LISTO PARA COPIAR a un agente (Cursor/Claude) y crear
+otro sistema con la misma arquitectura.
+
+
+================================================================================
+1. STACK
+================================================================================
+
+Backend
+- PHP 8.4 (FPM) / Laravel 13
+- MySQL 8.4 (utf8mb4_unicode_ci)
+- Redis 8 Alpine (colas + Horizon; opcionalmente cache)
+- Laravel Horizon 5 (supervisión de colas Redis)
+- Laravel Fortify (login web, 2FA/passkeys disponibles)
+- Laravel Sanctum (API móvil, tokens Bearer)
+- Spatie laravel-permission 8 (roles/permisos)
+- Guzzle (HTTP a integraciones externas)
+
+Frontend (panel web)
+- Vite 8 + Tailwind 4
+- Tabler Core + Tabler Icons (`ti ti-*`)
+- Bootstrap 5 + jQuery
+- DataTables server-side (helper propio `createDataTable`)
+- Google Maps JS + Terra Draw (polígonos de zonas)
+- jsPDF / QR (documentos)
+
+Auth dual
+- Web: sesión cookie (Fortify, guard `web`, home `/dashboard`)
+- API: Sanctum `auth:sanctum` (login JSON → token Bearer)
+
+Tests
+- PHPUnit 12
+- Feature + Unit
+- En tests: sqlite :memory:, QUEUE_CONNECTION=sync, CACHE_STORE=array
+
+
+================================================================================
+2. DOCKER — LÓGICA DE DISEÑO
+================================================================================
+
+Hay DOS compose files. Misma imagen PHP, distintos servicios según entorno.
+
+2.1 Principio
+- Un único Dockerfile (php:8.4-fpm) se reutiliza en 3 procesos:
+  php-fpm (HTTP), horizon (workers), scheduler (cron Laravel).
+- Nginx NO ejecuta PHP: solo sirve `public/` y hace FastCGI a php-fpm.
+- MySQL y Redis tienen healthcheck. PHP/Horizon/Scheduler esperan
+  `condition: service_healthy` antes de arrancar.
+- El código se monta como volumen `./:/var/www/html` (hot reload de archivos).
+- Red Docker interna: `appnetwork`. Los contenedores se hablan por NOMBRE
+  de servicio (`mysql`, `redis`, `php`), no por localhost.
+
+2.2 Dockerfile (imagen PHP)
+FROM php:8.4-fpm
+ARG INSTALL_XDEBUG=false
+
+Extensiones instaladas (imprescindibles):
+- pdo_mysql, mysqli  → BD
+- pcntl              → OBLIGATORIO para Horizon (fork de workers)
+- redis (pecl)       → cliente phpredis
+- bcmath, exif, gd, intl, mbstring, opcache, soap, zip
+- Composer 2 copiado desde imagen oficial
+
+Xdebug es condicional (solo contenedor `php` de local, NUNCA en horizon/scheduler).
+CMD por defecto: php-fpm (puerto 9000). Horizon y scheduler lo sobrescriben
+con `command:`.
+
+2.3 docker-compose.yml — LOCAL (todo incluido)
+
+Servicios:
+  nginx
+    imagen: nginx:stable-alpine
+    puerto host: ${PORT_NGINX:-8080} → 80
+    volumes: código, docker/nginx/default.conf, logs, certs
+    depends_on: php
+
+  php
+    build Dockerfile, INSTALL_XDEBUG=true (por defecto)
+    working_dir /var/www/html
+    volumes: código + docker/php/php.ini
+    depends_on: mysql healthy + redis healthy
+
+  horizon
+    misma imagen, INSTALL_XDEBUG=false
+    command: php artisan horizon
+    depends_on: mysql healthy + redis healthy
+    NO expone puertos (solo consume Redis)
+
+  scheduler
+    misma imagen, INSTALL_XDEBUG=false
+    command: php artisan schedule:work
+    (equivalente a un cron que corre `schedule:run` cada minuto)
+    depends_on: mysql healthy + redis healthy
+
+  mysql
+    mysql:8.4
+    charset utf8mb4 / collation utf8mb4_unicode_ci
+    MYSQL_DATABASE=db, MYSQL_USER=user, MYSQL_PASSWORD=password, root/root
+    puerto host: ${PORT_MYSQL:-4310} → 3306
+    volumen persistente: mysql_data
+    healthcheck: mysqladmin ping
+
+  redis
+    redis:8-alpine
+    puerto host: ${PORT_REDIS:-6379} → 6379
+    volumen persistente: redis_data
+    healthcheck: redis-cli ping
+
+  phpmyadmin
+    PMA_HOST=mysql
+    puerto host: ${PORT_PHPMYADMIN:-8081} → 80
+
+Red: appnetwork (interna, creada por compose)
+Volúmenes: mysql_data, redis_data
+restart: unless-stopped
+
+2.4 docker-compose-staging.yaml — STAGING/PROD (sin MySQL local)
+
+Diferencias clave:
+- NO hay servicio mysql ni phpmyadmin (la BD es externa al compose).
+- Red `appnetwork` es EXTERNAL (ya existe en el host/servidor).
+- php/horizon/scheduler solo esperan redis healthy (no mysql).
+- restart: always
+- XDEBUG_MODE=off en php/horizon/scheduler
+- Nginx elige conf con ${NGINX_CONF_FILE:-default.conf}
+
+Esto permite desplegar app+redis+horizon+scheduler en un servidor
+mientras MySQL vive en otra máquina o contenedor ya existente.
+
+2.5 Nginx (docker/nginx/default.conf)
+- root: /var/www/html/public
+- try_files → index.php (front controller Laravel)
+- FastCGI a php-ban:9000 (NO usar "php:9000" si el container_name es php-ban;
+  el default.conf actual usa el container_name)
+- client_max_body_size 150M
+- niega acceso a /.env
+
+2.6 Makefile (atajos locales)
+  make up       → docker compose down + up -d
+  make install  → composer install dentro de php-ban
+  make enter    → bash en php-ban
+  make nginx    → sh en nginx-ban
+  make clear    → config:cache/clear + horizon:terminate + queue:restart + route cache
+  make ngrok    → túnel a localhost:8080
+
+Tests / artisan SIEMPRE se corren DENTRO del contenedor:
+  docker exec php-ban php artisan test
+  docker exec php-ban php artisan migrate
+  docker exec php-ban php artisan permissions:create
+  docker exec php-ban php artisan roles:create
+  docker exec php-ban php artisan initial-setup
+
+2.7 Variables .env que Docker espera (local)
+
+El .env.example de Laravel viene con sqlite/database. En Docker local hay que
+apuntar a los NOMBRES DE SERVICIO:
+
+  APP_URL=http://localhost:8080
+
+  DB_CONNECTION=mysql
+  DB_HOST=mysql          # nombre del servicio, NO 127.0.0.1
+  DB_PORT=3306           # puerto INTERNO del contenedor
+  DB_DATABASE=db
+  DB_USERNAME=user
+  DB_PASSWORD=password
+
+  REDIS_CLIENT=phpredis
+  REDIS_HOST=redis       # nombre del servicio
+  REDIS_PORT=6379
+  REDIS_PASSWORD=null
+
+  QUEUE_CONNECTION=redis
+  CACHE_STORE=redis      # o database; Horizon SÍ requiere Redis
+  SESSION_DRIVER=database  # o redis
+
+Sin QUEUE_CONNECTION=redis, Horizon arranca pero no procesa jobs útiles
+(los jobs irían a la tabla `jobs` o sync).
+
+
+================================================================================
+3. REDIS + COLAS + HORIZON
+================================================================================
+
+3.1 Por qué Redis y no la cola `database`
+- Horizon SOLO funciona con Redis.
+- Redis da: workers auto-escalables, métricas, failed jobs UI, tags, balancing.
+- El contenedor `horizon` es un proceso largo (`php artisan horizon`) que
+  lee Redis y fork-ea workers PHP (por eso pcntl en el Dockerfile).
+
+3.2 Conexiones Redis (config/database.php)
+  client: phpredis
+  default  → REDIS_DB=0   (colas + meta de Horizon)
+  cache    → REDIS_CACHE_DB=1  (si CACHE_STORE=redis)
+
+3.3 Colas definidas
+Horizon supervisor-1 consume DOS colas:
+  - default   → jobs genéricos (emails, notificaciones)
+  - invoices  → facturación (más pesada / aislable)
+
+Dispatch explícito a cola:
+  SomeJob::dispatch(...)->onQueue('invoices');
+
+3.4 config/horizon.php (puntos no negociables)
+  use: 'default'          → conexión Redis
+  path: /horizon          → dashboard
+  waits: redis:default → 60s (alerta LongWait)
+  memory_limit master: 64 MB
+  workers:
+    connection: redis
+    queue: ['default', 'invoices']
+    balance: auto
+    autoScalingStrategy: time
+    tries: 1
+    timeout: 60
+    memory worker: 128
+    local maxProcesses: 3
+    production maxProcesses: 10
+
+3.5 Seguridad del dashboard Horizon
+HorizonServiceProvider:
+  Gate::define('viewHorizon') → $user->hasRole('Admin')
+  /horizon queda detrás de sesión web + rol Admin.
+
+3.6 Relación de procesos (importante)
+
+  [HTTP php-fpm]  --dispatch job-->  [Redis lista]
+                                          |
+                                          v
+                                   [contenedor horizon]
+                                          |
+                          +---------------+---------------+
+                          |                               |
+                    cola default                    cola invoices
+                    (emails, etc.)                  (CreateInvoiceJob)
+
+  [contenedor scheduler] cada minuto:
+      php artisan schedule:run
+      (jobs programados se DISPATCHAN a Redis; Horizon los ejecuta)
+
+NUNCA correr `queue:work` a la vez que Horizon (compiten por los mismos jobs).
+NUNCA meter Xdebug en el contenedor horizon (ralentiza workers).
+
+3.7 Jobs actuales (patrón a copiar)
+Ubicación preferida: app/Features/{Modulo}/Jobs/  o  Application/Jobs/
+
+  DispatchInvoiceCreationJobs  (ShouldQueue)
+    - Job "orquestador": busca servicios del día y despacha N CreateInvoiceJob
+    - Pensado para Schedule (hoy comentado en routes/console.php)
+
+  CreateInvoiceJob (ShouldQueue)
+    - Recibe IDs (NO modelos serializados si no hace falta)
+    - Inyecta casos de uso (CreateInvoice) + cliente HTTP externo (Facturapi)
+    - Actualiza estado local tras la integración
+
+  SendContractApprovalEmailJob (ShouldQueue, tries=3)
+    - tags() para Horizon UI
+    - respeta flags ENABLE_SEND_MAILS / DEFAULT_MAIL (no spamea en local)
+
+  TestHorizonJob
+    - smoke test: Log::info al procesarse
+
+Patrón de job:
+  implements ShouldQueue
+  use Queueable
+  constructor con IDs primitivos
+  handle() con dependencias inyectadas por el contenedor
+  onQueue('nombre') cuando no sea default
+
+3.8 Scheduler (routes/console.php)
+Hoy casi vacío (inspire + comentarios). El DISEÑO previsto:
+
+  Schedule::job(new DispatchInvoiceCreationJobs)
+      ->dailyAt('02:00');   // o everyMinute en pruebas
+
+El contenedor `scheduler` YA está corriendo `schedule:work`.
+Basta registrar el Schedule; no hay crontab en el host.
+
+3.9 Comando de recarga tras deploy
+  php artisan horizon:terminate
+  (el contenedor tiene restart: unless-stopped/always → Horizon vuelve a subir
+   con código nuevo)
+
+Makefile `clear` ya hace: config cache/clear + horizon:terminate + queue:restart.
+
+
+================================================================================
+4. ARQUITECTURA DE APLICACIÓN (FEATURES)
+================================================================================
+
+4.1 Capas — qué va dónde
+
+  app/Features/{Entity}/
+    Application/     → casos de uso invocables (__invoke)
+                       CreateX, UpdateX, DeleteX, SearchXHeaders, ListX
+    Domain/          → SOLO si hay contratos/reglas (ej. InvoiceCommand)
+    Infrastructure/  → SOLO si hay API externa o I/O no Eloquent
+    Jobs/            → jobs de ese módulo
+
+  app/Http/Controllers/Dashboard/  → páginas Blade del portal (CRUD)
+  app/Http/Controllers/Admin/      → JSON Headers/DataTables del portal (sesión)
+  app/Http/Controllers/Api/        → API móvil (Sanctum), NO el DataTable del portal
+
+  app/Http/Requests/Admin/         → Form Requests (authorize + rules)
+  app/Models/                      → Eloquent, fillable = columnas reales
+  app/Mail/                        → mails
+  app/Rules/                       → rules reutilizables
+
+NO crear:
+  - carpeta UseCases extra
+  - controllers dentro de Features
+  - repositorios/DTOs/mapeadores solo para pasar datos
+  - LengthAwarePaginator en index (usar Headers + DataTables)
+
+Controladores DELGADOS: validan/autorizan y llaman al caso de uso.
+Eloquent SÍ se usa directo desde Application en CRUD simples.
+
+4.2 Convención Headers (listados server-side)
+
+Para CUALQUIER index de tabla:
+
+  Application:
+    Search{Entity}Headers  → usa BuilderFilter::paginate
+    {Entity}Header         → proyección (opcional, readonly)
+    {Entity}HeaderSearchResult
+
+  HTTP:
+    Admin\{Entity}HeadersController  → offset, limit, draw, order_by, order_direction
+    Dashboard\{Entity}Controller     → index/create/store/edit/update/destroy (Blade)
+
+  JS:
+    resources/js/modules/{entidad}/index.js
+    createDataTable('#entidad-table', columns, { ajax: fetch(...) })
+    params: offset, limit, draw, order_by, order_direction
+    respuesta: { draw, recordsTotal, recordsFiltered, data }
+
+  Vista:
+    card + table#entidad-table data-url="..." + tbody vacío
+    NO @forelse, NO paginator Blade
+
+  Rutas (grupo auth en web.php para CRUDs NUEVOS):
+    Route::get('entity-headers', [EntityHeadersController::class, 'index']);
+    Route::resource('entities', EntityController::class)->except(['show']);
+
+Query compartida: app/Features/Shared/Query/
+  QueryFilter, QueryOptions, BuilderFilter, QueryModifierInterface
+  BuilderFilter::paginate clona el builder:
+    1) count total
+    2) count filtered (aplica FILTER, ignora offset/limit/order)
+    3) get data con options
+  Envelope DataTables lo arma el paginate (draw/recordsTotal/recordsFiltered).
+
+FilterRequest (Admin) convierte query string + filters[] a QueryFilter/QueryOptions
+con whitelist de campos (nunca filtrar columnas arbitrarias).
+
+4.3 Rutas (bootstrap/app.php)
+
+  web.php     → dashboard, CRUDs nuevos (drivers, services, manifests index)
+  admin.php   → grupo extra con middleware web; hoy tiene users/roles/clients/
+                zones/contracts + algunos headers legacy bajo prefix admin
+  api.php     → API móvil Sanctum
+  console.php → artisan commands + Schedule
+  health      → GET /up
+
+Middleware:
+  trustProxies('*')  → HTTPS detrás de nginx/SSL
+  alias Spatie: role, permission, role_or_permission
+
+CONVENCIÓN ACTUAL PARA MÓDULOS NUEVOS (reglas Cursor):
+  CRUD páginas → Dashboard\*  en web.php
+  headers JSON → Admin\*HeadersController en web.php
+  API móvil    → Api\* en api.php
+  NO registrar resources nuevos en admin.php
+
+Nota: el código histórico de clients/zones/contracts/users aún vive en Admin
+y admin.php. Los módulos posteriores (drivers, manifests, services) siguen
+el patrón Dashboard + Headers. Un sistema nuevo debe nacer YA con el patrón
+nuevo, no con el legado.
+
+4.4 Permisos
+Constantes, nunca strings sueltos:
+  app/Features/Permissions/Constants/PermissionTypes.php
+    patrón: {entities}.view|create|update|delete  (+ extras de negocio)
+  RoleTypes.php  → nombres de rol canónicos
+  PermissionHandler → lista completa + etiquetas UI
+
+Comandos de bootstrap:
+  php artisan permissions:create   → sincroniza PermissionTypes a BD
+  php artisan roles:create         → crea roles y syncPermissions
+  php artisan initial-setup        → usuario admin@admin.com / admin
+
+Form Requests: authorize() con PermissionTypes.
+Vistas: ocultar botones sin permiso (UX); el servidor SIEMPRE autoriza.
+
+4.5 Auth
+Web: Fortify, guard web, redirect /dashboard, username=email.
+API: POST /api/auth/login → { token_type, token, user }
+     POST /api/auth/logout (sanctum)
+     GET  /api/auth/user
+     recursos protegidos: middleware auth:sanctum
+User usa HasApiTokens + HasRoles + SoftDeletes.
+Chofer: User hasOne Driver; la API de servicios del día filtra por zone_id
+del Driver del usuario autenticado.
+
+4.6 Frontend
+Layout: resources/views/layouts/app.blade.php (Tabler page + header + alerts)
+Partials: partials/dashboard/header.blade.php (menú)
+Forms: x-form.input + iconos Tabler (ti ti-*)
+HTTP admin: BanHttp.get / BanHttp.post en resources/js/admin.js (CSRF, loader)
+DataTables: resources/js/shared/datatable.js
+Cada módulo JS se registra en vite.config.js (input[]).
+Paginación Blade (si se usa en algún lado): Bootstrap 5.
+Si APP_URL es https://, AppServiceProvider fuerza URL::forceScheme('https')
+para no romper @vite (Mixed Content).
+
+4.7 Integraciones externas (patrón Command)
+No llamar Guzzle desde el caso de uso a palo seco.
+
+  Domain: interface InvoiceCommand { getPayload, getUrl, getMethod }
+  Infrastructure: CreateCfdiCommand implements InvoiceCommand
+  Shared/Infrastructure/{Proveedor}/{Proveedor}Client
+    execCommand(Command): si FEATURE_ENABLED hace HTTP real;
+    si no, responde stub (para local/tests sin credenciales)
+
+Flags: FACTURAPI_ENABLED, FACTURAPI_SECRET_KEY, FACTURAPI_URI
+Mails: ENABLE_SEND_MAILS, DEFAULT_MAIL
+
+config/business.php: datos de empresa (razón social, direcciones) vía env,
+NO hardcodeados. Un sistema nuevo debe tener su propio config/business.php.
+
+
+================================================================================
+5. FLUJOS TRANSVERSALES (independientes del negocio RPBI)
+================================================================================
+
+Estos flujos se copian cambiando nombres de entidad:
+
+A) Alta con aprobación dual
+   1. Usuario operativo captura entidad + configuración
+   2. Envía a aprobación → job de mail a roles directivos
+   3. Dos roles distintos deben aprobar (tabla *approvals* por rol)
+   4. Al completar ambas: activa, cancela el registro previo ACTIVE
+   5. Opcional: genera agenda/servicios del periodo del contrato
+
+B) Generación masiva de "servicios/citas" a partir de un contrato
+   BulkCreateX + DateGenerator
+   frecuencias: weekly | biweekly | monthly
+   ajusta sábados/domingos a día hábil
+   por cada fecha: cabecera + detalles + documento asociado
+
+C) Facturación asíncrona
+   Scheduler despacha orquestador → N jobs en cola `invoices`
+   cada job: persiste local + llama proveedor + guarda IDs externos + QR
+   debe ser idempotente (reintentos)
+
+D) API de campo (móvil)
+   login Sanctum
+   listado del día filtrado por zona/asignación del usuario
+   token-push (registro de dispositivo; stub hoy)
+
+E) Documentos PDF en el browser
+   JS propio (jsPDF) para manifiestos/facturas; el index DataTable
+   renderiza botones de acción en la columna actions (HTML en frontend,
+   NO en el caso de uso).
+
+
+================================================================================
+6. BASE DE DATOS (solo forma, no dominio)
+================================================================================
+
+Migraciones Laravel estándar.
+Tablas de framework: users (soft deletes, 2FA, passkeys), cache, jobs,
+job_batches, failed_jobs, permission tables (Spatie), personal_access_tokens.
+
+Patrón de tablas de negocio:
+  - catálogos (zones, contracts, states, cities, profiles)
+  - entidades operativas (clients, drivers, services, manifests, invoices)
+  - tablas puente / estado (client_contracts, approvals, details)
+
+Reglas:
+  fillable y relaciones = columnas reales de la migración. No inventar campos.
+  Factory + test Feature por CRUD.
+  No correr migraciones salvo que se pida (regla del repo origen).
+
+Tests: sqlite memory, queue sync. No dependen de Redis/Docker.
+
+
+================================================================================
+7. CONVENCIONES PARA AGENTES (Cursor)
+================================================================================
+
+Reglas del repo origen (copiar a .cursor/rules del sistema nuevo):
+
+1) Index DataTable = patrón manifiestos
+   - JS propio por entidad, no reutilizar table id ni index.js de otra
+   - fetch offset/limit/draw
+   - HeadersController en Admin
+   - Search*Headers + BuilderFilter::paginate
+   - no LengthAwarePaginator, no @forelse
+
+2) CRUD resource en web.php
+   - Dashboard = páginas
+   - Admin = fetch headers
+   - Api = app móvil
+   - Store/Update Request con authorize() + PermissionTypes
+   - vistas index/create/edit/_form con x-form.input e iconos Tabler
+   - permisos {entities}.view|create|update|delete
+
+3) Formularios: siempre iconos Tabler; HTTP vía BanHttp (admin.js)
+
+4) Features: Application directa, Domain/Infrastructure solo si hace falta
+
+5) Idioma UI y respuestas al usuario: español
+
+
+================================================================================
+8. CHECKLIST DE ARRANQUE DE UN SISTEMA CLON
+================================================================================
+
+Infra
+[ ] Dockerfile php:8.4-fpm + pcntl + redis + composer
+[ ] docker-compose.yml: nginx, php, horizon, scheduler, mysql, redis, phpmyadmin
+[ ] docker-compose-staging.yaml: sin mysql, red external, xdebug off
+[ ] nginx default.conf → public/ + fastcgi al container_name de php
+[ ] Makefile: up, enter, install, clear (incluye horizon:terminate)
+[ ] .env Docker: DB_HOST=mysql, REDIS_HOST=redis, QUEUE_CONNECTION=redis
+
+App
+[ ] Laravel 13 + Fortify + Sanctum + Horizon + Spatie Permission
+[ ] HorizonServiceProvider gate por rol Admin
+[ ] horizon.php colas default + {cola-de-negocio}
+[ ] bootstrap/app.php: web, api, admin.php extra, trustProxies, aliases Spatie
+[ ] Features/Shared/Query (BuilderFilter, QueryFilter, QueryOptions)
+[ ] Features/Permissions (PermissionTypes, RoleTypes, PermissionHandler)
+[ ] comandos permissions:create, roles:create, initial-setup
+[ ] layout Tabler + datatable.js + admin.js + vite inputs
+[ ] reglas Cursor: index-datatable, crud-web-resource, forms-with-icons
+
+Auth
+[ ] Fortify login web → /dashboard
+[ ] POST /api/auth/login|logout + auth:sanctum
+[ ] User: HasApiTokens, HasRoles, SoftDeletes
+
+Calidad
+[ ] PHPUnit Feature por CRUD
+[ ] phpunit.xml: sqlite memory, queue sync
+[ ] Factories de modelos
+
+
+================================================================================
+9. ÁRBOL DE DIRECTORIOS A REPLICAR (esqueleto)
+================================================================================
+
+El sistema nuevo debe nacer con esta forma. Cambia {Entity} por el dominio nuevo.
+
+  docker-compose.yml
+  docker-compose-staging.yaml
+  Dockerfile
+  Makefile
+  docker/
+    nginx/default.conf
+    php/php.ini
+    php/xdebug.ini
+  bootstrap/
+    app.php
+    providers.php
+  routes/
+    web.php          # CRUDs nuevos + headers + dashboard
+    api.php          # móvil Sanctum
+    admin.php        # legado; en un sistema NUEVO déjalo mínimo o vacío
+    console.php      # Schedule
+  app/
+    Features/
+      Shared/
+        Query/       # BuilderFilter, QueryFilter, QueryOptions, interfaces
+        Infrastructure/{Proveedor}/
+      Permissions/
+        Constants/PermissionTypes.php
+        Constants/RoleTypes.php
+        PermissionHandler.php
+      {Entity}/
+        Application/Create{Entity}.php
+        Application/Update{Entity}.php
+        Application/Delete{Entity}.php
+        Application/Search{Entity}Headers.php
+        Jobs/        # opcional
+        Domain/      # opcional
+        Infrastructure/
+    Http/Controllers/
+      Dashboard/{Entity}Controller.php
+      Admin/{Entity}HeadersController.php
+      Api/Auth/LoginController.php
+      Api/Auth/LogoutController.php
+      Api/{RecursoMovil}Controller.php
+    Http/Requests/Admin/
+      Store{Entity}Request.php
+      Update{Entity}Request.php
+      FilterRequest.php
+    Models/
+    Providers/
+      AppServiceProvider.php
+      FortifyServiceProvider.php
+      HorizonServiceProvider.php
+    Console/Commands/
+      CreatePermissionCommand.php   # permissions:create
+      CreateRolesCommand.php        # roles:create
+      InitialSetupCommand.php       # initial-setup
+    Mail/
+    Rules/
+    Jobs/                           # jobs transversales (TestHorizonJob)
+  resources/
+    css/app.css
+    js/
+      app.js                        # Tabler + admin + permissions/users/roles
+      admin.js                      # BanHttp (get/post/put + CSRF + loader)
+      components/loader.js
+      shared/datatable.js
+      modules/{entidad}/index.js
+    views/
+      layouts/app.blade.php
+      auth/login.blade.php
+      dashboard.blade.php
+      partials/dashboard/header.blade.php
+      partials/dashboard/footer.blade.php
+      components/form/input.blade.php
+      {entidades}/index.blade.php
+      {entidades}/create.blade.php
+      {entidades}/edit.blade.php
+      {entidades}/_form.blade.php
+  config/
+    horizon.php
+    queue.php
+    sanctum.php
+    permission.php
+    fortify.php
+    business.php
+  database/
+    migrations/
+    factories/
+  tests/
+    Feature/{Entities}/{Entity}CrudTest.php
+    Feature/{Entities}/{Entity}HeaderControllerTest.php
+    Unit/Shared/Query/
+  .cursor/rules/
+    index-datatable.mdc
+    crud-web-resource.mdc
+    forms-with-icons.mdc
+
+
+================================================================================
+10. FRONTEND HTTP Y UI (detalle operativo)
+================================================================================
+
+10.1 BanHttp (resources/js/admin.js)
+ÚNICO cliente HTTP del panel. Axios preconfigurado:
+  X-Requested-With: XMLHttpRequest
+  Accept: application/json
+  X-CSRF-TOKEN desde <meta name="csrf-token">
+
+API global: window.BanHttp = { get, post, put }
+  get(url, loaderText, params, headers, loader, timeout)
+  post(url, data, loaderText, { params, headers, loader, timeout })
+  put(...)
+
+Muestra/oculta loader global (components/loader.js).
+Toasts: showToast(type, text) append a .toast-container del layout.
+
+NO usar axios suelto en módulos. DataTables del patrón nuevo usan `fetch`
+en el ajax custom (sesión cookie via same-origin); BanHttp se usa para
+modales, wizards y acciones puntuales.
+
+app.js importa: Tabler + admin + permissions + users + roles.
+Cada index de entidad se carga con @vite en @push('scripts'), NO en app.js
+(así no se ejecuta createDataTable en páginas que no tienen la tabla).
+
+10.2 Layout
+layouts/app.blade.php:
+  - lang=es, csrf-token, @vite css/app.css + js/app.js
+  - partials.dashboard.header (logo, user dropdown, menú @can)
+  - page-title (@yield) + page-actions (@yield)
+  - alerts session('success') / session('error')
+  - @yield('content')
+  - footer + toast-container
+  - @stack('scripts')
+
+Menú: cada ítem envuelto en @can(PermissionTypes::X_VIEW).
+El dropdown muestra nombre + primer rol. Logout POST Fortify.
+
+10.3 Componente x-form.input
+Props: name, label, type, icon (default ti ti-forms), value, required,
+disabled, autocomplete, help, id.
+Patrón Tabler input-icon. old() + $errors. Selects NO caben aquí: se
+escriben a mano con input-icon + form-select + @error.
+
+Botones siempre con icono a la izquierda:
+  Guardar  ti ti-device-floppy
+  Cancelar ti ti-x
+  Volver   ti ti-arrow-left
+  Nuevo    ti ti-plus
+  Editar   ti ti-pencil
+  Eliminar ti ti-trash
+
+
+================================================================================
+11. CRUD CANÓNICO (copiar de Drivers, no de Clients)
+================================================================================
+
+Clients/Zones/Contracts son LEGADO (controllers en Admin, rutas en admin.php).
+El molde vigente es Drivers. Un sistema nuevo debe clonar ESTE molde.
+
+11.1 Rutas (web.php, grupo auth)
+
+  Route::get('driver-headers', [DriverHeadersController::class, 'index'])
+      ->name('driver-headers.index');
+  Route::resource('drivers', DriverController::class)->except(['show']);
+
+11.2 Dashboard\{Entity}Controller
+- final class, constructor con Create/Update/Delete inyectados
+- index(): authorize VIEW → return view('{entidades}.index')  SIN datos
+- create/edit: authorize + catálogos para selects
+- store/update: Request + caso de uso + redirect index + flash success
+- destroy: caso de uso + flash success
+- El controlador NO arma DataTables ni consulta el listado
+
+11.3 Admin\{Entity}HeadersController
+- index(Request): offset (>=0), limit (default 20), draw (>=1)
+- QueryOptions::offset/limit/orderBy(order_by, order_direction)
+- return response()->json( ($searchHeaders)(filters, draw) )
+
+11.4 Search{Entity}Headers
+- BuilderFilter::paginate(builder, modifiers, draw)
+- SELECT solo columnas necesarias + joins de nombres para ordenar
+- map() a array plano: id, campos de tabla, nombres de relaciones
+- El `name` de cada columna JS DEBE coincidir con columnas SQL reales
+  (drivers.name, zones.name) para que order_by no rompa
+
+11.5 Vista index
+  @extends layouts.app
+  @can CREATE → botón Nuevo
+  card + table#{entidades}-table.table.table-vcenter.card-table
+  data-url="{{ route('{entity}-headers.index') }}"
+  thead con columnas + Acciones; tbody vacío
+  @push('scripts') @vite('resources/js/modules/{entidades}/index.js')
+
+11.6 JS index (drivers/index.js es la plantilla)
+  createDataTable('drivers-table', columns, {
+    entityName: '...',
+    pageLength: 10,
+    ajax: async (data, callback) => {
+      params: offset=data.start, limit=data.length, draw=data.draw
+      si hay order: order_by = column.name, order_direction = dir
+      fetch(`/driver-headers?${params}`, { headers: { Accept: application/json } })
+      callback({ draw, recordsTotal, recordsFiltered, data })
+      catch → callback vacío
+    }
+  })
+  Columna actions: HTML con Editar (GET /drivers/{id}/edit) y form DELETE
+  con _token + _method=DELETE + confirm(). CSRF leído del meta.
+
+11.7 Vistas create/edit/_form
+create: form POST route store, @csrf, include _form, footer Cancelar/Guardar
+edit:   form POST route update, @csrf @method('PUT'), include _form
+_form:  x-form.input por campo + selects con old() y @error
+
+11.8 Form Requests
+authorize(): $this->user()?->can(PermissionTypes::X_CREATE) ?? false
+rules(): solo columnas reales, Rule::exists, unique, rules custom
+attributes(): etiquetas en español para mensajes
+
+11.9 Permisos
+PermissionTypes::DRIVERS_VIEW|CREATE|UPDATE|DELETE
+PermissionHandler los lista y etiqueta
+roles:create los asigna al rol que corresponda
+Vistas: @can para botones. Servidor: authorize() SIEMPRE.
+
+11.10 Tests Feature (patrón DriverCrudTest)
+RefreshDatabase
+Helper actingAsUserWithPermissions(array): findOrCreate Permission, givePermissionTo
+Casos mínimos:
+  - autorizado ve index (assertSee table id + data-url)
+  - no autorizado → 403
+  - create persiste
+  - update persiste
+  - delete elimina
+  - validación 422/redirect errors
+  - headers JSON: draw/recordsTotal/data con usuario autorizado
+
+
+================================================================================
+12. AUTH WEB + API (contratos)
+================================================================================
+
+12.1 Web (Fortify)
+- Guard web, username=email, home=/dashboard
+- Vista custom auth.login (Fortify::loginView)
+- Rate limit login: 5/min por email|ip
+- Register de usuarios NO es público: se crean en el CRUD de users
+  (Fortify createUsersUsing está comentado a propósito)
+- 2FA/passkeys existen en el paquete y migraciones, pero las features
+  extra de Fortify están mayormente desactivadas/comentadas
+- Logout: POST route('logout') desde el header
+
+12.2 API móvil (Sanctum)
+
+POST /api/auth/login
+  body: { email, password, device_name? }
+  200:  { token_type: "Bearer", token: "...", user: {...} }
+  422:  credenciales inválidas (ValidationException en email)
+
+POST /api/auth/logout   (Bearer)
+  borra currentAccessToken()
+  200:  { message: "Sesión cerrada correctamente." }
+
+GET  /api/auth/user     (Bearer)
+GET  /api/user          (Bearer)  — ruta default Sanctum
+
+GET  /api/services      (Bearer)
+  filtra por zona del Driver ligado al User + service_date = hoy
+  usa FilterRequest + SearchServiceHeaders
+  respuesta envelope DataTables/headers
+
+POST /api/token-push    (Bearer)
+  stub: registra token de notificaciones push (hoy solo log)
+
+Prefijo Laravel: /api  (bootstrap withRouting api:)
+Tokens: tabla personal_access_tokens (migración Sanctum)
+User: HasApiTokens
+
+Para un sistema nuevo: el login debe exigir device_name (hoy está
+comentado). Restringir login móvil a roles de campo (regla UserIsChofer
+o equivalente).
+
+
+================================================================================
+13. MODELOS Y RELACIONES (forma, no dominio RPBI)
+================================================================================
+
+Patrones que se copian cambiando nombres:
+
+User
+  HasApiTokens, HasRoles, SoftDeletes, HasFactory
+  fillable: name, email, password
+  casts: password hashed, email_verified_at datetime
+  hasOne perfil-de-campo (Driver)
+
+Catálogo geográfico
+  Zone: name, description, color, geometry (array/GeoJSON), is_active
+  State / City: catálogo, clients pertenecen a state_id/city_id
+
+Entidad comercial
+  Client: datos fiscales/contacto + configuration_status + zone_id
+  estados como CONSTANTES del modelo (no magics strings)
+  hasMany contratos-asignados
+  hasOne pending / hasOne active (filtrado por status)
+
+Contrato catálogo vs contrato asignado
+  Contract: plantilla (name, duration_months, frequency)
+  ClientContract: client_id, contract_id, status int, start/end, SoftDeletes
+  STATUS_PENDING/ACTIVE/COMPLETED/CANCELLED
+
+Aprobación dual
+  tabla *approvals*: unique (entidad_id, role_name)
+  se completa cuando TODOS los roles de APPROVAL_DIRECTOR_ROLES tienen fila
+
+Agenda generada
+  Service: fecha, client_id, contract_id, zone_id, status
+  ServiceDetail: renglones (perfiles/productos del contrato)
+  BulkCreate + DateGenerator (weekly/biweekly/monthly, ajuste fin de semana)
+
+Documento operativo
+  Manifest pertenece a Service (se crea vacío al generar la agenda)
+
+Factura asíncrona
+  Invoice pertenece a Client + Service
+  campos locales + IDs del proveedor externo + QR en public/
+
+Regla: $fillable y relaciones = columnas de la migración. Factory por modelo
+de CRUD. Constantes de status EN el modelo.
+
+
+================================================================================
+14. TESTS, SEED Y COMANDOS
+================================================================================
+
+phpunit.xml fuerza:
+  sqlite :memory:, QUEUE_CONNECTION=sync, CACHE_STORE=array,
+  SESSION_DRIVER=array, MAIL_MAILER=array
+  → los tests NO necesitan Docker/Redis/Horizon
+
+Correr:
+  docker exec php-ban php artisan test
+  docker exec php-ban php artisan test tests/Feature/Drivers
+
+Comandos de bootstrap (en este orden tras migrate):
+  1. php artisan permissions:create
+  2. php artisan roles:create
+  3. php artisan initial-setup     → admin@admin.com / admin  rol Admin
+
+DatabaseSeeder del origen casi vacío (un user de factory). El setup real
+es por comandos artisan, no por seeders. Replicar eso.
+
+Otros comandos existentes (no críticos para el clon):
+  users:update-bulk-passwords
+  GenerateTestDataCommand
+  roles:create ya cubre sync de permisos por rol
+
+
+================================================================================
+15. DIAGRAMA DE ARRANQUE LOCAL
+================================================================================
+
+  make up
+       │
+       ├─ mysql  (healthcheck ping) ── volumen mysql_data
+       ├─ redis  (healthcheck ping) ── volumen redis_data
+       │
+       ├─ php        waits mysql+redis healthy ── php-fpm :9000
+       ├─ horizon    waits mysql+redis healthy ── php artisan horizon
+       ├─ scheduler  waits mysql+redis healthy ── php artisan schedule:work
+       │
+       ├─ nginx      waits php ── host :8080 → FastCGI php-ban:9000
+       └─ phpmyadmin waits mysql ── host :8081
+
+  Primera vez:
+    docker exec php-ban composer install
+    docker exec php-ban php artisan key:generate
+    docker exec php-ban php artisan migrate
+    docker exec php-ban php artisan permissions:create
+    docker exec php-ban php artisan roles:create
+    docker exec php-ban php artisan initial-setup
+    npm install && npm run dev   (o build)
+
+  Verificar Horizon:
+    login como Admin → GET /horizon
+    php artisan tinker: TestHorizonJob::dispatch()
+    debe aparecer en Horizon UI y en laravel.log
+
+  .env mínimo Docker (NO uses 127.0.0.1 para mysql/redis):
+    APP_URL=http://localhost:8080
+    DB_CONNECTION=mysql
+    DB_HOST=mysql
+    DB_PORT=3306
+    DB_DATABASE=db
+    DB_USERNAME=user
+    DB_PASSWORD=password
+    REDIS_CLIENT=phpredis
+    REDIS_HOST=redis
+    REDIS_PORT=6379
+    QUEUE_CONNECTION=redis
+    CACHE_STORE=redis
+    SESSION_DRIVER=database
+
+  Puerto MySQL en el HOST es 4310 (para clientes externos). Dentro de
+  Docker siempre 3306 y hostname `mysql`.
+
+
+================================================================================
+16. QUÉ NO COPIAR DEL ORIGEN
+================================================================================
+
+- Dominio RPBI: manifiestos SEMARNAT, perfiles RPBI, Facturapi SAT, SPA
+- config/business.php con claves DRIVER_/TRANSPORTISTA_ (haz las del negocio nuevo)
+- Clients/Zones controllers en Admin (usa el molde Drivers)
+- QUEUE_CONNECTION=database del .env.example (en Docker debe ser redis)
+- docker-compose-dev.yml (el Makefile lo menciona; no existe en el repo)
+- TokenPushController vacío, jobs de factura comentados: copia el PATRÓN,
+  no el estado a medias
+- Locale en: el origen tiene APP_LOCALE=en; el clon debe nacer en es
+
+
+================================================================================
+17. PROMPT LISTO PARA PEGAR A UN AGENTE
+================================================================================
+
+Copia desde aquí hasta el final. Sustituye los placeholders entre {{ }}.
+
+--------------------------------------------------------------------------------
+
+Quiero que crees un sistema NUEVO con la MISMA arquitectura de infraestructura
+y convenciones de un producto Laravel que ya existe (BAN RPBI). El modelo de
+negocio es OTRO; no copies entidades RPBI (manifiestos, residuos, SAT, etc.).
+
+Negocio nuevo: {{DESCRIPCIÓN CORTA DEL NEGOCIO}}
+Nombre del proyecto: {{NOMBRE}}
+Módulos funcionales iniciales: {{LISTA DE MÓDULOS}}
+Roles: {{LISTA DE ROLES}}
+
+STACK OBLIGATORIO
+- PHP 8.4-fpm, Laravel 13, MySQL 8.4 utf8mb4, Redis 8 Alpine
+- Laravel Horizon (colas Redis), scheduler como contenedor
+- Fortify (web), Sanctum (API móvil), Spatie Permission
+- Vite 8, Tailwind 4, Tabler + Bootstrap 5, jQuery, DataTables server-side
+- PHPUnit 12
+
+DOCKER (replicar esta lógica, no improvisar)
+1. Un solo Dockerfile php:8.4-fpm con: pdo_mysql, pcntl (obligatorio Horizon),
+   redis pecl, bcmath, gd, intl, mbstring, opcache, soap, zip, composer 2.
+   ARG INSTALL_XDEBUG=false. Xdebug SOLO en el servicio php local.
+2. docker-compose.yml local con servicios:
+   nginx (8080), php (fpm), horizon (`php artisan horizon`),
+   scheduler (`php artisan schedule:work`), mysql 8.4, redis 8-alpine,
+   phpmyadmin (8081). Red interna `appnetwork`. Volúmenes mysql_data y redis_data.
+   php/horizon/scheduler dependen de mysql y redis con condition: service_healthy.
+   Código montado en /var/www/html. Nginx root = public/, fastcgi al
+   container_name del php en :9000. client_max_body_size 150M. Deny /.env.
+3. docker-compose-staging.yaml: SIN mysql ni phpmyadmin; red appnetwork external;
+   solo espera redis healthy; XDEBUG off; restart always.
+4. Makefile: up, install (composer en php), enter, clear
+   (config clear/cache + horizon:terminate + queue:restart + route clear/cache).
+5. Documentar en .env.example los valores Docker:
+   DB_HOST=mysql, REDIS_HOST=redis, QUEUE_CONNECTION=redis, CACHE_STORE=redis.
+
+HORIZON / REDIS / COLAS
+- QUEUE_CONNECTION=redis, REDIS_CLIENT=phpredis, REDIS_HOST=redis.
+- Horizon usa conexión Redis `default`. Dashboard en /horizon, Gate viewHorizon
+  solo rol Admin.
+- Un supervisor que consume colas `default` y una cola de negocio
+  (ej. `invoices` o el nombre que corresponda). balance auto, tries 1, timeout 60.
+  local maxProcesses 3, production 10.
+- Jobs en app/Features/{Modulo}/Jobs/, ShouldQueue, constructor con IDs,
+  handle() con casos de uso inyectados, onQueue explícito si no es default.
+- El scheduler del contenedor ejecuta Schedule; los jobs PESADOS se despachan
+  a Redis, no se ejecutan inline en el schedule.
+- Tests: QUEUE_CONNECTION=sync (phpunit.xml). Nunca queue:work junto a Horizon.
+
+ARQUITECTURA DE CÓDIGO
+- Módulos en app/Features/{Entity}/Application/ como clases invocables
+  (Create, Update, Delete, Search{Entity}Headers). Sin carpeta UseCases.
+- Domain/ e Infrastructure/ solo si hay reglas o APIs externas.
+- Controladores delgados. Validación en Form Requests. Eloquent directo en
+  Application para CRUD simple. No repositorios/DTOs de relleno.
+- Controllers:
+    Dashboard\  → páginas Blade CRUD (index/create/edit/store/update/destroy)
+    Admin\      → JSON Headers/DataTables del portal (sesión). NO la app móvil.
+    Api\        → API móvil Sanctum.
+- Rutas nuevas en routes/web.php (grupo auth):
+    GET {entity}-headers → Admin\{Entity}HeadersController
+    resource {entities} → Dashboard\{Entity}Controller except show
+  API en routes/api.php. No uses admin.php para resources nuevos.
+- bootstrap/app.php: web + api + grupo admin.php + health /up + trustProxies('*')
+  + aliases Spatie role/permission/role_or_permission.
+
+INDEX / DATATABLES (obligatorio, patrón único)
+- Vista: card + table#{entidad}-table data-url + tbody vacío. Sin @forelse
+  y sin LengthAwarePaginator.
+- JS propio resources/js/modules/{entidad}/index.js cargado con @vite en
+  @push('scripts') de ESA vista, y también listado en vite.config.js input[].
+  createDataTable con ajax custom fetch: offset=data.start, limit=data.length,
+  draw, order_by=column.name (SQL real, no el data display), order_direction.
+  Callback { draw, recordsTotal, recordsFiltered, data }.
+  catch → callback con data [].
+- Backend: Search{Entity}Headers + BuilderFilter::paginate.
+  HeadersController lee offset/limit/draw + QueryOptions::orderBy.
+- Copiar el helper Shared/Query: QueryFilter, QueryOptions, BuilderFilter,
+  QueryModifierInterface, QueryModifierCategory.
+- HTML de acciones (editar + form DELETE con csrf y confirm) se renderiza
+  en el frontend, no en el caso de uso.
+- El index del Dashboard NO pasa filas a la vista. Solo renderiza la tabla vacía.
+
+CRUD CANÓNICO (molde Drivers, NO el de Clients legado)
+Para cada entidad:
+  Dashboard\{Entity}Controller → páginas; authorize + llama Create/Update/Delete
+  Admin\{Entity}HeadersController → JSON
+  Features/{Entity}/Application/{Create,Update,Delete,Search{Entity}Headers}
+  Store/Update{Entity}Request → authorize() + rules de columnas reales + attributes()
+  vistas: index, create, edit, _form
+  factory + tests Feature (index 200, 403, store, update, destroy, headers JSON)
+Vistas create/edit: card form, @csrf, @method PUT en edit, footer
+  Cancelar (ti ti-x) / Guardar (ti ti-device-floppy).
+x-form.input para textos; selects a mano con input-icon + form-select.
+
+PERMISOS / AUTH / SETUP
+- PermissionTypes como constantes {entities}.view|create|update|delete.
+- RoleTypes con nombres de rol. PermissionHandler lista + etiquetas.
+- Comandos en este orden tras migrate: permissions:create, roles:create,
+  initial-setup (admin@admin.com / admin, rol Admin). Setup por comandos,
+  no por DatabaseSeeder.
+- Store/Update Request: authorize() con PermissionTypes. Vistas @can en botones
+  y en el menú. El servidor SIEMPRE authorize().
+- Fortify login web → /dashboard. Register público DESACTIVADO (usuarios se
+  crean en el CRUD interno). Rate limit login 5/min.
+- User: HasApiTokens, HasRoles, SoftDeletes, password hashed.
+- API Sanctum:
+    POST /api/auth/login  → { token_type, token, user }
+    POST /api/auth/logout → borra currentAccessToken
+    GET  /api/auth/user
+  Exigir device_name en login. Restringir a roles de campo si aplica.
+
+FRONTEND
+- Layout Tabler: header (logo, dropdown user+rol, logout POST), menú @can,
+  page-title, page-actions, alerts success/error, toast-container, @stack scripts.
+- Formularios con x-form.input e iconos Tabler `ti ti-*`.
+- HTTP del panel: window.BanHttp { get, post, put } en admin.js (axios + CSRF
+  + loader). No axios suelto. DataTables del patrón nuevo usan fetch same-origin.
+- JS de módulo NO va en app.js (app.js solo Tabler + admin + users/roles/permissions).
+- Idioma UI: español. APP_LOCALE=es.
+- Vite: Tailwind 4 + laravel-vite-plugin + inject jQuery.
+
+AUTH API + JOBS DE EJEMPLO
+- TestHorizonJob en cola default.
+- Un job de negocio en cola dedicada (nombre según el dominio).
+- HorizonServiceProvider: viewHorizon solo rol Admin.
+- Nunca queue:work junto a Horizon. Tras cambios: horizon:terminate
+  (el contenedor tiene restart y vuelve a subir).
+
+INTEGRACIONES (si aplican)
+- Cliente HTTP por proveedor en Features/Shared/Infrastructure/{Proveedor}.
+- Interfaz Command (payload/url/method). Flag ENABLED: HTTP real o stub.
+- Datos de empresa en config/business.php vía env.
+
+CALIDAD
+- Factory + test Feature por CRUD.
+- phpunit.xml: sqlite :memory:, queue sync, cache/session array.
+- Solo campos de migración/modelo. No inventar columnas.
+- No correr migraciones salvo que yo lo pida.
+- Responde siempre en español.
+
+ORDEN DE IMPLEMENTACIÓN
+1) Docker + Dockerfile + compose local/staging + nginx + Makefile + .env.example
+2) Laravel base: Fortify, Sanctum, Horizon, Spatie, providers, bootstrap/app.php
+3) Shared/Query + datatable.js + layout Tabler + reglas .cursor/rules
+4) Permisos/roles/comandos + User + login web y API
+5) Primer CRUD de catálogo con el patrón Headers completo (para que sirva de
+   plantilla de todos los demás)
+6) Jobs de ejemplo (uno default, uno en cola de negocio) + Schedule vacío
+   documentado
+7) README corto: cómo levantar Docker, variables Redis/Horizon, comandos
+   permissions/roles/setup, y cómo se añade un módulo nuevo.
+
+No copies el dominio RPBI. Copia la ESTRUCTURA.
+
+--------------------------------------------------------------------------------
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
