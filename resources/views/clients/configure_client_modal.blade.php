@@ -3,8 +3,6 @@
     $contracts ??= collect();
     /** @var \Illuminate\Support\Collection<int, \App\Models\Zone> $zones */
     $zones ??= collect();
-    /** @var \Illuminate\Support\Collection<int, \App\Models\RpbiProfile> $rpbiProfiles */
-    $rpbiProfiles ??= collect();
     $frequencyLabels = \App\Models\Contract::frequencyLabels();
 @endphp
 
@@ -38,8 +36,7 @@
                         <ul class="steps steps-counter steps-yellow my-3" id="configure-client-steps">
                             <li class="step-item active" data-step="1">Contrato</li>
                             <li class="step-item" data-step="2">Zona</li>
-                            <li class="step-item" data-step="3">Perfiles</li>
-                            <li class="step-item" data-step="4">Resumen</li>
+                            <li class="step-item" data-step="3">Resumen</li>
                         </ul>
 
                         <div class="alert alert-warning d-none" id="configure-client-rejection"></div>
@@ -66,6 +63,8 @@
                                                 data-duration-months="{{ $contract->duration_months }}"
                                                 data-frequency="{{ $frequencyLabels[$contract->frequency] ?? $contract->frequency }}"
                                                 data-notes="{{ e($contract->notes ?? '') }}"
+                                                data-cost="{{ $contract->cost }}"
+                                                data-profiles="{{ e($contract->rpbiProfiles->map(fn ($profile) => $profile->code.' — '.$profile->name)->implode(', ')) }}"
                                             >
                                                 {{ $contract->name }}
                                                 ({{ $contract->duration_months }} meses)
@@ -85,6 +84,14 @@
                                         <div class="datagrid-item">
                                             <div class="datagrid-title">Frecuencia</div>
                                             <div class="datagrid-content" id="configure-contract-frequency">—</div>
+                                        </div>
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Costo</div>
+                                            <div class="datagrid-content" id="configure-contract-cost">—</div>
+                                        </div>
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Perfiles RPBI</div>
+                                            <div class="datagrid-content" id="configure-contract-profiles">—</div>
                                         </div>
                                         <div class="datagrid-item">
                                             <div class="datagrid-title">Notas del catálogo</div>
@@ -166,42 +173,6 @@
                         </div>
 
                         <div class="configure-step d-none" data-step-panel="3">
-                            <p class="text-secondary mb-3">
-                                Selecciona los tipos de residuos RPBI que aplican a este contrato.
-                            </p>
-
-                            <div class="divide-y" id="configure-profiles-list">
-                                @forelse ($rpbiProfiles as $profile)
-                                    <label class="row align-items-center py-2 cursor-pointer" for="configure-profile-{{ $profile->id }}">
-                                        <span class="col-auto">
-                                            <input
-                                                type="checkbox"
-                                                class="form-check-input configure-profile-checkbox"
-                                                name="profile_ids[]"
-                                                id="configure-profile-{{ $profile->id }}"
-                                                value="{{ $profile->id }}"
-                                                data-profile-code="{{ $profile->code }}"
-                                                data-profile-name="{{ $profile->name }}"
-                                            >
-                                        </span>
-                                        <span class="col">
-                                            <span class="fw-bold">
-                                                {{ $profile->code }} — {{ $profile->name }}
-                                            </span>
-                                            <span class="d-block text-secondary">
-                                                {{ $profile->description }}
-                                            </span>
-                                        </span>
-                                    </label>
-                                @empty
-                                    <div class="text-secondary py-3">
-                                        No hay perfiles RPBI configurados.
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        <div class="configure-step d-none" data-step-panel="4">
                             <div class="alert alert-info d-none" id="summary-active-contract-alert"></div>
                             <div class="datagrid">
                                 <div class="datagrid-item">
@@ -215,6 +186,10 @@
                                 <div class="datagrid-item">
                                     <div class="datagrid-title">Duración</div>
                                     <div class="datagrid-content" id="summary-duration">—</div>
+                                </div>
+                                <div class="datagrid-item">
+                                    <div class="datagrid-title">Costo</div>
+                                    <div class="datagrid-content" id="summary-cost">—</div>
                                 </div>
                                 <div class="datagrid-item">
                                     <div class="datagrid-title">Zona de recolección</div>

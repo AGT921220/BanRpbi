@@ -34,7 +34,6 @@
                                 <th>Nombre</th>
                                 <th>Usuario</th>
                                 <th>Teléfono</th>
-                                <th>Zona</th>
                                 <th class="w-1">Acciones</th>
                             </tr>
                         </thead>

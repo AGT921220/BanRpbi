@@ -30,7 +30,10 @@
                     </div>
 
                     <div class="card-body">
-                        @include('contracts._form', ['contract' => $contract])
+                        @include('contracts._form', [
+                            'contract' => $contract,
+                            'rpbiProfiles' => $rpbiProfiles,
+                        ])
                     </div>
 
                     <div class="card-footer d-flex justify-content-end gap-2">

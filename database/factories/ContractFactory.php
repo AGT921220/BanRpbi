@@ -27,6 +27,7 @@ class ContractFactory extends Factory
             'notes' => fake()->optional()->sentence(),
             'duration_months' => 12,
             'frequency' => fake()->randomElement(Contract::FREQUENCIES),
+            'cost' => fake()->randomFloat(2, 500, 25000),
         ];
     }
 }

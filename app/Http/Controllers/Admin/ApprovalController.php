@@ -6,11 +6,11 @@ use App\Features\Approvals\Application\ApproveClientConfiguration;
 use App\Features\Approvals\Application\ListPendingApprovals;
 use App\Features\Approvals\Application\RejectClientConfiguration;
 use App\Features\Permissions\Constants\PermissionTypes;
-use App\Features\Permissions\Constants\RoleTypes;
 use App\Features\Services\Application\BulkCreateServices;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectClientConfigurationRequest;
 use App\Models\Client;
+use App\Models\ClientConfigurationApproval;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -27,10 +27,11 @@ final class ApprovalController extends Controller
     {
         $this->authorize(PermissionTypes::APPROVALS_VIEW);
 
+        
         // return ($this->listPendingApprovals)();
         return view('approvals.index', [
             'clients' => ($this->listPendingApprovals)(),
-            'requiredApprovalRoles' => RoleTypes::APPROVAL_DIRECTOR_ROLES,
+            'requiredApprovalCount' => ClientConfigurationApproval::REQUIRED_COUNT,
         ]);
     }
 
@@ -51,7 +52,7 @@ final class ApprovalController extends Controller
 
         $message = $client->configuration_status === Client::STATUS_APPROVED
             ? 'Cliente aprobado correctamente. El contrato quedó vigente.'
-            : 'Tu aprobación quedó registrada. Falta la del otro director.';
+            : 'Tu aprobación quedó registrada. Falta la de otra persona.';
 
         return redirect()
             ->route('approvals.index')

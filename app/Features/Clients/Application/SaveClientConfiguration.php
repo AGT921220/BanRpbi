@@ -4,6 +4,7 @@ namespace App\Features\Clients\Application;
 
 use App\Models\Client;
 use App\Models\ClientContract;
+use App\Models\Contract;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -15,8 +16,7 @@ final class SaveClientConfiguration
      *     zone_id?: int|null,
      *     start_date?: string|null,
      *     end_date?: string|null,
-     *     notes?: string|null,
-     *     profile_ids?: list<int>|null
+     *     notes?: string|null
      * }  $data
      */
     public function __invoke(Client $client, array $data, ?int $userId = null): Client
@@ -50,6 +50,7 @@ final class SaveClientConfiguration
                     'notes' => $data['notes'] ?? null,
                     'status' => ClientContract::STATUS_PENDING,
                     'user_id' => $userId,
+                    'price' => Contract::query()->whereKey($data['contract_id'])->value('cost'),
                 ];
 
                 if ($pending) {
@@ -62,21 +63,10 @@ final class SaveClientConfiguration
                 $client->configurationApprovals()->delete();
             }
 
-            if (array_key_exists('profile_ids', $data)) {
-                if ($pending !== null) {
-                    $pending->rpbiProfiles()->sync($data['profile_ids'] ?? []);
-                } elseif (! empty($data['profile_ids'])) {
-                    throw ValidationException::withMessages([
-                        'profile_ids' => 'Debe asignar un contrato antes de seleccionar perfiles.',
-                    ]);
-                }
-            }
-
             return $client->fresh([
                 'zone',
-                'pendingContract.contract',
-                'pendingContract.rpbiProfiles',
-                'activeContract.contract',
+                'pendingContract.contract.rpbiProfiles',
+                'activeContract.contract.rpbiProfiles',
             ]) ?? $client;
         });
     }

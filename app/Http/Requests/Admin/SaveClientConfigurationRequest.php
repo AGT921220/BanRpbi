@@ -32,11 +32,6 @@ final class SaveClientConfigurationRequest extends FormRequest
             'start_date' => ['nullable', 'date', 'required_with:contract_id'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date', 'required_with:contract_id'],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'profile_ids' => ['nullable', 'array'],
-            'profile_ids.*' => [
-                'integer',
-                Rule::exists('rpbi_profiles', 'id'),
-            ],
         ];
     }
 
@@ -51,8 +46,6 @@ final class SaveClientConfigurationRequest extends FormRequest
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha de fin',
             'notes' => 'notas',
-            'profile_ids' => 'perfiles',
-            'profile_ids.*' => 'perfil',
         ];
     }
 }

@@ -5,8 +5,8 @@ namespace Tests\Feature\Clients;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Models\Client;
 use App\Models\ClientContract;
-use App\Models\RpbiProfile;
 use App\Models\Contract;
+use App\Models\RpbiProfile;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,6 +34,21 @@ class ClientConfigurationTest extends TestCase
         return $user;
     }
 
+    private function contractWithProfiles(int $profileCount = 2, array $attributes = []): Contract
+    {
+        $contract = Contract::factory()->create($attributes);
+        $profileIds = RpbiProfile::query()
+            ->orderBy('code')
+            ->limit($profileCount)
+            ->pluck('id')
+            ->all();
+
+        $this->assertCount($profileCount, $profileIds);
+        $contract->rpbiProfiles()->sync($profileIds);
+
+        return $contract->fresh(['rpbiProfiles']) ?? $contract;
+    }
+
     public function test_can_save_partial_configuration_without_submitting(): void
     {
         Mail::fake();
@@ -43,11 +58,8 @@ class ClientConfigurationTest extends TestCase
         ]);
 
         $client = Client::factory()->create();
-        $contract = Contract::factory()->create(['duration_months' => 12]);
+        $contract = $this->contractWithProfiles(2, ['duration_months' => 12]);
         $zone = Zone::factory()->create();
-        $profiles = RpbiProfile::query()->orderBy('code')->take(2)->get();
-
-        $this->assertGreaterThanOrEqual(2, $profiles->count());
 
         $response = $this->putJson(route('clients.configuration.save', $client), [
             'contract_id' => $contract->id,
@@ -55,7 +67,6 @@ class ClientConfigurationTest extends TestCase
             'start_date' => '2026-08-01',
             'end_date' => '2027-08-01',
             'notes' => 'Borrador',
-            'profile_ids' => $profiles->pluck('id')->all(),
         ]);
 
         $response->assertOk();
@@ -73,20 +84,10 @@ class ClientConfigurationTest extends TestCase
             'client_id' => $client->id,
             'contract_id' => $contract->id,
             'status' => ClientContract::STATUS_PENDING,
+            'price' => $contract->cost,
         ]);
 
-        $clientContractId = ClientContract::query()
-            ->where('client_id', $client->id)
-            ->where('status', ClientContract::STATUS_PENDING)
-            ->value('id');
-
-        foreach ($profiles as $profile) {
-            $this->assertDatabaseHas('client_contract_profiles', [
-                'client_contract_id' => $clientContractId,
-                'rpbi_profile_id' => $profile->id,
-            ]);
-        }
-
+        $this->assertDatabaseCount('contract_rpbi_profiles', 2);
         Mail::assertNothingSent();
     }
 
@@ -108,7 +109,7 @@ class ClientConfigurationTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    public function test_submit_requires_at_least_one_profile(): void
+    public function test_submit_requires_contract_with_profiles(): void
     {
         Mail::fake();
 
@@ -125,13 +126,12 @@ class ClientConfigurationTest extends TestCase
             'zone_id' => $zone->id,
             'start_date' => '2026-08-01',
             'end_date' => '2027-08-01',
-            'profile_ids' => [],
         ])->assertOk();
 
         $response = $this->postJson(route('clients.configuration.submit', $client));
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['profile_ids']);
+        $response->assertJsonValidationErrors(['contract_id']);
         Mail::assertNothingSent();
     }
 
@@ -145,18 +145,14 @@ class ClientConfigurationTest extends TestCase
         ]);
 
         $client = Client::factory()->create();
-        $contract = Contract::factory()->create();
+        $contract = $this->contractWithProfiles(1);
         $zone = Zone::factory()->create();
-        $profileId = RpbiProfile::query()->value('id');
-
-        $this->assertNotNull($profileId);
 
         $this->putJson(route('clients.configuration.save', $client), [
             'contract_id' => $contract->id,
             'zone_id' => $zone->id,
             'start_date' => '2026-08-01',
             'end_date' => '2027-08-01',
-            'profile_ids' => [$profileId],
         ])->assertOk();
 
         $response = $this->postJson(route('clients.configuration.submit', $client));
@@ -177,9 +173,9 @@ class ClientConfigurationTest extends TestCase
         ]);
 
         $client = Client::factory()->create();
-        $contract = Contract::factory()->create();
+        $contract = $this->contractWithProfiles(1);
         $zone = Zone::factory()->create();
-        $profileId = RpbiProfile::query()->value('id');
+        $profileId = $contract->rpbiProfiles->first()?->id;
 
         $this->assertNotNull($profileId);
 
@@ -189,7 +185,6 @@ class ClientConfigurationTest extends TestCase
             'start_date' => '2026-08-01',
             'end_date' => '2027-08-01',
             'notes' => 'Nota',
-            'profile_ids' => [$profileId],
         ])->assertOk();
 
         $response = $this->getJson(route('clients.configuration.show', $client));
@@ -201,6 +196,7 @@ class ClientConfigurationTest extends TestCase
         $response->assertJsonPath('profile_ids.0', $profileId);
         $response->assertJsonPath('can_edit', true);
         $response->assertJsonPath('has_active_contract', false);
+        $response->assertJsonPath('contract.cost', $contract->cost);
     }
 
     public function test_cannot_edit_when_pending_approval(): void
@@ -234,13 +230,13 @@ class ClientConfigurationTest extends TestCase
 
         $active = ClientContract::query()->create([
             'client_id' => $client->id,
-            'contract_id' => Contract::factory()->create(['name' => 'Actual'])->id,
+            'contract_id' => $this->contractWithProfiles(1, ['name' => 'Actual'])->id,
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'status' => ClientContract::STATUS_ACTIVE,
         ]);
 
-        $replacementCatalog = Contract::factory()->create(['name' => 'Reemplazo']);
+        $replacementCatalog = $this->contractWithProfiles(1, ['name' => 'Reemplazo']);
 
         $response = $this->putJson(route('clients.configuration.save', $client), [
             'contract_id' => $replacementCatalog->id,

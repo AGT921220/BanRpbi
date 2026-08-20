@@ -19,14 +19,4 @@ final class RoleTypes
     public const FACTURACION = 'Administración / Facturación';
 
     public const CLIENTE = 'Cliente';
-
-    /**
-     * Roles required for dual client-configuration approval.
-     *
-     * @var list<string>
-     */
-    public const APPROVAL_DIRECTOR_ROLES = [
-        self::DIRECTOR_VENTAS,
-        self::DIRECTOR_GENERAL,
-    ];
 }

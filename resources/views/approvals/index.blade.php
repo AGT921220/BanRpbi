@@ -15,9 +15,9 @@
 
             <div class="card-body border-bottom">
                 <p class="text-secondary mb-0">
-                    Se requieren las aprobaciones de <strong>Director de Ventas</strong> y
-                    <strong>Director General</strong>. Al completar ambas, el contrato pendiente
-                    reemplaza al vigente (si existe).
+                    Se requieren <strong>{{ $requiredApprovalCount }} aprobaciones</strong>
+                    de personas distintas con permiso para aprobar. No importa el cargo:
+                    al completar ambas, el contrato pendiente reemplaza al vigente (si existe).
                 </p>
             </div>
 
@@ -37,9 +37,9 @@
                     <tbody>
                         @forelse ($clients as $client)
                             @php
-                                $approvedRoles = $client->configurationApprovals
-                                    ->pluck('role_name')
-                                    ->all();
+                                $approvals = $client->configurationApprovals
+                                    ->sortBy('approved_at')
+                                    ->values();
                             @endphp
                             <tr>
                                 <td>
@@ -65,13 +65,18 @@
                                 <td>{{ $client->zone?->name ?? '—' }}</td>
                                 <td>
                                     <div class="badges-list">
-                                        @foreach ($requiredApprovalRoles as $roleName)
-                                            @if (in_array($roleName, $approvedRoles, true))
-                                                <span class="badge bg-success-lt">{{ $roleName }}</span>
+                                        @for ($slot = 1; $slot <= $requiredApprovalCount; $slot++)
+                                            @php
+                                                $approval = $approvals->get($slot - 1);
+                                            @endphp
+                                            @if ($approval)
+                                                <span class="badge bg-success-lt">
+                                                    {{ $approval->user?->name ?? 'Persona '.$slot }}
+                                                </span>
                                             @else
-                                                <span class="badge bg-secondary-lt">{{ $roleName }}</span>
+                                                <span class="badge bg-secondary-lt">Persona {{ $slot }}</span>
                                             @endif
-                                        @endforeach
+                                        @endfor
                                     </div>
                                 </td>
                                 <td>
@@ -103,7 +108,7 @@
                                                 <i class="ti ti-x me-1"></i>
                                                 Rechazar
                                             </button>
-                                        @endcan
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -201,7 +206,7 @@
                         <i class="ti ti-circle-check icon icon-lg text-success mb-2"></i>
                         <h3 id="approve-client-modal-title">Aprobar configuración</h3>
                         <div class="text-secondary" id="approve-client-message">
-                            ¿Registrar tu aprobación como director?
+                            ¿Registrar tu aprobación?
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -240,7 +245,7 @@
             }
 
             const urlTemplate = form.dataset.actionTemplate || '';
-            const defaultMessage = '¿Registrar tu aprobación como director?';
+            const defaultMessage = '¿Registrar tu aprobación?';
             const submitDefaultHtml = submitBtn.innerHTML;
 
             const updateApproveModal = (clientId, clientName = '') => {
@@ -250,7 +255,7 @@
                 if (clientName) {
                     const strong = document.createElement('strong');
                     strong.textContent = clientName;
-                    messageEl.append('¿Registrar tu aprobación como director para ', strong, '?');
+                    messageEl.append('¿Registrar tu aprobación para ', strong, '?');
                     return;
                 }
 

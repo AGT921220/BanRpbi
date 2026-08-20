@@ -3,7 +3,6 @@
 namespace Tests\Feature\Approvals;
 
 use App\Features\Permissions\Constants\PermissionTypes;
-use App\Features\Permissions\Constants\RoleTypes;
 use App\Models\Client;
 use App\Models\ClientContract;
 use App\Models\Contract;
@@ -11,7 +10,6 @@ use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ApprovalsTest extends TestCase
@@ -20,24 +18,15 @@ class ApprovalsTest extends TestCase
 
     /**
      * @param  list<string>  $permissions
-     * @param  list<string>  $roles
      */
-    private function actingAsUserWithPermissions(array $permissions, array $roles = []): User
+    private function actingAsUserWithPermissions(array $permissions, array $attributes = []): User
     {
         foreach ($permissions as $permission) {
             Permission::findOrCreate($permission, 'web');
         }
 
-        foreach ($roles as $role) {
-            Role::findOrCreate($role, 'web');
-        }
-
-        $user = User::factory()->create();
+        $user = User::factory()->create($attributes);
         $user->givePermissionTo($permissions);
-
-        if ($roles !== []) {
-            $user->syncRoles($roles);
-        }
 
         $this->actingAs($user);
 
@@ -73,15 +62,17 @@ class ApprovalsTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('approvals.index');
         $response->assertSee('Clientes pendientes de aprobación');
-        $response->assertSee('Director de Ventas');
-        $response->assertSee('Director General');
+        $response->assertSee('Persona 1');
+        $response->assertSee('Persona 2');
+        $response->assertDontSee('Director de Ventas');
+        $response->assertDontSee('Director General');
     }
 
-    public function test_single_director_approval_is_not_enough(): void
+    public function test_single_approval_is_not_enough(): void
     {
-        $this->actingAsUserWithPermissions(
+        $approver = $this->actingAsUserWithPermissions(
             [PermissionTypes::APPROVALS_VIEW, PermissionTypes::CLIENT_CONTRACTS_APPROVE],
-            [RoleTypes::DIRECTOR_VENTAS],
+            ['name' => 'Ana Pérez'],
         );
 
         $client = $this->pendingClient();
@@ -99,11 +90,34 @@ class ApprovalsTest extends TestCase
         ]);
         $this->assertDatabaseHas('client_configuration_approvals', [
             'client_id' => $client->id,
-            'role_name' => RoleTypes::DIRECTOR_VENTAS,
+            'user_id' => $approver->id,
+        ]);
+
+        $this->get(route('approvals.index'))
+            ->assertSee('Ana Pérez')
+            ->assertSee('Persona 2');
+    }
+
+    public function test_same_user_cannot_approve_twice(): void
+    {
+        $this->actingAsUserWithPermissions([
+            PermissionTypes::APPROVALS_VIEW,
+            PermissionTypes::CLIENT_CONTRACTS_APPROVE,
+        ]);
+
+        $client = $this->pendingClient();
+
+        $this->post(route('approvals.approve', $client))->assertRedirect(route('approvals.index'));
+        $this->post(route('approvals.approve', $client))->assertSessionHasErrors('user_id');
+
+        $this->assertDatabaseCount('client_configuration_approvals', 1);
+        $this->assertDatabaseHas('clients', [
+            'id' => $client->id,
+            'configuration_status' => Client::STATUS_PENDING_APPROVAL,
         ]);
     }
 
-    public function test_both_directors_activate_contract_and_replace_previous(): void
+    public function test_two_people_with_permission_activate_contract_and_replace_previous(): void
     {
         $client = Client::factory()->create([
             'configuration_status' => Client::STATUS_PENDING_APPROVAL,
@@ -127,23 +141,21 @@ class ApprovalsTest extends TestCase
             'status' => ClientContract::STATUS_PENDING,
         ]);
 
-        $ventas = $this->actingAsUserWithPermissions(
-            [PermissionTypes::APPROVALS_VIEW, PermissionTypes::CLIENT_CONTRACTS_APPROVE],
-            [RoleTypes::DIRECTOR_VENTAS],
-        );
-        $this->post(route('approvals.approve', $client))->assertRedirect();
-
-        $general = User::factory()->create();
-        foreach ([PermissionTypes::APPROVALS_VIEW, PermissionTypes::CLIENT_CONTRACTS_APPROVE] as $permission) {
-            Permission::findOrCreate($permission, 'web');
-        }
-        Role::findOrCreate(RoleTypes::DIRECTOR_GENERAL, 'web');
-        $general->givePermissionTo([
+        $first = $this->actingAsUserWithPermissions([
             PermissionTypes::APPROVALS_VIEW,
             PermissionTypes::CLIENT_CONTRACTS_APPROVE,
         ]);
-        $general->syncRoles([RoleTypes::DIRECTOR_GENERAL]);
-        $this->actingAs($general);
+        $this->post(route('approvals.approve', $client))->assertRedirect();
+
+        $second = User::factory()->create();
+        foreach ([PermissionTypes::APPROVALS_VIEW, PermissionTypes::CLIENT_CONTRACTS_APPROVE] as $permission) {
+            Permission::findOrCreate($permission, 'web');
+        }
+        $second->givePermissionTo([
+            PermissionTypes::APPROVALS_VIEW,
+            PermissionTypes::CLIENT_CONTRACTS_APPROVE,
+        ]);
+        $this->actingAs($second);
 
         $this->post(route('approvals.approve', $client))->assertRedirect(route('approvals.index'));
 
@@ -159,7 +171,7 @@ class ApprovalsTest extends TestCase
             'id' => $newContract->id,
             'status' => ClientContract::STATUS_ACTIVE,
         ]);
-        $this->assertNotNull($ventas->id);
+        $this->assertNotSame($first->id, $second->id);
     }
 
     public function test_can_reject_client_with_reason_keeps_active_contract(): void
@@ -167,7 +179,7 @@ class ApprovalsTest extends TestCase
         $this->actingAsUserWithPermissions([
             PermissionTypes::APPROVALS_VIEW,
             PermissionTypes::APPROVALS_REJECT,
-        ], [RoleTypes::DIRECTOR_GENERAL]);
+        ]);
 
         $client = Client::factory()->create([
             'configuration_status' => Client::STATUS_PENDING_APPROVAL,
@@ -217,23 +229,5 @@ class ApprovalsTest extends TestCase
         $client = $this->pendingClient();
 
         $this->post(route('approvals.approve', $client))->assertForbidden();
-    }
-
-    public function test_user_without_director_role_cannot_complete_approval(): void
-    {
-        $this->actingAsUserWithPermissions([
-            PermissionTypes::APPROVALS_VIEW,
-            PermissionTypes::CLIENT_CONTRACTS_APPROVE,
-        ]);
-
-        $client = $this->pendingClient();
-
-        $response = $this->post(route('approvals.approve', $client));
-
-        $response->assertSessionHasErrors('role');
-        $this->assertDatabaseHas('clients', [
-            'id' => $client->id,
-            'configuration_status' => Client::STATUS_PENDING_APPROVAL,
-        ]);
     }
 }

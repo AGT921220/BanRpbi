@@ -31,7 +31,7 @@ return new class extends Migration
                 ->on('client_contracts')
                 ->cascadeOnDelete();
 
-            $table->unique(['client_contract_id', 'role_name'], 'cca_contract_role_unique');
+            $table->unique(['client_contract_id', 'user_id'], 'cca_contract_user_unique');
         });
     }
 

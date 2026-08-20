@@ -32,7 +32,6 @@
                     <div class="card-body">
                         @include('drivers._form', [
                             'driver' => $driver,
-                            'zones' => $zones,
                             'users' => $users,
                         ])
                     </div>

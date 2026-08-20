@@ -24,7 +24,6 @@ final class UpdateDriverRequest extends FormRequest
             'parentarl_surname' => ['required', 'string', 'max:255'],
             'maternal_surname' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'zone_id' => ['required', 'integer', Rule::exists('zones', 'id')],
             'user_id' => [
                 'required',
                 'integer',
@@ -45,7 +44,6 @@ final class UpdateDriverRequest extends FormRequest
             'parentarl_surname' => 'apellido paterno',
             'maternal_surname' => 'apellido materno',
             'phone' => 'teléfono',
-            'zone_id' => 'zona',
             'user_id' => 'usuario',
         ];
     }

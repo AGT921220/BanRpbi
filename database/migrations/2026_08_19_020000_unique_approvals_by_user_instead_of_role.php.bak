@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('client_configuration_approvals', function (Blueprint $table): void {
+            $table->dropUnique('cca_contract_role_unique');
+            $table->unique(['client_contract_id', 'user_id'], 'cca_contract_user_unique');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('client_configuration_approvals', function (Blueprint $table): void {
+            $table->dropUnique('cca_contract_user_unique');
+            $table->unique(['client_contract_id', 'role_name'], 'cca_contract_role_unique');
+        });
+    }
+};

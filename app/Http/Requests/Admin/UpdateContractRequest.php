@@ -39,6 +39,9 @@ final class UpdateContractRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
             'duration_months' => ['required', 'integer', 'min:1', 'max:120'],
             'frequency' => ['required', 'string', Rule::in(Contract::FREQUENCIES)],
+            'cost' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
+            'profile_ids' => ['required', 'array', 'min:1'],
+            'profile_ids.*' => ['integer', Rule::exists('rpbi_profiles', 'id')],
         ];
     }
 
@@ -52,6 +55,9 @@ final class UpdateContractRequest extends FormRequest
             'notes' => 'notas',
             'duration_months' => 'duración en meses',
             'frequency' => 'frecuencia',
+            'cost' => 'costo',
+            'profile_ids' => 'perfiles RPBI',
+            'profile_ids.*' => 'perfil RPBI',
         ];
     }
 }

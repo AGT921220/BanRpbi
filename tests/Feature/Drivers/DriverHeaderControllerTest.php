@@ -4,7 +4,6 @@ namespace Tests\Feature\Drivers;
 
 use App\Models\Driver;
 use App\Models\User;
-use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,14 +15,12 @@ class DriverHeaderControllerTest extends TestCase
     {
         $this->actingAs(User::factory()->create());
 
-        $zone = Zone::factory()->create(['name' => 'Zona Norte']);
         $user = User::factory()->create(['name' => 'chofer.portal']);
         $driver = Driver::factory()->create([
             'name' => 'Luis',
             'parentarl_surname' => 'García',
             'maternal_surname' => 'Pérez',
             'phone' => '5512345678',
-            'zone_id' => $zone->id,
             'user_id' => $user->id,
         ]);
 
@@ -41,6 +38,6 @@ class DriverHeaderControllerTest extends TestCase
         $response->assertJsonPath('data.0.name', 'Luis García Pérez');
         $response->assertJsonPath('data.0.user', 'chofer.portal');
         $response->assertJsonPath('data.0.phone', '5512345678');
-        $response->assertJsonPath('data.0.zone', 'Zona Norte');
+        $this->assertArrayNotHasKey('zone', $response->json('data.0'));
     }
 }

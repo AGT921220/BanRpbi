@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="card-body">
-                        @include('contracts._form')
+                        @include('contracts._form', ['rpbiProfiles' => $rpbiProfiles])
                     </div>
 
                     <div class="card-footer d-flex justify-content-end gap-2">

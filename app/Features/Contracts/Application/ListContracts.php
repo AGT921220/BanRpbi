@@ -12,6 +12,7 @@ final class ListContracts
         ?string $search = null,
     ): LengthAwarePaginator {
         return Contract::query()
+            ->with('rpbiProfiles')
             ->when(
                 filled($search),
                 function ($query) use ($search): void {

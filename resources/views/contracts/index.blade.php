@@ -64,6 +64,8 @@
                             <th>Nombre</th>
                             <th>Duración</th>
                             <th>Frecuencia</th>
+                            <th>Costo</th>
+                            <th>Perfiles RPBI</th>
                             <th>Notas</th>
                             <th class="w-1">Acciones</th>
                         </tr>
@@ -78,6 +80,14 @@
                                 <td>{{ $contract->duration_months }} meses</td>
                                 <td>
                                     {{ $frequencyLabels[$contract->frequency] ?? $contract->frequency }}
+                                </td>
+                                <td>${{ number_format((float) $contract->cost, 2) }}</td>
+                                <td>
+                                    @forelse ($contract->rpbiProfiles as $profile)
+                                        <span class="badge bg-blue-lt">{{ $profile->code }}</span>
+                                    @empty
+                                        <span class="text-secondary">—</span>
+                                    @endforelse
                                 </td>
                                 <td class="text-secondary">
                                     {{ \Illuminate\Support\Str::limit($contract->notes ?? '—', 60) }}
@@ -113,7 +123,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-secondary py-4">
+                                <td colspan="7" class="text-center text-secondary py-4">
                                     No hay contratos en el catálogo.
                                 </td>
                             </tr>

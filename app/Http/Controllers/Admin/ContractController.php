@@ -11,8 +11,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreContractRequest;
 use App\Http\Requests\Admin\UpdateContractRequest;
 use App\Models\Contract;
+use App\Models\RpbiProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 final class ContractController extends Controller
@@ -43,7 +45,9 @@ final class ContractController extends Controller
     {
         $this->authorize(PermissionTypes::CONTRACTS_CREATE);
 
-        return view('contracts.create');
+        return view('contracts.create', [
+            'rpbiProfiles' => $this->rpbiProfilesForForm(),
+        ]);
     }
 
     public function store(StoreContractRequest $request): RedirectResponse
@@ -62,7 +66,8 @@ final class ContractController extends Controller
         $this->authorize(PermissionTypes::CONTRACTS_UPDATE);
 
         return view('contracts.edit', [
-            'contract' => $contract,
+            'contract' => $contract->load('rpbiProfiles'),
+            'rpbiProfiles' => $this->rpbiProfilesForForm(),
         ]);
     }
 
@@ -86,5 +91,15 @@ final class ContractController extends Controller
         return redirect()
             ->route('contracts.index')
             ->with('success', 'Contrato eliminado correctamente.');
+    }
+
+    /**
+     * @return Collection<int, RpbiProfile>
+     */
+    private function rpbiProfilesForForm()
+    {
+        return RpbiProfile::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'description']);
     }
 }

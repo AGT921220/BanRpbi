@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RpbiProfile extends Model
 {
@@ -19,18 +18,13 @@ class RpbiProfile extends Model
         'description',
     ];
 
-    public function clientContractProfiles(): HasMany
-    {
-        return $this->hasMany(ClientContractProfile::class, 'rpbi_profile_id');
-    }
-
-    public function clientContracts(): BelongsToMany
+    public function contracts(): BelongsToMany
     {
         return $this->belongsToMany(
-            ClientContract::class,
-            'client_contract_profiles',
+            Contract::class,
+            'contract_rpbi_profiles',
             'rpbi_profile_id',
-            'client_contract_id',
+            'contract_id',
         )->withTimestamps();
     }
 }

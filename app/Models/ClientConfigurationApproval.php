@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ClientConfigurationApproval extends Model
 {
+    public const REQUIRED_COUNT = 2;
+
     /**
      * @var list<string>
      */

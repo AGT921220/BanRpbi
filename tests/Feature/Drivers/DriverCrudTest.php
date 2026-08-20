@@ -6,7 +6,6 @@ use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Permissions\Constants\RoleTypes;
 use App\Models\Driver;
 use App\Models\User;
-use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -56,6 +55,7 @@ class DriverCrudTest extends TestCase
         $response->assertSee('Listado de choferes');
         $response->assertSee('drivers-table');
         $response->assertSee(route('driver-headers.index'), false);
+        $response->assertDontSee('>Zona</th>', false);
     }
 
     public function test_unauthorized_user_receives_forbidden(): void
@@ -96,6 +96,7 @@ class DriverCrudTest extends TestCase
         $response->assertDontSee('Ana Ventas');
         $response->assertSee('value="'.$availableChofer->id.'"', false);
         $response->assertDontSee('value="'.$notChofer->id.'"', false);
+        $response->assertDontSee('driver-zone-id');
     }
 
     public function test_authorized_user_can_create_a_driver(): void
@@ -105,7 +106,6 @@ class DriverCrudTest extends TestCase
             PermissionTypes::DRIVERS_CREATE,
         ]);
 
-        $zone = Zone::factory()->create();
         $chofer = $this->createChoferUser();
 
         $payload = [
@@ -113,7 +113,6 @@ class DriverCrudTest extends TestCase
             'parentarl_surname' => 'López',
             'maternal_surname' => 'Martínez',
             'phone' => '5512345678',
-            'zone_id' => $zone->id,
             'user_id' => $chofer->id,
         ];
 
@@ -134,7 +133,6 @@ class DriverCrudTest extends TestCase
                 'parentarl_surname' => '',
                 'maternal_surname' => '',
                 'phone' => '',
-                'zone_id' => '',
                 'user_id' => '',
             ]);
 
@@ -144,7 +142,6 @@ class DriverCrudTest extends TestCase
             'parentarl_surname',
             'maternal_surname',
             'phone',
-            'zone_id',
             'user_id',
         ]);
         $this->assertDatabaseCount('drivers', 0);
@@ -154,7 +151,6 @@ class DriverCrudTest extends TestCase
     {
         $this->actingAsUserWithPermissions([PermissionTypes::DRIVERS_CREATE]);
 
-        $zone = Zone::factory()->create();
         $user = User::factory()->create();
 
         $response = $this->from(route('drivers.create'))
@@ -163,7 +159,6 @@ class DriverCrudTest extends TestCase
                 'parentarl_surname' => 'López',
                 'maternal_surname' => 'Martínez',
                 'phone' => '5512345678',
-                'zone_id' => $zone->id,
                 'user_id' => $user->id,
             ]);
 
@@ -178,7 +173,6 @@ class DriverCrudTest extends TestCase
 
         $chofer = $this->createChoferUser();
         Driver::factory()->create(['user_id' => $chofer->id]);
-        $zone = Zone::factory()->create();
 
         $response = $this->from(route('drivers.create'))
             ->post(route('drivers.store'), [
@@ -186,7 +180,6 @@ class DriverCrudTest extends TestCase
                 'parentarl_surname' => 'López',
                 'maternal_surname' => 'Martínez',
                 'phone' => '5512345678',
-                'zone_id' => $zone->id,
                 'user_id' => $chofer->id,
             ]);
 
@@ -206,7 +199,6 @@ class DriverCrudTest extends TestCase
             'name' => 'Original',
             'user_id' => $this->createChoferUser()->id,
         ]);
-        $zone = Zone::factory()->create();
         $chofer = $this->createChoferUser();
 
         $payload = [
@@ -214,7 +206,6 @@ class DriverCrudTest extends TestCase
             'parentarl_surname' => 'Pérez',
             'maternal_surname' => 'Sánchez',
             'phone' => '5511111111',
-            'zone_id' => $zone->id,
             'user_id' => $chofer->id,
         ];
 
@@ -244,6 +235,7 @@ class DriverCrudTest extends TestCase
         $response->assertSee('Luis Asignado');
         $response->assertSee('luis.asignado@example.com');
         $response->assertSee('value="'.$assignedChofer->id.'"', false);
+        $response->assertDontSee('driver-zone-id');
     }
 
     public function test_authorized_user_can_delete_a_driver(): void

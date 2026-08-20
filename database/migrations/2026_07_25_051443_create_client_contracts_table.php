@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->unsignedInteger('client_id')->nullable();
             $table->unsignedInteger('contract_id')->nullable();
+            $table->decimal('price', 12, 2)->nullable();
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('set null');
             $table->foreign('contract_id')->references('id')->on('contracts')->onDelete('set null');
 

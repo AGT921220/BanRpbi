@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\ContractFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contract extends Model
@@ -31,6 +32,7 @@ class Contract extends Model
         'notes',
         'duration_months',
         'frequency',
+        'cost',
     ];
 
     /**
@@ -40,6 +42,7 @@ class Contract extends Model
     {
         return [
             'duration_months' => 'integer',
+            'cost' => 'decimal:2',
         ];
     }
 
@@ -53,5 +56,15 @@ class Contract extends Model
             'biweekly' => 'Quincenal',
             'monthly' => 'Mensual',
         ];
+    }
+
+    public function rpbiProfiles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            RpbiProfile::class,
+            'contract_rpbi_profiles',
+            'contract_id',
+            'rpbi_profile_id',
+        )->withTimestamps();
     }
 }

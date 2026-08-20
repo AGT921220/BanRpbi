@@ -24,11 +24,6 @@ $(function () {
                 orderSequence: ["asc", "desc"],
             },
             {
-                data: "zone",
-                name: "zones.name",
-                orderSequence: ["asc", "desc"],
-            },
-            {
                 data: null,
                 name: "actions",
                 orderable: false,

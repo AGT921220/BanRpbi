@@ -3,6 +3,7 @@
 namespace App\Features\Contracts\Application;
 
 use App\Models\Contract;
+use Illuminate\Support\Facades\DB;
 
 final class UpdateContract
 {
@@ -11,13 +12,21 @@ final class UpdateContract
      *     name: string,
      *     notes?: string|null,
      *     duration_months: int,
-     *     frequency: string
+     *     frequency: string,
+     *     cost: float|string,
+     *     profile_ids: list<int>
      * }  $data
      */
     public function __invoke(Contract $contract, array $data): Contract
     {
-        $contract->update($data);
+        return DB::transaction(function () use ($contract, $data): Contract {
+            $profileIds = $data['profile_ids'];
+            unset($data['profile_ids']);
 
-        return $contract->refresh();
+            $contract->update($data);
+            $contract->rpbiProfiles()->sync($profileIds);
+
+            return $contract->refresh()->load('rpbiProfiles');
+        });
     }
 }

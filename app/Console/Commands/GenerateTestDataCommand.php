@@ -367,8 +367,8 @@ class GenerateTestDataCommand extends Command
     {
         // Pools precargados: cero consultas por registro.
         $clientIds = Client::query()->pluck('id')->all();
-        $contracts = Contract::query()->withTrashed()->pluck('duration_months', 'id')->all();
-        $contractIds = array_keys($contracts);
+        $contracts = Contract::query()->withTrashed()->get(['id', 'duration_months', 'cost'])->keyBy('id');
+        $contractIds = $contracts->keys()->all();
         $userIds = DB::table('users')->whereNull('deleted_at')->pluck('id')->all();
 
         if ($clientIds === [] || $contractIds === []) {
@@ -387,7 +387,8 @@ class GenerateTestDataCommand extends Command
             $status = (int) $this->weighted([1 => 60, 0 => 20, 2 => 15, 3 => 5]);
 
             $contractId = $contractIds[mt_rand(0, count($contractIds) - 1)];
-            $durationMonths = max(1, (int) $contracts[$contractId]);
+            $contract = $contracts[$contractId];
+            $durationMonths = max(1, (int) $contract->duration_months);
 
             // Completados: inicio suficientemente lejano para que su fin ya haya pasado.
             if ($status === 2) {
@@ -411,6 +412,7 @@ class GenerateTestDataCommand extends Command
                 'status' => $status,
                 'start_date' => $start->format('Y-m-d'),
                 'end_date' => $end->format('Y-m-d'),
+                'price' => $contract->cost,
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
                 'deleted_at' => null,

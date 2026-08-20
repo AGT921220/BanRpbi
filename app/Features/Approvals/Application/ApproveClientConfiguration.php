@@ -2,7 +2,7 @@
 
 namespace App\Features\Approvals\Application;
 
-use App\Features\Permissions\Constants\RoleTypes;
+use App\Features\Permissions\Constants\PermissionTypes;
 use App\Models\Client;
 use App\Models\ClientConfigurationApproval;
 use App\Models\ClientContract;
@@ -12,7 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 final class ApproveClientConfiguration
 {
-    public function __construct() {}
     public function __invoke(Client $client, User $user): Client
     {
         if ($client->configuration_status !== Client::STATUS_PENDING_APPROVAL) {
@@ -21,51 +20,57 @@ final class ApproveClientConfiguration
             ]);
         }
 
-        $approverRole = $this->resolveApproverRole($user);
-
-        if ($approverRole === null) {
+        if (! $user->can(PermissionTypes::CLIENT_CONTRACTS_APPROVE)) {
             throw ValidationException::withMessages([
-                'role' => 'Solo Director de Ventas o Director General pueden aprobar.',
+                'permission' => 'No tienes permiso para aprobar.',
             ]);
         }
 
-        $pending = $client->contracts()
-            ->where('status', ClientContract::STATUS_PENDING)
-            ->latest('id')
-            ->first();
+        return DB::transaction(function () use ($client, $user): Client {
+            $pending = $client->contracts()
+                ->where('status', ClientContract::STATUS_PENDING)
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
 
-        if ($pending === null) {
-            throw ValidationException::withMessages([
-                'contract_id' => 'No hay un contrato pendiente de aprobación.',
-            ]);
-        }
+            if ($pending === null) {
+                throw ValidationException::withMessages([
+                    'contract_id' => 'No hay un contrato pendiente de aprobación.',
+                ]);
+            }
 
-        return DB::transaction(function () use ($client, $user, $approverRole, $pending): Client {
-            ClientConfigurationApproval::query()->updateOrCreate(
-                [
-                    'client_contract_id' => $pending->id,
-                    'role_name' => $approverRole,
-                ],
-                [
-                    'client_id' => $client->id,
-                    'user_id' => $user->id,
-                    'approved_at' => now(),
-                ],
-            );
-
-            $approvedRoles = ClientConfigurationApproval::query()
+            $existing = ClientConfigurationApproval::query()
                 ->where('client_contract_id', $pending->id)
-                ->pluck('role_name')
-                ->all();
+                ->lockForUpdate()
+                ->get();
 
-            $allApproved = collect(RoleTypes::APPROVAL_DIRECTOR_ROLES)
-                ->every(static fn (string $role): bool => in_array($role, $approvedRoles, true));
+            if ($existing->contains('user_id', $user->id)) {
+                throw ValidationException::withMessages([
+                    'user_id' => 'Ya registraste tu aprobación para este contrato.',
+                ]);
+            }
 
-            if (! $allApproved) {
+            if ($existing->count() >= ClientConfigurationApproval::REQUIRED_COUNT) {
+                throw ValidationException::withMessages([
+                    'approvals' => 'Este contrato ya tiene las aprobaciones requeridas.',
+                ]);
+            }
+
+            ClientConfigurationApproval::query()->create([
+                'client_contract_id' => $pending->id,
+                'client_id' => $client->id,
+                'user_id' => $user->id,
+                'role_name' => $user->getRoleNames()->first() ?: 'Aprobador',
+                'approved_at' => now(),
+            ]);
+
+            $approvedCount = $existing->count() + 1;
+
+            if ($approvedCount < ClientConfigurationApproval::REQUIRED_COUNT) {
                 return $client->fresh([
                     'pendingContract.contract',
                     'activeContract.contract',
-                    'configurationApprovals',
+                    'configurationApprovals.user',
                 ]) ?? $client;
             }
 
@@ -80,23 +85,11 @@ final class ApproveClientConfiguration
             $client->configuration_rejection_reason = null;
             $client->save();
 
-
             return $client->fresh([
                 'pendingContract.contract',
                 'activeContract.contract',
-                'configurationApprovals',
+                'configurationApprovals.user',
             ]) ?? $client;
         });
-    }
-
-    private function resolveApproverRole(User $user): ?string
-    {
-        foreach (RoleTypes::APPROVAL_DIRECTOR_ROLES as $role) {
-            if ($user->hasRole($role)) {
-                return $role;
-            }
-        }
-
-        return null;
     }
 }

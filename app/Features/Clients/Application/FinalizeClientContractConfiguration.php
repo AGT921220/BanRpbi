@@ -38,9 +38,9 @@ final class FinalizeClientContractConfiguration
             ]);
         }
 
-        if (! $pending->rpbiProfiles()->exists()) {
+        if (! $pending->contract?->rpbiProfiles()->exists()) {
             throw ValidationException::withMessages([
-                'profile_ids' => 'Debe seleccionar al menos un perfil RPBI antes de enviar a aprobación.',
+                'contract_id' => 'El contrato seleccionado no tiene perfiles RPBI configurados.',
             ]);
         }
 

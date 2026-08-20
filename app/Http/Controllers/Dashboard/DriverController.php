@@ -12,7 +12,6 @@ use App\Http\Requests\Admin\StoreDriverRequest;
 use App\Http\Requests\Admin\UpdateDriverRequest;
 use App\Models\Driver;
 use App\Models\User;
-use App\Models\Zone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -37,7 +36,6 @@ final class DriverController extends Controller
         $this->authorize(PermissionTypes::DRIVERS_CREATE);
 
         return view('drivers.create', [
-            'zones' => $this->zonesForForm(),
             'users' => $this->usersForForm(),
         ]);
     }
@@ -59,7 +57,6 @@ final class DriverController extends Controller
 
         return view('drivers.edit', [
             'driver' => $driver,
-            'zones' => $this->zonesForForm($driver->zone_id),
             'users' => $this->usersForForm($driver->user_id),
         ]);
     }
@@ -84,23 +81,6 @@ final class DriverController extends Controller
         return redirect()
             ->route('drivers.index')
             ->with('success', 'Chofer eliminado correctamente.');
-    }
-
-    /**
-     * @return Collection<int, Zone>
-     */
-    private function zonesForForm(?int $currentZoneId = null)
-    {
-        return Zone::query()
-            ->where(function ($query) use ($currentZoneId): void {
-                $query->where('is_active', true);
-
-                if ($currentZoneId !== null) {
-                    $query->orWhere('id', $currentZoneId);
-                }
-            })
-            ->orderBy('name')
-            ->get(['id', 'name']);
     }
 
     /**

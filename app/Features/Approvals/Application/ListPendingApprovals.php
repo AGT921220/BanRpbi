@@ -4,6 +4,7 @@ namespace App\Features\Approvals\Application;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Models\Client;
+use App\Models\ClientConfigurationApproval;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class ListPendingApprovals
@@ -19,17 +20,18 @@ final class ListPendingApprovals
                 'zone',
                 'pendingContract.contract',
                 'activeContract.contract',
-                'configurationApprovals',
+                'configurationApprovals.user',
             ])
             ->where('configuration_status', Client::STATUS_PENDING_APPROVAL)
             ->orderByDesc('configuration_submitted_at')
             ->paginate($perPage);
 
         $paginator->getCollection()->transform(function (Client $client) use ($canApprove, $canReject, $userId) {
-            $hasApprovedForUser = $client->configurationApprovals()
-                ->where('user_id', $userId)
-                ->exists();
-            $client->can_approve = $canApprove && ! $hasApprovedForUser;
+            $approvals = $client->configurationApprovals;
+            $hasApprovedForUser = $approvals->contains('user_id', $userId);
+            $client->can_approve = $canApprove
+                && ! $hasApprovedForUser
+                && $approvals->count() < ClientConfigurationApproval::REQUIRED_COUNT;
             $client->can_reject = $canReject && ! $hasApprovedForUser;
 
             return $client;

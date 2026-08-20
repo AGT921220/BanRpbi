@@ -455,7 +455,9 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - Vistas: `resources/views/clients/{index,create,edit,_form,configure_client_modal}.blade.php`
 - JS: `resources/js/modules/clients/index.js` (wizard Configurar cliente)
 - Modelo y migraciones: `app/Models/Client.php`, `client_contracts`, campos `configuration_status`, `zone_id`
+- Los perfiles RPBI se definen en el contrato; el cliente hereda los del contrato asignado
 - Estados: `configuration_pending`, `pending_approval`, `approved`, `rejected`
+- Wizard de configuración: contrato (con costo y perfiles RPBI del catálogo) + zona
 - Pruebas: `tests/Feature/Clients/{ClientCrud,SearchClientHeaders,ClientHeaderController,ClientConfiguration}Test.php`
 - Pendiente: RFC/direcciones, generación automática de recolecciones al aprobar
 
@@ -464,7 +466,7 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - Feature: `app/Features/Approvals/Application/{ListPendingApprovals,ApproveClientConfiguration,RejectClientConfiguration}.php`
 - Controlador: `app/Http/Controllers/Admin/ApprovalController.php`
 - Vista: `resources/views/approvals/index.blade.php`
-- Aprobación dual: roles `Director de Ventas` y `Director General` (tabla `client_configuration_approvals`)
+- Aprobación dual: 2 personas distintas con permiso `client_contracts.approve` (tabla `client_configuration_approvals`)
 - Reemplazo de contrato: el PENDING se activa al completar ambas aprobaciones y cancela el ACTIVE previo
 - Correo: `app/Mail/ClientConfigurationSubmitted.php` (solo al enviar a aprobación)
 - Rutas: `approvals.index`, `approvals.approve`, `approvals.reject`
@@ -479,8 +481,9 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - Rutas: `routes/admin.php`
 - Vistas: `resources/views/contracts/{index,create,edit,_form}.blade.php`
 - Modelo y migración: `app/Models/Contract.php`, `database/migrations/2026_07_25_050000_create_contracts_table.php`
+- Perfiles y costo: `contracts.cost`, pivote `contract_rpbi_profiles` (`rpbi_profiles` se seleccionan en el catálogo del contrato)
 - Pruebas: `tests/Feature/Contracts/ContractCrudTest.php`
-- Alcance actual: catálogo de contratos (`name`, `notes`, `duration_months`, `frequency`) + asignación en wizard de cliente (`client_contracts`)
+- Alcance actual: catálogo de contratos (`name`, `notes`, `duration_months`, `frequency`, `cost`, perfiles RPBI) + asignación en wizard de cliente (`client_contracts`)
 - Pendiente: renovación, firma/PDF y generación de recolecciones
 
 #### Zonas del mapa — Parcial
@@ -494,6 +497,7 @@ Estados permitidos: `No iniciado`, `En análisis`, `En desarrollo`, `Parcial`, `
 - JS: `resources/js/modules/zones/form.js` (Google Maps + Terra Draw)
 - Modelo y migración: `app/Models/Zone.php`, `database/migrations/2026_07_25_043000_create_zones_table.php`
 - Clientes vinculados mediante `clients.zone_id` (no se elimina zona con clientes asociados)
+- Los choferes no se ligan a zona
 - Pruebas: `tests/Feature/Zones/ZoneCrudTest.php`, `tests/Unit/Rules/ValidGeoJsonPolygonTest.php`
 - Pendiente: regla definitiva de superposición y validación visual del mapa con API key real
 #### Usuarios — Parcial

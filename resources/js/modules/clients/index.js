@@ -9,7 +9,7 @@ const STATUS_LABELS = {
     rejected: 'Rechazado',
 };
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3;
 
 document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = document
@@ -107,9 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDateInput = document.getElementById('configure-start-date');
     const endDateInput = document.getElementById('configure-end-date');
     const notesInput = document.getElementById('configure-notes');
-    const profileCheckboxes = () => [
-        ...document.querySelectorAll('.configure-profile-checkbox'),
-    ];
     const rejectionAlert = document.getElementById('configure-client-rejection');
     const readonlyAlert = document.getElementById('configure-client-readonly');
     const prevBtn = document.getElementById('configure-prev-btn');
@@ -148,11 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(zoneSelect).on('change', () => {
         updateZoneDetails();
-        updateSummary();
-        updateSubmitButton();
-    });
-
-    $(document).on('change', '.configure-profile-checkbox', () => {
         updateSummary();
         updateSubmitButton();
     });
@@ -222,14 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         endDateInput.value = data.end_date || '';
         notesInput.value = data.notes || '';
 
-        const selectedProfileIds = new Set(
-            (data.profile_ids || []).map((id) => String(id)),
-        );
-
-        profileCheckboxes().forEach((checkbox) => {
-            checkbox.checked = selectedProfileIds.has(checkbox.value);
-        });
-
         updateModalTitle(hasActiveContract);
 
         if (data.rejection_reason) {
@@ -272,19 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.disabled = !editable;
             });
 
-        profileCheckboxes().forEach((checkbox) => {
-            checkbox.disabled = !editable;
-        });
-
         saveCloseBtn.classList.toggle('d-none', !editable);
         nextBtn.classList.toggle('d-none', !editable);
         submitBtn.classList.toggle('d-none', !editable || currentStep !== TOTAL_STEPS);
-    }
-
-    function selectedProfileIds() {
-        return profileCheckboxes()
-            .filter((checkbox) => checkbox.checked)
-            .map((checkbox) => Number(checkbox.value));
     }
 
     async function saveConfiguration(closeAfter) {
@@ -298,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
             start_date: startDateInput.value || null,
             end_date: endDateInput.value || null,
             notes: notesInput.value || null,
-            profile_ids: selectedProfileIds(),
         };
 
         try {
@@ -356,6 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `${option.dataset.durationMonths || '—'} meses`;
         document.getElementById('configure-contract-frequency').textContent =
             option.dataset.frequency || '—';
+        document.getElementById('configure-contract-cost').textContent =
+            formatCost(option.dataset.cost);
+        document.getElementById('configure-contract-profiles').textContent =
+            option.dataset.profiles || 'Sin perfiles';
         document.getElementById('configure-contract-catalog-notes').textContent =
             option.dataset.notes || 'Sin notas';
         details.classList.remove('d-none');
@@ -393,9 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const contractOption = contractSelect.selectedOptions[0];
         const zoneOption = zoneSelect.selectedOptions[0];
         const activeAlert = document.getElementById('summary-active-contract-alert');
-        const selectedProfiles = profileCheckboxes()
-            .filter((checkbox) => checkbox.checked)
-            .map((checkbox) => `${checkbox.dataset.profileCode} — ${checkbox.dataset.profileName}`);
 
         document.getElementById('summary-client-name').textContent =
             clientNameLabel.textContent || '—';
@@ -405,10 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
             contractOption?.dataset.durationMonths
                 ? `${contractOption.dataset.durationMonths} meses`
                 : '—';
+        document.getElementById('summary-cost').textContent =
+            contractOption?.value ? formatCost(contractOption.dataset.cost) : '—';
         document.getElementById('summary-zone').textContent =
             zoneOption?.value ? zoneOption.textContent.trim() : 'Sin seleccionar';
         document.getElementById('summary-profiles').textContent =
-            selectedProfiles.length > 0 ? selectedProfiles.join(', ') : 'Sin seleccionar';
+            contractOption?.dataset.profiles || 'Sin seleccionar';
         document.getElementById('summary-status').textContent =
             STATUS_LABELS[configurationStatus] || configurationStatus;
 
@@ -427,10 +403,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const ready = Boolean(
             contractSelect.value
             && zoneSelect.value
-            && selectedProfileIds().length > 0
             && canEdit,
         );
         submitBtn.disabled = !ready;
+    }
+
+    function formatCost(value) {
+        const amount = Number(value);
+
+        if (Number.isNaN(amount)) {
+            return '—';
+        }
+
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+        }).format(amount);
     }
 
     function extractError(error, fallback) {

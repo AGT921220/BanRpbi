@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Features\Clients\Application\CreateClient;
 use App\Features\Clients\Application\DeleteClient;
-use App\Features\Clients\Application\SaveClientConfiguration;
 use App\Features\Clients\Application\FinalizeClientContractConfiguration;
+use App\Features\Clients\Application\SaveClientConfiguration;
 use App\Features\Clients\Application\UpdateClient;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
@@ -14,7 +14,6 @@ use App\Http\Requests\Admin\StoreClientRequest;
 use App\Http\Requests\Admin\SubmitClientConfigurationRequest;
 use App\Http\Requests\Admin\UpdateClientRequest;
 use App\Models\Client;
-use App\Models\RpbiProfile;
 use App\Models\Contract;
 use App\Models\State;
 use App\Models\Zone;
@@ -38,15 +37,13 @@ final class ClientController extends Controller
 
         return view('clients.index', [
             'contracts' => Contract::query()
+                ->with('rpbiProfiles')
                 ->orderBy('name')
-                ->get(['id', 'name', 'duration_months', 'frequency', 'notes']),
+                ->get(['id', 'name', 'duration_months', 'frequency', 'notes', 'cost']),
             'zones' => Zone::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'description']),
-            'rpbiProfiles' => RpbiProfile::query()
-                ->orderBy('code')
-                ->get(['id', 'code', 'name', 'description']),
         ]);
     }
 
@@ -108,10 +105,8 @@ final class ClientController extends Controller
 
         $client->load([
             'zone',
-            'pendingContract.contract',
-            'pendingContract.rpbiProfiles',
-            'activeContract.contract',
-            'activeContract.rpbiProfiles',
+            'pendingContract.contract.rpbiProfiles',
+            'activeContract.contract.rpbiProfiles',
         ]);
         $draft = $client->pendingContract ?? (
             $client->configuration_status === Client::STATUS_APPROVED
@@ -119,19 +114,14 @@ final class ClientController extends Controller
                 : $client->activeContract
         );
         $active = $client->activeContract;
-        $selectedProfileIds = $draft?->rpbiProfiles
-            ?->pluck('id')
+        $selectedProfiles = $draft?->contract?->rpbiProfiles
+            ?? $active?->contract?->rpbiProfiles
+            ?? collect();
+        $selectedProfileIds = $selectedProfiles
+            ->pluck('id')
             ->map(static fn ($id): int => (int) $id)
             ->values()
-            ->all() ?? [];
-
-        if ($selectedProfileIds === [] && $active?->rpbiProfiles) {
-            $selectedProfileIds = $active->rpbiProfiles
-                ->pluck('id')
-                ->map(static fn ($id): int => (int) $id)
-                ->values()
-                ->all();
-        }
+            ->all();
 
         return response()->json([
             'id' => $client->id,
@@ -158,6 +148,7 @@ final class ClientController extends Controller
                 'duration_months' => $draft->contract->duration_months,
                 'frequency' => $draft->contract->frequency,
                 'notes' => $draft->contract->notes,
+                'cost' => $draft->contract->cost,
             ] : null,
             'zone' => $client->zone ? [
                 'id' => $client->zone->id,

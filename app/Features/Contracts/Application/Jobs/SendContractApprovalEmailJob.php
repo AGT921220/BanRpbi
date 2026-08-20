@@ -3,7 +3,6 @@
 namespace App\Features\Contracts\Application\Jobs;
 
 use App\Features\Permissions\Constants\PermissionTypes;
-use App\Features\Permissions\Constants\RoleTypes;
 use App\Mail\ClientConfigurationSubmitted;
 use App\Models\ClientContract;
 use App\Models\Contract;
@@ -80,10 +79,6 @@ class SendContractApprovalEmailJob implements ShouldQueue
             ])
             ->whereNotNull('users.email')
             ->where('users.email', '!=', '')
-            ->role([
-                RoleTypes::DIRECTOR_GENERAL,
-                RoleTypes::DIRECTOR_VENTAS,
-            ])
             ->permission(PermissionTypes::CLIENT_CONTRACTS_APPROVE)
             ->get();
     }

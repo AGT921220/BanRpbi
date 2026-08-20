@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientContract extends Model
@@ -31,6 +29,7 @@ class ClientContract extends Model
         'status',
         'start_date',
         'end_date',
+        'price',
     ];
 
     /**
@@ -40,6 +39,7 @@ class ClientContract extends Model
     {
         return [
             'status' => 'integer',
+            'price' => 'decimal:2',
             'start_date' => 'date',
             'end_date' => 'date',
         ];
@@ -60,18 +60,18 @@ class ClientContract extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function clientContractProfiles(): HasMany
+    protected static function booted(): void
     {
-        return $this->hasMany(ClientContractProfile::class);
-    }
+        static::saving(function (ClientContract $clientContract): void {
+            if (! $clientContract->contract_id) {
+                return;
+            }
 
-    public function rpbiProfiles(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            RpbiProfile::class,
-            'client_contract_profiles',
-            'client_contract_id',
-            'rpbi_profile_id',
-        )->withTimestamps();
+            if (! $clientContract->exists || $clientContract->isDirty('contract_id')) {
+                $clientContract->price = Contract::query()
+                    ->whereKey($clientContract->contract_id)
+                    ->value('cost');
+            }
+        });
     }
 }
