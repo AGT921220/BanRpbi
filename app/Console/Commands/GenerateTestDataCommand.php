@@ -157,6 +157,7 @@ class GenerateTestDataCommand extends Command
 
             $rows[] = [
                 'name' => fake()->name(),
+                'nickname' => "usuario{$i}.{$this->batch}",
                 'email' => "usuario{$i}.{$this->batch}@".self::EMAIL_DOMAIN,
                 'email_verified_at' => mt_rand(1, 100) <= 90 ? $createdAt : null,
                 'password' => $password,
@@ -225,6 +226,7 @@ class GenerateTestDataCommand extends Command
             ['email' => 'admin@'.self::EMAIL_DOMAIN],
             [
                 'name' => 'Admin Datos de Prueba',
+                'nickname' => 'admin.testdata',
                 'password' => 'password',
                 'email_verified_at' => now(),
             ]

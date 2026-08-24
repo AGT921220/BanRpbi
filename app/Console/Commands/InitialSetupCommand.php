@@ -18,6 +18,7 @@ class InitialSetupCommand extends Command
     private const USERS = [
         [
             'name' => 'Administrador',
+            'nickname' => 'admin',
             'email' => 'admin@admin.com',
             'role' => RoleTypes::ADMIN,
         ]
@@ -33,12 +34,16 @@ class InitialSetupCommand extends Command
 
             $user = User::query()
                 ->withTrashed()
-                ->where('email', $userData['email'])
+                ->where(function ($query) use ($userData): void {
+                    $query->where('email', $userData['email'])
+                        ->orWhere('nickname', $userData['nickname']);
+                })
                 ->first();
 
             if ($user === null) {
                 $user = User::query()->create([
                     'name' => $userData['name'],
+                    'nickname' => $userData['nickname'],
                     'email' => $userData['email'],
                     'password' => $password,
                     'email_verified_at' => now(),
@@ -46,7 +51,7 @@ class InitialSetupCommand extends Command
 
                 $user->syncRoles([$role]);
 
-                $this->components->info("Creado: {$userData['email']} ({$userData['role']})");
+                $this->components->info("Creado: {$userData['nickname']} ({$userData['role']})");
 
                 continue;
             }
@@ -57,13 +62,15 @@ class InitialSetupCommand extends Command
 
             $user->forceFill([
                 'name' => $userData['name'],
+                'nickname' => $userData['nickname'],
+                'email' => $userData['email'],
                 'password' => $password,
                 'email_verified_at' => $user->email_verified_at ?? now(),
             ])->save();
 
             $user->syncRoles([$role]);
 
-            $this->components->info("Actualizado: {$userData['email']} ({$userData['role']})");
+            $this->components->info("Actualizado: {$userData['nickname']} ({$userData['role']})");
         }
     }
 }

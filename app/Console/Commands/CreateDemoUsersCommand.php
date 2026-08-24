@@ -17,51 +17,60 @@ class CreateDemoUsersCommand extends Command
     protected $description = 'Crea el Admin y usuarios de demostración por rol (contraseña: admin)';
 
     /**
-     * @var list<array{name: string, email: string, role: string}>
+     * @var list<array{name: string, nickname: string, email: string, role: string}>
      */
     private const USERS = [
         [
             'name' => 'Administrador',
+            'nickname' => 'admin',
             'email' => 'admin@admin.com',
             'role' => RoleTypes::ADMIN,
         ],
         [
             'name' => 'Director de Ventas',
+            'nickname' => 'director.ventas',
             'email' => 'director.ventas@director.com',
             'role' => RoleTypes::DIRECTOR_VENTAS,
         ],
         [
             'name' => 'Director General',
+            'nickname' => 'director.general',
             'email' => 'director.general@director.com',
             'role' => RoleTypes::DIRECTOR_GENERAL,
         ],
         [
             'name' => 'Vendedor 1',
+            'nickname' => 'vendedor1',
             'email' => 'vendedor1@ventas.com',
             'role' => RoleTypes::VENTAS,
         ],
         [
             'name' => 'Vendedor 2',
+            'nickname' => 'vendedor2',
             'email' => 'vendedor2@ventas.com',
             'role' => RoleTypes::VENTAS,
         ],
         [
             'name' => 'Logística 1',
+            'nickname' => 'logistica1',
             'email' => 'logistica1@logistica.com',
             'role' => RoleTypes::LOGISTICA,
         ],
         [
             'name' => 'Chofer 1',
+            'nickname' => 'chofer1',
             'email' => 'chofer1@chofer.com',
             'role' => RoleTypes::CHOFER,
         ],
         [
             'name' => 'Administración / Facturación 1',
+            'nickname' => 'facturacion1',
             'email' => 'facturacion1@facturacion.com',
             'role' => RoleTypes::FACTURACION,
         ],
         [
             'name' => 'Cliente 1',
+            'nickname' => 'cliente1',
             'email' => 'cliente1@cliente.com',
             'role' => RoleTypes::CLIENTE,
         ],
@@ -85,12 +94,16 @@ class CreateDemoUsersCommand extends Command
 
                 $user = User::query()
                     ->withTrashed()
-                    ->where('email', $userData['email'])
+                    ->where(function ($query) use ($userData): void {
+                        $query->where('email', $userData['email'])
+                            ->orWhere('nickname', $userData['nickname']);
+                    })
                     ->first();
 
                 if ($user === null) {
                     $user = User::query()->create([
                         'name' => $userData['name'],
+                        'nickname' => $userData['nickname'],
                         'email' => $userData['email'],
                         'password' => $password,
                         'email_verified_at' => now(),
@@ -99,7 +112,7 @@ class CreateDemoUsersCommand extends Command
                     $user->syncRoles([$role]);
                     $created++;
 
-                    $this->components->info("Creado: {$userData['email']} ({$userData['role']})");
+                    $this->components->info("Creado: {$userData['nickname']} ({$userData['role']})");
 
                     continue;
                 }
@@ -110,13 +123,15 @@ class CreateDemoUsersCommand extends Command
 
                 if (! $force) {
                     $skipped++;
-                    $this->components->warn("Omitido (ya existe): {$userData['email']}. Usa --force para actualizar.");
+                    $this->components->warn("Omitido (ya existe): {$userData['nickname']}. Usa --force para actualizar.");
 
                     continue;
                 }
 
                 $user->forceFill([
                     'name' => $userData['name'],
+                    'nickname' => $userData['nickname'],
+                    'email' => $userData['email'],
                     'password' => $password,
                     'email_verified_at' => $user->email_verified_at ?? now(),
                 ])->save();
@@ -124,7 +139,7 @@ class CreateDemoUsersCommand extends Command
                 $user->syncRoles([$role]);
                 $updated++;
 
-                $this->components->info("Actualizado: {$userData['email']} ({$userData['role']})");
+                $this->components->info("Actualizado: {$userData['nickname']} ({$userData['role']})");
             }
 
             $permissionRegistrar->forgetCachedPermissions();
@@ -173,7 +188,6 @@ class CreateDemoUsersCommand extends Command
             return;
         }
 
-        // Si ya existen ambos, migrar usuarios al rol Admin y eliminar el legado.
         User::role('Super Administrador')->each(function (User $user) use ($adminRole): void {
             $user->removeRole('Super Administrador');
             $user->assignRole($adminRole);

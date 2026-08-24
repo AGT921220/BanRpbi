@@ -30,6 +30,9 @@ Route::get('invoices/{id}', [InvoiceController::class, 'show'])
 });
 
 
+    Route::get('users/check-nickname', [UserController::class, 'checkNickname'])
+        ->name('users.check-nickname');
+
     Route::resource('users', UserController::class);
 
     Route::resource('roles', RoleController::class)

@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Permissions\PermissionHandler;
+use App\Features\Users\Application\CheckNicknameAvailability;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\CheckNicknameRequest;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
@@ -18,7 +20,8 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
     public function __construct(
-        private readonly PermissionHandler $permissionHandler
+        private readonly PermissionHandler $permissionHandler,
+        private readonly CheckNicknameAvailability $checkNicknameAvailability,
     ) {}
 
     public function index(): View
@@ -34,6 +37,20 @@ class UserController extends Controller
             compact('users'),
             $this->formData()
         ));
+    }
+
+    public function checkNickname(CheckNicknameRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        return response()->json(
+            ($this->checkNicknameAvailability)(
+                nickname: $validated['nickname'] ?? null,
+                ignoreUserId: isset($validated['ignore_user_id'])
+                    ? (int) $validated['ignore_user_id']
+                    : null,
+            )
+        );
     }
 
     public function create(Request $request): RedirectResponse|JsonResponse
@@ -53,6 +70,7 @@ class UserController extends Controller
 
         $user = User::create([
             'name' => $validated['name'],
+            'nickname' => $validated['nickname'],
             'email' => $validated['email'],
             'password' => $validated['password'],
         ]);
@@ -85,6 +103,7 @@ class UserController extends Controller
             return response()->json([
                 'id' => $user->id,
                 'name' => $user->name,
+                'nickname' => $user->nickname,
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name')->values(),
                 'direct_permissions' => $user->getDirectPermissions()->pluck('name')->values(),
@@ -101,6 +120,7 @@ class UserController extends Controller
         $validated = $request->validated();
 
         $user->name = $validated['name'];
+        $user->nickname = $validated['nickname'];
         $user->email = $validated['email'];
 
         if (! empty($validated['password'])) {

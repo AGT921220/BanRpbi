@@ -32,6 +32,7 @@
                     <thead>
                         <tr>
                             <th>Nombre</th>
+                            <th>Nickname</th>
                             <th>Correo</th>
                             <th>Roles</th>
                             <th class="w-1">Acciones</th>
@@ -41,6 +42,7 @@
                         @forelse ($users as $user)
                             <tr>
                                 <td>{{ $user->name }}</td>
+                                <td><code>{{ $user->nickname }}</code></td>
                                 <td class="text-secondary">{{ $user->email }}</td>
                                 <td>
                                     @forelse ($user->roles as $role)
@@ -95,7 +97,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-secondary py-4">
+                                <td colspan="5" class="text-center text-secondary py-4">
                                     No hay usuarios registrados.
                                 </td>
                             </tr>

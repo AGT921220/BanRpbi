@@ -1,9 +1,13 @@
 /**
  * Carga y rellena el modal de usuarios.
- * Usa BanHttp.get / BanHttp.post.
+ * Usa BanHttp.get para editar y fetch para validar nickname.
  */
 
-import { showToast } from "./admin";
+import { checkNicknameAvailability } from './services/nicknameAvailability';
+
+let nicknameCheckTimer = null;
+let nicknameAvailable = true;
+let nicknameCheckToken = 0;
 
 function getRolesPermissionsMap() {
     const node = document.getElementById('users-roles-permissions-map');
@@ -16,6 +20,108 @@ function getRolesPermissionsMap() {
     } catch (error) {
         return {};
     }
+}
+
+function getSubmitButton() {
+    return document.querySelector('#user-admin-form button[type="submit"]');
+}
+
+function setNicknameFeedback(state, message = '') {
+    const input = document.getElementById('user-nickname');
+    const feedback = document.getElementById('user-nickname-feedback');
+    const hint = document.getElementById('user-nickname-hint');
+    const submit = getSubmitButton();
+
+    if (!input || !feedback) {
+        return;
+    }
+
+    input.classList.remove('is-valid', 'is-invalid');
+    feedback.classList.add('d-none');
+    feedback.textContent = '';
+
+    if (hint) {
+        hint.classList.toggle('d-none', state === 'invalid' || state === 'valid');
+    }
+
+    if (state === 'invalid') {
+        nicknameAvailable = false;
+        input.classList.add('is-invalid');
+        feedback.className = 'invalid-feedback d-block';
+        feedback.textContent = message || 'Este nickname ya está en uso.';
+    } else if (state === 'valid') {
+        nicknameAvailable = true;
+        input.classList.add('is-valid');
+        feedback.className = 'valid-feedback d-block';
+        feedback.textContent = message || 'Nickname disponible.';
+    } else if (state === 'checking') {
+        nicknameAvailable = false;
+        feedback.className = 'form-hint';
+        feedback.textContent = 'Validando nickname…';
+    } else {
+        nicknameAvailable = true;
+        feedback.className = 'invalid-feedback d-none';
+        feedback.textContent = '';
+    }
+
+    if (submit) {
+        submit.disabled = !nicknameAvailable;
+    }
+}
+
+function clearNicknameFeedback() {
+    setNicknameFeedback('idle');
+}
+
+async function validateNicknameInput() {
+    const input = document.getElementById('user-nickname');
+    const form = document.getElementById('user-admin-form');
+
+    if (!input || !form) {
+        return;
+    }
+
+    const nickname = input.value.trim();
+    const checkUrl = input.dataset.checkUrl || '/users/check-nickname';
+    const ignoreUserId = form.dataset.userId || null;
+    const token = ++nicknameCheckToken;
+
+    if (nickname === '') {
+        clearNicknameFeedback();
+        return;
+    }
+
+    setNicknameFeedback('checking');
+
+    try {
+        const result = await checkNicknameAvailability(nickname, ignoreUserId, checkUrl);
+
+        if (token !== nicknameCheckToken) {
+            return;
+        }
+
+        setNicknameFeedback(
+            result.available ? 'valid' : 'invalid',
+            result.message,
+        );
+
+        if (result.nickname && result.nickname !== nickname) {
+            input.value = result.nickname;
+        }
+    } catch (error) {
+        if (token !== nicknameCheckToken) {
+            return;
+        }
+
+        setNicknameFeedback('invalid', error.message || 'No se pudo validar el nickname.');
+    }
+}
+
+function scheduleNicknameCheck() {
+    clearTimeout(nicknameCheckTimer);
+    nicknameCheckTimer = setTimeout(() => {
+        validateNicknameInput();
+    }, 350);
 }
 
 function refreshPermissionLocks() {
@@ -60,6 +166,7 @@ function resetUserForm() {
 
     form.reset();
     form.action = form.dataset.storeUrl;
+    delete form.dataset.userId;
     form.querySelector('[name="_method"]')?.remove();
 
     form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
@@ -74,6 +181,7 @@ function resetUserForm() {
     document.getElementById('user-password-input')?.setAttribute('required', 'required');
     document.getElementById('user-password-confirmation-input')?.setAttribute('required', 'required');
 
+    clearNicknameFeedback();
     document.dispatchEvent(new Event('permissions:refresh-groups'));
 }
 
@@ -86,6 +194,7 @@ function fillUserForm(data) {
     resetUserForm();
 
     form.action = data.update_url;
+    form.dataset.userId = String(data.id ?? '');
 
     let methodInput = form.querySelector('[name="_method"]');
     if (!methodInput) {
@@ -97,6 +206,7 @@ function fillUserForm(data) {
     methodInput.value = 'PUT';
 
     form.querySelector('[name="name"]').value = data.name ?? '';
+    form.querySelector('[name="nickname"]').value = data.nickname ?? '';
     form.querySelector('[name="email"]').value = data.email ?? '';
 
     document.getElementById('user-modal-title').innerHTML = '<i class="ti ti-user-edit me-2"></i> Editar usuario';
@@ -121,6 +231,7 @@ function fillUserForm(data) {
     });
 
     refreshPermissionLocks();
+    clearNicknameFeedback();
 }
 
 async function loadUserIntoModal(userId, editUrl) {
@@ -129,13 +240,16 @@ async function loadUserIntoModal(userId, editUrl) {
     }
 
     const url = editUrl || `/users/${userId}/edit`;
-    const data = await window.BanHttp.get(url,'Cargando Usuario');
+    const data = await window.BanHttp.get(url, 'Cargando Usuario');
     fillUserForm(data);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('user-form-modal');
-    if (!modal) {
+    const form = document.getElementById('user-admin-form');
+    const nicknameInput = document.getElementById('user-nickname');
+
+    if (!modal || !form) {
         return;
     }
 
@@ -155,6 +269,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         resetUserForm();
+    });
+
+    nicknameInput?.addEventListener('input', scheduleNicknameCheck);
+    nicknameInput?.addEventListener('blur', () => {
+        clearTimeout(nicknameCheckTimer);
+        validateNicknameInput();
+    });
+
+    form.addEventListener('submit', (event) => {
+        if (!nicknameAvailable) {
+            event.preventDefault();
+            setNicknameFeedback('invalid', 'Corrige el nickname antes de guardar.');
+            nicknameInput?.focus();
+        }
     });
 
     document.querySelectorAll('#user-form-modal .user-role-checkbox').forEach((checkbox) => {

@@ -58,14 +58,14 @@
                         @csrf
 
                         <x-form.input
-                            name="email"
-                            label="Correo electrónico"
-                            type="email"
-                            icon="ti ti-mail"
-                            :value="old('email')"
+                            name="nickname"
+                            label="Nickname"
+                            type="text"
+                            icon="ti ti-at"
+                            :value="old('nickname')"
                             required
                             autofocus
-                            autocomplete="email"
+                            autocomplete="username"
                         />
 
                         <x-form.input

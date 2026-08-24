@@ -20,6 +20,29 @@
 </div>
 
 <div class="mb-3">
+    <label for="user-nickname" class="form-label required">Nickname</label>
+    <div class="input-icon">
+        <span class="input-icon-addon"><i class="ti ti-at"></i></span>
+        <input
+            type="text"
+            name="nickname"
+            id="user-nickname"
+            class="form-control"
+            required
+            minlength="3"
+            maxlength="50"
+            pattern="[a-zA-Z0-9._\-]+"
+            autocomplete="username"
+            data-check-url="{{ route('users.check-nickname') }}"
+        >
+    </div>
+    <div class="form-hint" id="user-nickname-hint">
+        Se usa para iniciar sesión. Letras, números, punto, guion o guion bajo.
+    </div>
+    <div class="invalid-feedback d-none" data-error-for="nickname" id="user-nickname-feedback"></div>
+</div>
+
+<div class="mb-3">
     <label for="user-email" class="form-label required">Correo electrónico</label>
     <div class="input-icon">
         <span class="input-icon-addon"><i class="ti ti-mail"></i></span>
