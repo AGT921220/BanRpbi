@@ -26,7 +26,14 @@ clear:
 
 ngrok:
 	@ngrok http --host-header=rewrite http://localhost:8080;
-
+demo/restart-data:
+	@docker exec -it php-ban /bin/bash -c \
+"php artisan migrate:rollback && php artisan migrate && php artisan permissions:create && php artisan roles:create && php artisan users:create-demo"
+# 	@php artisan migrate:rollback
+# 	@php artisan migrate
+# 	@php artisan permissions:create
+# 	@php artisan roles:create
+# 	@php artisan users:create-demo
 
 import-db:
 	@docker exec -i ${DB_HOST} mysql -u user -ppassword -e "DROP DATABASE IF EXISTS ${DB_DATABASE}; CREATE DATABASE ${DB_DATABASE};"
