@@ -9,27 +9,28 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-public function up(): void
-{
-    Schema::create('services', function (Blueprint $table) {
-        $table->increments('id');
+    public function up(): void
+    {
+        Schema::create('services', function (Blueprint $table) {
+            $table->increments('id');
 
-        $table->date('service_date');
+            $table->date('service_date');
 
-        $table->unsignedInteger('zone_id');
-        $table->unsignedInteger('client_id');
-        $table->unsignedInteger('contract_id');
+            $table->unsignedInteger('zone_id');
+            $table->unsignedInteger('client_id');
+            $table->unsignedInteger('contract_id');
 
-        $table->string('status')->default('pending');
+            $table->string('status')->default('pending');
+            $table->integer('folio')->nullable();
 
-        $table->timestamps();
-        $table->softDeletes();
+            $table->timestamps();
+            $table->softDeletes();
 
-        $table->foreign('zone_id')->references('id')->on('zones');
-        $table->foreign('client_id')->references('id')->on('clients');
-        $table->foreign('contract_id')->references('id')->on('contracts');
-    });
-}
+            $table->foreign('zone_id')->references('id')->on('zones');
+            $table->foreign('client_id')->references('id')->on('clients');
+            $table->foreign('contract_id')->references('id')->on('contracts');
+        });
+    }
 
     /**
      * Reverse the migrations.
