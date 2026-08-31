@@ -19,10 +19,6 @@ return new class extends Migration
             $table->foreign('client_id')
                 ->references('id')
                 ->on('clients');
-            $table->integer('service_id')->unsigned()->nullable();
-            $table->foreign('service_id')
-                ->references('id')
-                ->on('services');
 
             $table->string('external_id')->nullable();
             $table->string('status')->default('pending');

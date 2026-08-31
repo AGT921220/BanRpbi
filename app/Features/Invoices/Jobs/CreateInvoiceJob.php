@@ -15,14 +15,14 @@ class CreateInvoiceJob implements ShouldQueue
 {
     use Queueable;
 
-    private int $serviceId;
+    private int $services;
     private int $clientId;
     /**
      * Create a new job instance.
      */
-    public function __construct(int $serviceId, int $clientId)
+    public function __construct(int $clientId, int $services)
     {
-        $this->serviceId = $serviceId;
+        $this->services = $services;
         $this->clientId = $clientId;
     }
 
@@ -31,9 +31,16 @@ class CreateInvoiceJob implements ShouldQueue
      */
     public function handle(CreateInvoice $createInvoice, FacturapiClient $facturapiClient): void
     {
-        $invoiceId = $createInvoice->__invoke($this->serviceId, $this->clientId);
+        $invoiceId = $createInvoice->__invoke($this->clientId);
 
-        $externalInvoice = $this->createExternalInvoice($facturapiClient);
+        Service::where('client_id', $this->clientId)
+            ->whereNull('invoice_id')
+            ->orderBy('id', 'asc')
+            ->limit($this->services)
+            ->update([
+                'invoice_id' => $invoiceId
+            ]);
+        $externalInvoice = $this->createExternalInvoice($facturapiClient, $invoiceId);
 
         $invoice = Invoice::where('id', $invoiceId)->first();
         $externalId = $externalInvoice['id'];
@@ -45,25 +52,26 @@ class CreateInvoiceJob implements ShouldQueue
         $invoice->cadena_complemento = $externalInvoice['stamp']['complement_string'];
         $invoice->serie_sat = $externalInvoice['stamp']['sat_cert_number'];
         $invoice->sello_cfdi = $externalInvoice['stamp']['signature'];
-        $invoice->status='completed';
+        $invoice->status = 'completed';
         // $qrcode = new Generator();
         $destination = public_path() . '/invoices/' . $invoice->id . '.svg';
         $qrcode = QrCode::size(500)->generate($invoice->verification_url, $destination);
         $invoice->save();
     }
-    private function createExternalInvoice(FacturapiClient $facturapiClient): array
+    private function createExternalInvoice(FacturapiClient $facturapiClient, int $invoiceId): array
     {
-        $service = Service::where('id', $this->serviceId)
+        $services = Service::where('invoice_id', $invoiceId)
             ->with(['client', 'serviceDetails.rpbiProfile'])
-            ->first();
+            ->get();
 
+        $service = $services->first();
         $rpbiProfiles = $service->serviceDetails->map(function ($serviceDetail) {
             return $serviceDetail->rpbiProfile;
         });
 
-        $items = array_map(function (array $rpbiProfile) {
+        $items = array_map(function (array $rpbiProfile) use ($services) {
             return [
-                'quantity' => 1,
+                'quantity' => $services->count(),
                 'product' => [
                     'description' => $rpbiProfile['description'],
                     'product_key' => '76121900', //PENDIENTE DARME PRODUCT KEY
@@ -88,7 +96,7 @@ class CreateInvoiceJob implements ShouldQueue
             ],
             'items' => $items,
             "payment_form" => '03',
-            'folio_number' => $this->serviceId, //ID DE BASE DE DATOS
+            'folio_number' => $invoiceId, //ID DE BASE DE DATOS
             // "series" => "F"
         ];
         $command = new CreateCfdiCommand($datosFactura);

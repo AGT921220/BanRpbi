@@ -28,8 +28,7 @@ ngrok:
 	@ngrok http --host-header=rewrite http://localhost:8080;
 demo/restart-data:
 	@docker exec -it php-ban /bin/bash -c \
-"php artisan migrate:rollback && php artisan migrate && php artisan permissions:create && php artisan roles:create && php artisan users:create-demo"
-# 	@php artisan migrate:rollback
+	"php artisan migrate:fresh && php artisan permissions:create && php artisan roles:create && php artisan users:create-demo && php artisan demo:create-data"
 # 	@php artisan migrate
 # 	@php artisan permissions:create
 # 	@php artisan roles:create

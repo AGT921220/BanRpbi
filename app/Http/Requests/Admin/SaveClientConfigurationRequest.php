@@ -13,6 +13,19 @@ final class SaveClientConfigurationRequest extends FormRequest
         return $this->user()?->can(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS) ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->exists('generate_invoice')) {
+            $this->merge([
+                'generate_invoice' => filter_var(
+                    $this->input('generate_invoice'),
+                    FILTER_VALIDATE_BOOLEAN,
+                    FILTER_NULL_ON_FAILURE,
+                ) ?? false,
+            ]);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -32,6 +45,14 @@ final class SaveClientConfigurationRequest extends FormRequest
             'start_date' => ['nullable', 'date', 'required_with:contract_id'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date', 'required_with:contract_id'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            // Preparado para facturación futura; aún no se genera la factura.
+            'generate_invoice' => ['sometimes', 'boolean'],
+            'invoice_manifest_count' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'required_if:generate_invoice,true,1',
+            ],
         ];
     }
 
@@ -46,6 +67,8 @@ final class SaveClientConfigurationRequest extends FormRequest
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha de fin',
             'notes' => 'notas',
+            'generate_invoice' => 'generar factura',
+            'invoice_manifest_count' => 'manifiestos a facturar',
         ];
     }
 }

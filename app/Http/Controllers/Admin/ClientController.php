@@ -7,6 +7,7 @@ use App\Features\Clients\Application\DeleteClient;
 use App\Features\Clients\Application\FinalizeClientContractConfiguration;
 use App\Features\Clients\Application\SaveClientConfiguration;
 use App\Features\Clients\Application\UpdateClient;
+use App\Features\Invoices\Jobs\CreateInvoiceJob;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SaveClientConfigurationRequest;
@@ -110,8 +111,8 @@ final class ClientController extends Controller
         ]);
         $draft = $client->pendingContract ?? (
             $client->configuration_status === Client::STATUS_APPROVED
-                ? null
-                : $client->activeContract
+            ? null
+            : $client->activeContract
         );
         $active = $client->activeContract;
         $selectedProfiles = $draft?->contract?->rpbiProfiles
@@ -119,7 +120,7 @@ final class ClientController extends Controller
             ?? collect();
         $selectedProfileIds = $selectedProfiles
             ->pluck('id')
-            ->map(static fn ($id): int => (int) $id)
+            ->map(static fn($id): int => (int) $id)
             ->values()
             ->all();
 
@@ -171,6 +172,10 @@ final class ClientController extends Controller
             userId: $request->user()?->id,
         );
 
+        if ($request->input('generate_invoice')) {
+            info('Generate invoice for client ' . $client->id);
+            CreateInvoiceJob::dispatch($client->id, $request->input('invoice_manifest_count'))->onQueue('invoices');
+        }
         return response()->json([
             'message' => 'Configuración guardada correctamente.',
             'configuration_status' => $client->configuration_status,
@@ -199,14 +204,14 @@ final class ClientController extends Controller
     private function statesCitiesCatalog(): array
     {
         return State::query()
-            ->with(['cities' => static fn ($query) => $query->orderBy('name')])
+            ->with(['cities' => static fn($query) => $query->orderBy('name')])
             ->orderBy('name')
             ->get()
-            ->map(static fn (State $state): array => [
+            ->map(static fn(State $state): array => [
                 'id' => (int) $state->id,
                 'name' => (string) $state->name,
                 'cities' => $state->cities
-                    ->map(static fn ($city): array => [
+                    ->map(static fn($city): array => [
                         'id' => (int) $city->id,
                         'name' => (string) $city->name,
                     ])

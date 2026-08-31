@@ -1,0 +1,16 @@
+[
+    {
+        "name": "Contrato 1",
+        "notes": null,
+        "duration_months": 12,
+        "frequency": "weekly",
+        "cost": 500.00
+    },
+    {
+        "name": "Contrato 2",
+        "notes": null,
+        "duration_months": 12,
+        "frequency": "weekly",
+        "cost": 750.00
+    }
+]

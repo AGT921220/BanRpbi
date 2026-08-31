@@ -29,6 +29,11 @@ return new class extends Migration
             $table->foreign('zone_id')->references('id')->on('zones');
             $table->foreign('client_id')->references('id')->on('clients');
             $table->foreign('contract_id')->references('id')->on('contracts');
+
+            $table->integer('invoice_id')->unsigned()->nullable();
+            $table->foreign('invoice_id')
+                ->references('id')
+                ->on('invoices');
         });
     }
 

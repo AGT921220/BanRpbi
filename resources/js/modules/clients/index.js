@@ -113,12 +113,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = document.getElementById('configure-next-btn');
     const saveCloseBtn = document.getElementById('configure-save-close-btn');
     const submitBtn = document.getElementById('configure-submit-btn');
+    const generateInvoiceCheckbox = document.getElementById('configure-generate-invoice');
+    const invoiceManifestsWrap = document.getElementById('configure-invoice-manifests-wrap');
+    const invoiceManifestCountInput = document.getElementById('configure-invoice-manifest-count');
+    const invoiceManifestsHint = document.getElementById('configure-invoice-manifests-hint');
 
     let currentStep = 1;
     let canEdit = true;
     let configurationStatus = 'configuration_pending';
     let activeContract = null;
     let hasActiveContract = false;
+    let expectedCollectionsCount = 0;
 
     $(document).on('click', '.configure-client-btn', async function () {
         const clientId = $(this).data('client-id');
@@ -139,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $(contractSelect).on('change', () => {
         updateContractDetails();
         updateEndDate();
+        updateInvoiceOptions();
         updateSummary();
         updateSubmitButton();
     });
@@ -149,7 +155,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSubmitButton();
     });
 
-    $(startDateInput).on('change', updateEndDate);
+    $(startDateInput).on('change', () => {
+        updateEndDate();
+        updateInvoiceOptions();
+        updateSummary();
+    });
+
+    $(endDateInput).on('change', () => {
+        updateInvoiceOptions();
+        updateSummary();
+    });
+
+    $(generateInvoiceCheckbox).on('change', () => {
+        updateInvoiceOptions();
+    });
+
+    $(invoiceManifestCountInput).on('input change', () => {
+        clampInvoiceManifestCount();
+    });
 
     $(prevBtn).on('click', () => {
         if (currentStep > 1) {
@@ -213,6 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
         startDateInput.value = data.start_date || new Date().toISOString().slice(0, 10);
         endDateInput.value = data.end_date || '';
         notesInput.value = data.notes || '';
+        generateInvoiceCheckbox.checked = false;
+        invoiceManifestCountInput.value = '';
 
         updateModalTitle(hasActiveContract);
 
@@ -232,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateEndDate();
         }
 
+        updateInvoiceOptions();
         updateSummary();
         updateSubmitButton();
     }
@@ -251,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setFormEditable(editable) {
-        [contractSelect, zoneSelect, startDateInput, endDateInput, notesInput]
+        [contractSelect, zoneSelect, startDateInput, endDateInput, notesInput, generateInvoiceCheckbox, invoiceManifestCountInput]
             .forEach((el) => {
                 el.disabled = !editable;
             });
@@ -266,12 +292,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         }
 
+        const generateInvoice = Boolean(generateInvoiceCheckbox.checked);
         const payload = {
             contract_id: contractSelect.value || null,
             zone_id: zoneSelect.value || null,
             start_date: startDateInput.value || null,
             end_date: endDateInput.value || null,
             notes: notesInput.value || null,
+            generate_invoice: generateInvoice,
+            invoice_manifest_count: generateInvoice
+                ? Number(invoiceManifestCountInput.value || 0) || null
+                : null,
         };
 
         try {
@@ -312,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         prevBtn.classList.toggle('d-none', step === 1 || !canEdit);
         nextBtn.classList.toggle('d-none', step === TOTAL_STEPS || !canEdit);
         submitBtn.classList.toggle('d-none', step !== TOTAL_STEPS || !canEdit);
+        updateInvoiceOptions();
         updateSummary();
         updateSubmitButton();
     }
@@ -387,6 +419,10 @@ document.addEventListener('DOMContentLoaded', () => {
             contractOption?.dataset.profiles || 'Sin seleccionar';
         document.getElementById('summary-status').textContent =
             STATUS_LABELS[configurationStatus] || configurationStatus;
+        document.getElementById('summary-collections-count').textContent =
+            expectedCollectionsCount > 0
+                ? String(expectedCollectionsCount)
+                : '—';
 
         if (activeContract?.name) {
             activeAlert.textContent =
@@ -400,12 +436,144 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateSubmitButton() {
+        const generateInvoice = Boolean(generateInvoiceCheckbox.checked);
+        const invoiceCount = Number(invoiceManifestCountInput.value || 0);
+        const invoiceReady = !generateInvoice
+            || (
+                invoiceCount >= 1
+                && expectedCollectionsCount > 0
+                && invoiceCount <= expectedCollectionsCount
+            );
+
         const ready = Boolean(
             contractSelect.value
             && zoneSelect.value
-            && canEdit,
+            && canEdit
+            && invoiceReady,
         );
         submitBtn.disabled = !ready;
+    }
+
+    function updateInvoiceOptions() {
+        expectedCollectionsCount = countExpectedCollections();
+        const generateInvoice = Boolean(generateInvoiceCheckbox.checked);
+
+        invoiceManifestsWrap.classList.toggle('d-none', !generateInvoice);
+        invoiceManifestCountInput.disabled = !canEdit || !generateInvoice;
+
+        if (expectedCollectionsCount > 0) {
+            invoiceManifestCountInput.min = '1';
+            invoiceManifestCountInput.max = String(expectedCollectionsCount);
+            invoiceManifestsHint.textContent =
+                `Máximo ${expectedCollectionsCount} (recolecciones que se van a generar).`;
+        } else {
+            invoiceManifestCountInput.removeAttribute('max');
+            invoiceManifestsHint.textContent =
+                'El máximo es el número de recolecciones que se van a generar.';
+        }
+
+        if (generateInvoice) {
+            if (!invoiceManifestCountInput.value && expectedCollectionsCount > 0) {
+                invoiceManifestCountInput.value = String(expectedCollectionsCount);
+            }
+            clampInvoiceManifestCount();
+        } else {
+            invoiceManifestCountInput.value = '';
+        }
+
+        updateSubmitButton();
+    }
+
+    function clampInvoiceManifestCount() {
+        if (!generateInvoiceCheckbox.checked) {
+            return;
+        }
+
+        let value = Number(invoiceManifestCountInput.value || 0);
+
+        if (!Number.isFinite(value) || value < 1) {
+            value = expectedCollectionsCount > 0 ? 1 : 0;
+        }
+
+        if (expectedCollectionsCount > 0 && value > expectedCollectionsCount) {
+            value = expectedCollectionsCount;
+        }
+
+        if (value > 0) {
+            invoiceManifestCountInput.value = String(value);
+        }
+
+        updateSubmitButton();
+    }
+
+    /**
+     * Mirrors ServiceDateGenerator: one recolección (and manifesto) per period
+     * while start_date < end_date for weekly / biweekly / monthly.
+     */
+    function countExpectedCollections() {
+        const frequency = contractSelect.selectedOptions[0]?.dataset.frequencyKey;
+        const startValue = startDateInput.value;
+        const endValue = endDateInput.value;
+
+        if (!frequency || !startValue || !endValue) {
+            return 0;
+        }
+
+        const startDate = parseLocalDate(startValue);
+        const endDate = parseLocalDate(endValue);
+
+        if (!startDate || !endDate || !(startDate < endDate)) {
+            return 0;
+        }
+
+        let count = 0;
+        let cursor = new Date(startDate);
+
+        while (cursor < endDate) {
+            count += 1;
+            cursor = nextServiceDate(cursor, frequency);
+
+            if (count > 10000) {
+                break;
+            }
+        }
+
+        return count;
+    }
+
+    function parseLocalDate(value) {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+        if (!match) {
+            return null;
+        }
+
+        return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+
+    function nextServiceDate(date, frequency) {
+        const next = new Date(date);
+
+        if (frequency === 'weekly') {
+            next.setDate(next.getDate() + 7);
+            return next;
+        }
+
+        if (frequency === 'biweekly') {
+            next.setDate(next.getDate() + 14);
+            return next;
+        }
+
+        if (frequency === 'monthly') {
+            const day = next.getDate();
+            next.setDate(1);
+            next.setMonth(next.getMonth() + 1);
+            const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+            next.setDate(Math.min(day, lastDay));
+            return next;
+        }
+
+        return next;
     }
 
     function formatCost(value) {

@@ -62,6 +62,7 @@
                                                 value="{{ $contract->id }}"
                                                 data-duration-months="{{ $contract->duration_months }}"
                                                 data-frequency="{{ $frequencyLabels[$contract->frequency] ?? $contract->frequency }}"
+                                                data-frequency-key="{{ $contract->frequency }}"
                                                 data-notes="{{ e($contract->notes ?? '') }}"
                                                 data-cost="{{ $contract->cost }}"
                                                 data-profiles="{{ e($contract->rpbiProfiles->map(fn ($profile) => $profile->code.' — '.$profile->name)->implode(', ')) }}"
@@ -202,6 +203,41 @@
                                 <div class="datagrid-item">
                                     <div class="datagrid-title">Estado</div>
                                     <div class="datagrid-content" id="summary-status">—</div>
+                                </div>
+                                <div class="datagrid-item">
+                                    <div class="datagrid-title">Recolecciones a generar</div>
+                                    <div class="datagrid-content" id="summary-collections-count">—</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 pt-3 border-top">
+                                <label class="form-check">
+                                    <input
+                                        type="checkbox"
+                                        class="form-check-input"
+                                        id="configure-generate-invoice"
+                                        name="generate_invoice"
+                                        value="1"
+                                    >
+                                    <span class="form-check-label">
+                                        <i class="ti ti-file-invoice me-1"></i>
+                                        Generar factura
+                                    </span>
+                                </label>
+
+                                <div class="mt-3 d-none" id="configure-invoice-manifests-wrap">
+                                    <x-form.input
+                                        name="invoice_manifest_count"
+                                        id="configure-invoice-manifest-count"
+                                        type="number"
+                                        label="Manifiestos a facturar"
+                                        icon="ti ti-files"
+                                        min="1"
+                                        step="1"
+                                    />
+                                    <div class="form-hint" id="configure-invoice-manifests-hint">
+                                        El máximo es el número de recolecciones que se van a generar.
+                                    </div>
                                 </div>
                             </div>
                         </div>
