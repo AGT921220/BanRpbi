@@ -28,7 +28,7 @@ class BulkCreateServices
         foreach ($this->serviceDateGenerator->__invoke($clientContract->start_date, $clientContract->end_date, $frequency) as $serviceDate) {
             $serviceId = $this->createServiceForContract($client, $contract, $serviceDate);
             $this->createServiceDetails($serviceId, $rpbiProfileIds);
-            $this->createManifestForService($serviceId);
+            // $this->createManifestForService($serviceId);
         }
     }
 
