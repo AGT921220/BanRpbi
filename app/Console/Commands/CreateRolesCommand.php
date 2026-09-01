@@ -205,6 +205,8 @@ class CreateRolesCommand extends Command
             PermissionTypes::COLLECTIONS_CREATE,
             PermissionTypes::COLLECTIONS_UPDATE,
             PermissionTypes::COLLECTIONS_DELETE,
+            PermissionTypes::COLLECTIONS_ASSIGN,
+            PermissionTypes::DRIVERS_VIEW,
             PermissionTypes::ROUTES_VIEW,
             PermissionTypes::ROUTES_CREATE,
             PermissionTypes::ROUTES_UPDATE,

@@ -36,6 +36,7 @@ final class PermissionTypes
     public const COLLECTIONS_UPDATE = 'collections.update';
     public const COLLECTIONS_DELETE = 'collections.delete';
     public const COLLECTIONS_COMPLETE = 'collections.complete';
+    public const COLLECTIONS_ASSIGN = 'collections.assign';
 
     // Rutas
     public const ROUTES_VIEW = 'routes.view';

@@ -38,6 +38,7 @@ class PermissionHandler
             PermissionTypes::COLLECTIONS_UPDATE,
             PermissionTypes::COLLECTIONS_DELETE,
             PermissionTypes::COLLECTIONS_COMPLETE,
+            PermissionTypes::COLLECTIONS_ASSIGN,
 
             PermissionTypes::ROUTES_VIEW,
             PermissionTypes::ROUTES_CREATE,
@@ -161,6 +162,7 @@ class PermissionHandler
             PermissionTypes::COLLECTIONS_UPDATE => 'Editar recolecciones',
             PermissionTypes::COLLECTIONS_DELETE => 'Eliminar recolecciones',
             PermissionTypes::COLLECTIONS_COMPLETE => 'Completar recolecciones',
+            PermissionTypes::COLLECTIONS_ASSIGN => 'Asignar recolecciones',
 
             PermissionTypes::ROUTES_VIEW => 'Ver rutas',
             PermissionTypes::ROUTES_CREATE => 'Crear rutas',

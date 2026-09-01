@@ -58,6 +58,7 @@
                         id="service-date"
                         class="position-absolute opacity-0"
                         style="width: 1px; height: 1px;"
+                        value="{{ $serviceDate ?? '' }}"
                     >
                 </label>
 

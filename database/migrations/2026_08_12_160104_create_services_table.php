@@ -20,6 +20,8 @@ return new class extends Migration
             $table->unsignedInteger('client_id');
             $table->unsignedInteger('contract_id');
 
+            $table->decimal('cost', 10, 2)->default(0);
+
             $table->string('status')->default('pending');
             $table->integer('folio')->nullable();
 

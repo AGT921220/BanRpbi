@@ -31,6 +31,11 @@ Route::middleware('auth')->group(function (): void {
 
     Route::resource('drivers', DriverController::class)
         ->except(['show']);
+
+    Route::get('services/assign', [ServiceController::class, 'assign'])
+        ->name('services.assign');
+    Route::post('services/assign', [ServiceController::class, 'storeAssignment'])
+        ->name('services.assign.store');
     Route::resource('services', ServiceController::class)
         ->only(['index']);
 

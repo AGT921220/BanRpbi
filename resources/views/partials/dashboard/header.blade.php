@@ -175,6 +175,7 @@
                             {{-- LOGÍSTICA --}}
                             @canany([
                                 PermissionTypes::COLLECTIONS_VIEW,
+                                PermissionTypes::COLLECTIONS_ASSIGN,
                                 PermissionTypes::ROUTES_VIEW,
                                 PermissionTypes::ZONES_VIEW,
                                 PermissionTypes::DRIVERS_VIEW,
@@ -199,12 +200,38 @@
                                     </a>
 
                                     <div class="dropdown-menu">
-                                        @can(PermissionTypes::COLLECTIONS_VIEW)
-                                            <a href="{{ route('services.index') }}" class="dropdown-item">
-                                                <i class="ti ti-calendar-event me-2"></i>
-                                                Recolecciones
-                                            </a>
-                                        @endcan
+                                        @canany([
+                                            PermissionTypes::COLLECTIONS_VIEW,
+                                            PermissionTypes::COLLECTIONS_ASSIGN,
+                                        ])
+                                            <div class="dropend">
+                                                <a
+                                                    class="dropdown-item dropdown-toggle"
+                                                    href="#navbar-recolecciones"
+                                                    data-bs-toggle="dropdown"
+                                                    data-bs-auto-close="outside"
+                                                    role="button"
+                                                    aria-expanded="false"
+                                                >
+                                                    <i class="ti ti-calendar-event me-2"></i>
+                                                    Recolecciones
+                                                </a>
+                                                <div class="dropdown-menu">
+                                                    @can(PermissionTypes::COLLECTIONS_VIEW)
+                                                        <a href="{{ route('services.index') }}" class="dropdown-item">
+                                                            <i class="ti ti-eye me-2"></i>
+                                                            Ver
+                                                        </a>
+                                                    @endcan
+                                                    @can(PermissionTypes::COLLECTIONS_ASSIGN)
+                                                        <a href="{{ route('services.assign') }}" class="dropdown-item">
+                                                            <i class="ti ti-user-check me-2"></i>
+                                                            Asignar
+                                                        </a>
+                                                    @endcan
+                                                </div>
+                                            </div>
+                                        @endcanany
 
                                         @can(PermissionTypes::ROUTES_VIEW)
                                             <a href="#" class="dropdown-item">
