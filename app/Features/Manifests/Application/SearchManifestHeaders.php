@@ -22,7 +22,7 @@ class SearchManifestHeaders
             'service_date','invoices.id as invoice')
             ->join('services', 'manifests.service_id', '=', 'services.id')
             ->join('clients', 'services.client_id', '=', 'clients.id')
-            ->leftJoin('invoices','invoices.service_id','services.id')
+            ->leftJoin('invoices','invoices.id','services.invoice_id')
             ,
             modifiers: $filters,
             draw: $draw,

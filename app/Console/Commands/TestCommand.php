@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Features\Invoices\Jobs\CreateInvoiceFromNextServices;
+use App\Features\Manifests\Jobs\CreateDailyManifestsJob;
+use App\Features\Manifests\Jobs\CreateDailyManifestsJobShouldQueue;
 use App\Features\Services\Application\BulkCreateServices;
 use App\Jobs\TestHorizonJob;
 use App\Mail\ClientConfigurationSubmitted;
@@ -23,7 +25,10 @@ class TestCommand extends Command
     public function handle(BulkCreateServices $bulkCreateServices): void
     {
 
-
+        info('Se envía a crear manifiestos');
+        CreateDailyManifestsJob::dispatch();
+        info('Se envía a crear manifiestos');
+        return;
         $serviceId = 54;
         $service = Service::where('id', $serviceId)
             ->with(['client', 'serviceDetails.rpbiProfile'])

@@ -418,12 +418,12 @@
                                             </div>
                                         @endcanany
 
-                                        @can(PermissionTypes::PAYMENTS_VIEW)
+                                        {{-- @can(PermissionTypes::PAYMENTS_VIEW)
                                             <a href="#" class="dropdown-item">
                                                 <i class="ti ti-cash me-2"></i>
                                                 Pagos
                                             </a>
-                                        @endcan
+                                        @endcan --}}
                                     </div>
                                 </li>
                             @endcanany
