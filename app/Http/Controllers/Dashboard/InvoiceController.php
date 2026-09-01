@@ -2,11 +2,20 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
+    public function index(): View
+    {
+        $this->authorize(PermissionTypes::INVOICES_VIEW);
+
+        return view('dashboard.invoices.index');
+    }
+
     public function show(int $invoiceId)
     {
         return response()->json(

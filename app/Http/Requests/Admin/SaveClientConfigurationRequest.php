@@ -13,19 +13,15 @@ final class SaveClientConfigurationRequest extends FormRequest
         return $this->user()?->can(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS) ?? false;
     }
 
+
     protected function prepareForValidation(): void
     {
         if ($this->exists('generate_invoice')) {
             $this->merge([
-                'generate_invoice' => filter_var(
-                    $this->input('generate_invoice'),
-                    FILTER_VALIDATE_BOOLEAN,
-                    FILTER_NULL_ON_FAILURE,
-                ) ?? false,
+                'generate_invoice' => $this->boolean('generate_invoice'),
             ]);
         }
     }
-
     /**
      * @return array<string, mixed>
      */

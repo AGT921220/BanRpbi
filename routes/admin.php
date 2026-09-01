@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Admin\InvoiceHeadersController;
 use App\Http\Controllers\Admin\ManifestHeadersController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceController;
@@ -18,6 +19,9 @@ Route::middleware('auth')->group(function (): void {
 Route::group(['prefix' => 'admin'], function (): void {
 Route::get('manifest-headers', [ManifestHeadersController::class, 'index'])
         ->name('manifest-headers.index');
+
+Route::get('invoice-headers', [InvoiceHeadersController::class, 'index'])
+        ->name('invoice-headers.index');
         
 Route::get('manifests/{id}', [ManifestController::class, 'show'])
         ->name('manifests.show');

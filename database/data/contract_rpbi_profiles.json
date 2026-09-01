@@ -1,0 +1,22 @@
+[
+    {
+        "contract_id": 1,
+        "rpbi_profile_id": 1
+    },
+    {
+        "contract_id": 1,
+        "rpbi_profile_id": 2
+    },
+    {
+        "contract_id": 2,
+        "rpbi_profile_id": 1
+    },
+    {
+        "contract_id": 2,
+        "rpbi_profile_id": 3
+    },
+    {
+        "contract_id": 2,
+        "rpbi_profile_id": 5
+    }
+]

@@ -25,6 +25,8 @@ class ClientContract extends Model
         'client_id',
         'contract_id',
         'user_id',
+        'generate_initial_invoice',
+        'initial_invoice_manifest_count',
         'notes',
         'status',
         'start_date',

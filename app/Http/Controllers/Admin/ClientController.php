@@ -164,6 +164,8 @@ final class ClientController extends Controller
         SaveClientConfigurationRequest $request,
         Client $client,
     ): JsonResponse {
+        // info($request->all());
+        // info($request->validated());
         $this->authorize(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS);
 
         $client = ($this->saveClientConfiguration)(
@@ -172,10 +174,6 @@ final class ClientController extends Controller
             userId: $request->user()?->id,
         );
 
-        if ($request->input('generate_invoice')) {
-            info('Generate invoice for client ' . $client->id);
-            CreateInvoiceJob::dispatch($client->id, $request->input('invoice_manifest_count'))->onQueue('invoices');
-        }
         return response()->json([
             'message' => 'Configuración guardada correctamente.',
             'configuration_status' => $client->configuration_status,

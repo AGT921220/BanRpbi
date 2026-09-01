@@ -53,6 +53,13 @@ final class SaveClientConfiguration
                     'price' => Contract::query()->whereKey($data['contract_id'])->value('cost'),
                 ];
 
+                info($data['generate_invoice']);
+                if(!!isset($data['generate_invoice'])) {
+                    $payload['generate_initial_invoice'] = $data['generate_invoice'];
+                    $payload['initial_invoice_manifest_count'] = $data['invoice_manifest_count'];
+                }
+                
+                info($payload);
                 if ($pending) {
                     $pending->update($payload);
                 } else {

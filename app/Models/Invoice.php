@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Invoice extends Model
 {
+    protected $guarded = [];
+    public const STATUS_PENDING = 'pending';
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

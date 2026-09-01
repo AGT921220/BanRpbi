@@ -15,6 +15,8 @@ return new class extends Migration
             $table->increments('id');
             $table->text('notes')->nullable();
             $table->integer('status')->nullable();
+            $table->boolean('generate_initial_invoice')->default(false);
+            $table->integer('initial_invoice_manifest_count')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->unsignedInteger('client_id')->nullable();

@@ -22,8 +22,11 @@ nginx:
 	docker exec -it nginx-ban /bin/sh;	
 clear:
 	@docker exec -it php-ban /bin/bash -c \
-"php artisan config:cache && php artisan config:clear && php artisan horizon:terminate && php artisan queue:restart && php artisan route:clear && php artisan route:cache"
-
+	"php artisan optimize:clear && \
+	php artisan config:cache && \
+	php artisan route:cache && \
+	php artisan horizon:terminate && \
+	php artisan queue:restart"
 ngrok:
 	@ngrok http --host-header=rewrite http://localhost:8080;
 demo/restart-data:

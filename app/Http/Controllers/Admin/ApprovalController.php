@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Features\Approvals\Application\ApproveClientConfiguration;
 use App\Features\Approvals\Application\ListPendingApprovals;
 use App\Features\Approvals\Application\RejectClientConfiguration;
+use App\Features\Invoices\Jobs\CreateInvoiceJob;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Services\Application\BulkCreateServices;
 use App\Http\Controllers\Controller;
@@ -48,6 +49,15 @@ final class ApprovalController extends Controller
             ($this->bulkCreateServices)(
                 client: $client,
             );
+            $clientContract = $client->activeContract;
+            if($clientContract !== null&& !!$clientContract->generate_initial_invoice) {
+            info('Generate invoice for client ' . $client->id);
+            CreateInvoiceJob::dispatch(
+                $client->id,
+                $clientContract->initial_invoice_manifest_count
+            )->onQueue('invoices');
+            }
+
         }
 
         $message = $client->configuration_status === Client::STATUS_APPROVED

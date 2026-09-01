@@ -358,7 +358,7 @@
 
                                     <div class="dropdown-menu">
                                         @can(PermissionTypes::INVOICES_VIEW)
-                                            <a href="#" class="dropdown-item">
+                                            <a href="{{ route('invoices.index') }}" class="dropdown-item">
                                                 <i class="ti ti-file-invoice me-2"></i>
                                                 Facturas
                                             </a>
