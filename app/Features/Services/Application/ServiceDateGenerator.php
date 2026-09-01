@@ -12,20 +12,24 @@ class ServiceDateGenerator
         Carbon $endDate,
         string $frequency
     ): Generator {
-        for (
-            $date = $startDate->copy();
-            $date->lessThan($endDate);
-            $date = $this->getNextDate($date, $frequency)
-        ) {
-            yield $this->adjustBusinessDay($date);
+        $date = $this->adjustBusinessDay($startDate->copy());
+
+        while ($date->lessThan($endDate)) {
+            yield $date->copy();
+
+            $date = $this->adjustBusinessDay(
+                $this->getNextDate($date, $frequency)
+            );
         }
     }
+
     private function getNextDate(Carbon $date, string $frequency): Carbon
     {
         return match ($frequency) {
             'weekly' => $date->copy()->addWeek(),
             'biweekly' => $date->copy()->addWeeks(2),
-            'monthly' => $date->copy()->addMonthNoOverflow()
+            'monthly' => $date->copy()->addMonthNoOverflow(),
+            default => $date->copy()->addWeek(),
         };
     }
 

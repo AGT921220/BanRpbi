@@ -527,11 +527,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let count = 0;
-        let cursor = new Date(startDate);
+        let cursor = adjustBusinessDay(new Date(startDate));
 
         while (cursor < endDate) {
             count += 1;
-            cursor = nextServiceDate(cursor, frequency);
+            cursor = adjustBusinessDay(nextServiceDate(cursor, frequency));
 
             if (count > 10000) {
                 break;
@@ -539,6 +539,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return count;
+    }
+
+    function adjustBusinessDay(date) {
+        const adjusted = new Date(date);
+
+        if (adjusted.getDay() === 6) {
+            adjusted.setDate(adjusted.getDate() - 1);
+        }
+
+        if (adjusted.getDay() === 0) {
+            adjusted.setDate(adjusted.getDate() + 1);
+        }
+
+        return adjusted;
     }
 
     function parseLocalDate(value) {

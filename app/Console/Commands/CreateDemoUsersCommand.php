@@ -63,6 +63,19 @@ class CreateDemoUsersCommand extends Command
             'role' => RoleTypes::CHOFER,
         ],
         [
+            'name' => 'Chofer 2',
+            'nickname' => 'chofer2',
+            'email' => 'chofer2@chofer.com',
+            'role' => RoleTypes::CHOFER,
+        ],
+        [
+            'name' => 'Chofer 3',
+            'nickname' => 'chofer3',
+            'email' => 'chofer3@chofer.com',
+            'role' => RoleTypes::CHOFER,
+        ],
+
+        [
             'name' => 'Administración / Facturación 1',
             'nickname' => 'facturacion1',
             'email' => 'facturacion1@facturacion.com',
@@ -155,7 +168,7 @@ class CreateDemoUsersCommand extends Command
             report($exception);
 
             $this->components->error(
-                'No fue posible crear los usuarios demo: '.$exception->getMessage()
+                'No fue posible crear los usuarios demo: ' . $exception->getMessage()
             );
 
             return self::FAILURE;
