@@ -363,6 +363,7 @@
                             {{-- FACTURACIÓN --}}
                             @canany([
                                 PermissionTypes::INVOICES_VIEW,
+                                PermissionTypes::INVOICES_CREATE,
                                 PermissionTypes::PAYMENTS_VIEW,
                             ])
                                 <li class="nav-item dropdown">
@@ -384,12 +385,38 @@
                                     </a>
 
                                     <div class="dropdown-menu">
-                                        @can(PermissionTypes::INVOICES_VIEW)
-                                            <a href="{{ route('invoices.index') }}" class="dropdown-item">
-                                                <i class="ti ti-file-invoice me-2"></i>
-                                                Facturas
-                                            </a>
-                                        @endcan
+                                        @canany([
+                                            PermissionTypes::INVOICES_VIEW,
+                                            PermissionTypes::INVOICES_CREATE,
+                                        ])
+                                            <div class="dropend">
+                                                <a
+                                                    class="dropdown-item dropdown-toggle"
+                                                    href="#navbar-facturas"
+                                                    data-bs-toggle="dropdown"
+                                                    data-bs-auto-close="outside"
+                                                    role="button"
+                                                    aria-expanded="false"
+                                                >
+                                                    <i class="ti ti-file-invoice me-2"></i>
+                                                    Facturas
+                                                </a>
+                                                <div class="dropdown-menu">
+                                                    @can(PermissionTypes::INVOICES_VIEW)
+                                                        <a href="{{ route('invoices.index') }}" class="dropdown-item">
+                                                            <i class="ti ti-eye me-2"></i>
+                                                            Ver
+                                                        </a>
+                                                    @endcan
+                                                    @can(PermissionTypes::INVOICES_CREATE)
+                                                        <a href="{{ route('invoices.create') }}" class="dropdown-item">
+                                                            <i class="ti ti-plus me-2"></i>
+                                                            Crear
+                                                        </a>
+                                                    @endcan
+                                                </div>
+                                            </div>
+                                        @endcanany
 
                                         @can(PermissionTypes::PAYMENTS_VIEW)
                                             <a href="#" class="dropdown-item">

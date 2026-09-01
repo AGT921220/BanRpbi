@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Features\Invoices\Jobs\CreateInvoiceJob;
+use App\Features\Invoices\Jobs\CreateInvoiceFromNextServices;
 use App\Features\Services\Application\BulkCreateServices;
 use App\Jobs\TestHorizonJob;
 use App\Mail\ClientConfigurationSubmitted;
@@ -28,7 +28,7 @@ class TestCommand extends Command
         $service = Service::where('id', $serviceId)
             ->with(['client', 'serviceDetails.rpbiProfile'])
             ->first();
-        CreateInvoiceJob::dispatch($serviceId, $service->client_id)->onQueue('invoices');
+        CreateInvoiceFromNextServices::dispatch($serviceId, $service->client_id)->onQueue('invoices');
         return;
 
         $rpbiProfiles = $service->serviceDetails->map(function ($serviceDetail) {

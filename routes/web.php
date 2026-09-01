@@ -39,6 +39,8 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('services', ServiceController::class)
         ->only(['index']);
 
+    Route::get('invoices/create', [InvoiceController::class, 'create'])
+        ->name('invoices.create');
     Route::resource('invoices', InvoiceController::class)
         ->only(['index']);
 });

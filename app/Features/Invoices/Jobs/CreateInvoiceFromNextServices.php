@@ -12,7 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Str;
 
-class CreateInvoiceJob implements ShouldQueue
+class CreateInvoiceFromNextServices implements ShouldQueue
 {
     use Queueable;
 

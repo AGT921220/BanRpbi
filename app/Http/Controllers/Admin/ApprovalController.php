@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Features\Approvals\Application\ApproveClientConfiguration;
 use App\Features\Approvals\Application\ListPendingApprovals;
 use App\Features\Approvals\Application\RejectClientConfiguration;
-use App\Features\Invoices\Jobs\CreateInvoiceJob;
+use App\Features\Invoices\Jobs\CreateInvoiceFromNextServices;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Services\Application\BulkCreateServices;
 use App\Http\Controllers\Controller;
@@ -13,7 +13,6 @@ use App\Http\Requests\Admin\RejectClientConfigurationRequest;
 use App\Models\Client;
 use App\Models\ClientConfigurationApproval;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 final class ApprovalController extends Controller
 {
@@ -51,8 +50,7 @@ final class ApprovalController extends Controller
             );
             $clientContract = $client->activeContract;
             if($clientContract !== null&& !!$clientContract->generate_initial_invoice) {
-            info('Generate invoice for client ' . $client->id);
-            CreateInvoiceJob::dispatch(
+            CreateInvoiceFromNextServices::dispatch(
                 $client->id,
                 $clientContract->initial_invoice_manifest_count
             )->onQueue('invoices');

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Admin\InvoiceBillableServiceHeadersController;
+use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\InvoiceHeadersController;
 use App\Http\Controllers\Admin\ManifestHeadersController;
 use App\Http\Controllers\Admin\RoleController;
@@ -22,6 +24,12 @@ Route::get('manifest-headers', [ManifestHeadersController::class, 'index'])
 
 Route::get('invoice-headers', [InvoiceHeadersController::class, 'index'])
         ->name('invoice-headers.index');
+
+Route::get('invoice-billable-service-headers', [InvoiceBillableServiceHeadersController::class, 'index'])
+        ->name('invoice-billable-service-headers.index');
+
+Route::post('invoices/create', [AdminInvoiceController::class, 'store'])
+        ->name('admin.invoices.create');
         
 Route::get('manifests/{id}', [ManifestController::class, 'show'])
         ->name('manifests.show');

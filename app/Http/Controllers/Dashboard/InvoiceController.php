@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\Invoice;
 use Illuminate\View\View;
 
@@ -14,6 +15,18 @@ class InvoiceController extends Controller
         $this->authorize(PermissionTypes::INVOICES_VIEW);
 
         return view('dashboard.invoices.index');
+    }
+
+    public function create(): View
+    {
+        $this->authorize(PermissionTypes::INVOICES_CREATE);
+
+        return view('dashboard.invoices.create', [
+            'clients' => Client::query()
+                ->orderBy('company')
+                ->orderBy('name')
+                ->get(['id', 'company', 'name', 'parentarl_surname']),
+        ]);
     }
 
     public function show(int $invoiceId)

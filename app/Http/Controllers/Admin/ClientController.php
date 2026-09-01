@@ -7,7 +7,6 @@ use App\Features\Clients\Application\DeleteClient;
 use App\Features\Clients\Application\FinalizeClientContractConfiguration;
 use App\Features\Clients\Application\SaveClientConfiguration;
 use App\Features\Clients\Application\UpdateClient;
-use App\Features\Invoices\Jobs\CreateInvoiceJob;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SaveClientConfigurationRequest;
@@ -164,8 +163,6 @@ final class ClientController extends Controller
         SaveClientConfigurationRequest $request,
         Client $client,
     ): JsonResponse {
-        // info($request->all());
-        // info($request->validated());
         $this->authorize(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS);
 
         $client = ($this->saveClientConfiguration)(

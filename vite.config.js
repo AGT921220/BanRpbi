@@ -19,6 +19,7 @@ export default defineConfig({
                 'resources/js/modules/manifests/manifestPdf.js',
                 'resources/js/modules/manifests/manifestPdfBuilder.js',
                 'resources/js/modules/invoices/index.js',
+                'resources/js/modules/invoices/create.js',
                 'resources/js/modules/invoices/invoicePdf.js',
                 'resources/js/modules/invoices/invoicePdfBuilder.js',
                 'resources/js/modules/invoices/invoicePdfTest.js',
