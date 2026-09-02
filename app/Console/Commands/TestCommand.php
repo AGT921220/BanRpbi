@@ -55,9 +55,9 @@ class TestCommand extends Command
         // private string $manifestNumber,
         // private string $residues,
         // private string $manifestUuid,
-        $sendWhatsappTemplate->__invoke($to, $template);
+        // $sendWhatsappTemplate->__invoke($to, $template);
 
-        return;
+        // return;
         info('Se envía a crear manifiestos');
         CreateDailyManifestsJob::dispatch();
         info('Se envía a crear manifiestos');

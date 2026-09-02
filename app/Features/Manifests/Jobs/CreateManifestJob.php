@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class CreateManifestJob implements ShouldQueue
 {
@@ -31,6 +31,8 @@ class CreateManifestJob implements ShouldQueue
             return;
         }
         $manifest = new Manifest();
+        $manifest->public_uuid = Str::uuid()->toString();
+
         $manifest->service_id = $serviceId;
         $manifest->save();
     }
