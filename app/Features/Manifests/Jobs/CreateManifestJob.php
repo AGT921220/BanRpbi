@@ -26,8 +26,10 @@ class CreateManifestJob implements ShouldQueue
 
     private function createManifestForService(int $serviceId)
     {
-        // Implement the logic to create a manifest for the service
-        // This could involve creating a new Manifest model and associating it with the service
+
+        if (Manifest::where('service_id', $serviceId)->exists()) {
+            return;
+        }
         $manifest = new Manifest();
         $manifest->service_id = $serviceId;
         $manifest->save();

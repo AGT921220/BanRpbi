@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('manifests', function (Blueprint $table) {
             $table->increments('id');
+            $table->uuid('public_uuid')->unique();
             $table->unsignedInteger('service_id');
             $table->foreign('service_id')->references('id')->on('services');
             $table->string('status')->default('pending');

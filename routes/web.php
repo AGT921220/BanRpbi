@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\DriverHeadersController;
+use App\Http\Controllers\ClientAccessManifestController;
 use App\Http\Controllers\Dashboard\DriverController;
 use App\Http\Controllers\Dashboard\InvoiceController;
 use App\Http\Controllers\Dashboard\ManifestController;
@@ -9,8 +10,15 @@ use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\TestController;
 use Illuminate\Support\Facades\Route;
 
-Route::resource('test', TestController::class)->only(['index']);
+    Route::resource('test', TestController::class)->only(['index']);
 
+    Route::resource('client-access/manifests', ClientAccessManifestController::class)
+        ->only(['index', 'show'])
+        ->names([
+            'index' => 'client-access.manifests.index',
+            'show' => 'client-access.manifests.show',
+        ])
+        ;
 Route::redirect('/', '/dashboard');
 
 Route::middleware('auth')->group(function (): void {

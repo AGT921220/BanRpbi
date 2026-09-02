@@ -34,5 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+        'auth_token' => env('TWILIO_AUTH_TOKEN'),
+        'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'),
+        'whatsapp_content_sid' => env('TWILIO_WHATSAPP_CONTENT_SID'),
+        'status_callback_url' => env('TWILIO_STATUS_CALLBACK_URL'),
+    ],
 ];

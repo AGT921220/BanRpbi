@@ -6,6 +6,9 @@ use App\Features\Invoices\Jobs\CreateInvoiceFromNextServices;
 use App\Features\Manifests\Jobs\CreateDailyManifestsJob;
 use App\Features\Manifests\Jobs\CreateDailyManifestsJobShouldQueue;
 use App\Features\Services\Application\BulkCreateServices;
+use App\Features\WhatsApp\Application\UseCases\SendWhatsappTemplate;
+use App\Features\WhatsApp\Domain\Templates\AppointmentConfirmationRequestTemplate;
+use App\Features\WhatsApp\Domain\Templates\ClientServiceReminderTemplate;
 use App\Jobs\TestHorizonJob;
 use App\Mail\ClientConfigurationSubmitted;
 use App\Models\Client;
@@ -14,6 +17,8 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+
 
 #[Signature('app:test-command')]
 #[Description('Command description')]
@@ -22,9 +27,37 @@ class TestCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(BulkCreateServices $bulkCreateServices): void
+    public function handle(BulkCreateServices $bulkCreateServices, SendWhatsappTemplate $sendWhatsappTemplate): void
     {
 
+        $to = '6144950659';
+        $randomUuid = Str::uuid()->toString();
+        $template = new ClientServiceReminderTemplate(
+            'Alfredo',
+            '2022-10-01',
+            'Alfredo Chofer',
+            'BAN-12345',
+            'Cultivos y cepas, Objetos punzocortantes',
+            $randomUuid
+        );
+        // $template = new AppointmentConfirmationRequestTemplate(
+        //     1,
+        //     'Alvaro Guilebaldo',
+        //     'Alfredo Paciente',
+        //     'BAN-12345',
+        //     'Cultivos y cepas, Objetos punzocortantes',
+        //     '2022-10-01',
+        //     '6144950659'
+        // );
+        //         private string $clientName,
+        // private string $date,
+        // private string $driverName,
+        // private string $manifestNumber,
+        // private string $residues,
+        // private string $manifestUuid,
+        $sendWhatsappTemplate->__invoke($to, $template);
+
+        return;
         info('Se envía a crear manifiestos');
         CreateDailyManifestsJob::dispatch();
         info('Se envía a crear manifiestos');

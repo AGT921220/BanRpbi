@@ -16,13 +16,8 @@ class CreateDailyManifestsJob implements ShouldQueue
     use Queueable, Dispatchable, InteractsWithQueue, SerializesModels;
     public function __invoke(): void
     {
-        info('createDailyManifestsJob invoked');
         $now = Carbon::now()->addDay(1)->toDateString();
-        info('Current date: '.$now);
         $services = Service::whereDate('service_date', $now)->get();
-        info('Services to create manifests for: '.count($services));
-        info('Se envía a crear manifiestos');
-        // Logic to create daily manifests
         foreach($services as $service){
             CreateManifestJob::dispatch($service->id);
         }
