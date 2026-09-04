@@ -18,7 +18,9 @@ class CreateDailyManifestsJob implements ShouldQueue
     public function __invoke(): void
     {
         $now = Carbon::now()->addDay(1)->toDateString();
-        $services = Service::whereDate('service_date', $now)->get();
+        $services = Service::
+        //whereDate('service_date', $now)->
+        get();
         foreach ($services as $service) {
             CreateManifestJob::dispatch($service->id);
         }

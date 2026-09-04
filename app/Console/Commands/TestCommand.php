@@ -29,6 +29,11 @@ class TestCommand extends Command
      */
     public function handle(BulkCreateServices $bulkCreateServices, SendWhatsappTemplate $sendWhatsappTemplate): void
     {
+        // info('Se envía a crear manifiestos');
+        // CreateDailyManifestsJob::dispatch();
+        // info('Se envía a crear manifiestos');
+        // return;
+
 
         $to = '6144950659';
         $randomUuid = Str::uuid()->toString();
@@ -55,12 +60,8 @@ class TestCommand extends Command
         // private string $manifestNumber,
         // private string $residues,
         // private string $manifestUuid,
-        // $sendWhatsappTemplate->__invoke($to, $template);
+        $sendWhatsappTemplate->__invoke($to, $template);
 
-        // return;
-        info('Se envía a crear manifiestos');
-        CreateDailyManifestsJob::dispatch();
-        info('Se envía a crear manifiestos');
         return;
         $serviceId = 54;
         $service = Service::where('id', $serviceId)

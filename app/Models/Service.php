@@ -11,6 +11,9 @@ class Service extends Model
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_SCHEDULED = 'scheduled';
+    public const STATUS_COLLECTED = 'collected';
+    public const STATUS_NEXT = 'next';
+
 
     /**
      * @var list<string>

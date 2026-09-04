@@ -14,6 +14,8 @@ class LoginController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
+        info('login');
+        info($request->all());
         $request->validate([
             'nickname' => ['required', 'string'],
             'password' => ['required', 'string'],
