@@ -39,6 +39,8 @@ class CreateRolesCommand extends Command
             $cliente = $this->resolveRole(RoleTypes::CLIENTE, [
                 'Consulta',
             ]);
+            $almacen = $this->resolveRole(RoleTypes::ALMACEN);
+            $procesos = $this->resolveRole(RoleTypes::PROCESOS);
 
             $this->migrateApprovalRoleNames([
                 'Director Ventas' => RoleTypes::DIRECTOR_VENTAS,
@@ -57,6 +59,8 @@ class CreateRolesCommand extends Command
             $chofer->syncPermissions($this->choferPermissions());
             $facturacion->syncPermissions($this->facturacionPermissions());
             $cliente->syncPermissions($this->clientePermissions());
+            $almacen->syncPermissions($this->almacenPermissions());
+            $procesos->syncPermissions($this->procesosPermissions());
 
             $permissionRegistrar->forgetCachedPermissions();
 
@@ -94,7 +98,7 @@ class CreateRolesCommand extends Command
                 ->where('guard_name', 'web')
                 ->first();
 
-            if ($legacy === null) {
+            if ($legacy === null || $legacy->id === $role->id) {
                 continue;
             }
 
@@ -292,6 +296,34 @@ class CreateRolesCommand extends Command
             PermissionTypes::INVOICES_DOWNLOAD_XML,
             PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
             PermissionTypes::CUSTOMER_DOCUMENTS_DOWNLOAD,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function almacenPermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::SERVICES_REGISTER_ENTRY,
+            PermissionTypes::PROFILE_VIEW,
+            PermissionTypes::PROFILE_UPDATE,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function procesosPermissions(): array
+    {
+        return [
+            PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
+            PermissionTypes::ENVIRONMENTAL_PROCESSES_CREATE,
+            PermissionTypes::ENVIRONMENTAL_PROCESSES_UPDATE,
             PermissionTypes::PROFILE_VIEW,
             PermissionTypes::PROFILE_UPDATE,
         ];

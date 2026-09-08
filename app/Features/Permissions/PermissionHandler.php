@@ -40,6 +40,8 @@ class PermissionHandler
             PermissionTypes::COLLECTIONS_COMPLETE,
             PermissionTypes::COLLECTIONS_ASSIGN,
 
+            PermissionTypes::SERVICES_REGISTER_ENTRY,
+
             PermissionTypes::ROUTES_VIEW,
             PermissionTypes::ROUTES_CREATE,
             PermissionTypes::ROUTES_UPDATE,
@@ -163,6 +165,8 @@ class PermissionHandler
             PermissionTypes::COLLECTIONS_DELETE => 'Eliminar recolecciones',
             PermissionTypes::COLLECTIONS_COMPLETE => 'Completar recolecciones',
             PermissionTypes::COLLECTIONS_ASSIGN => 'Asignar recolecciones',
+
+            PermissionTypes::SERVICES_REGISTER_ENTRY => 'Registrar entrada de servicios',
 
             PermissionTypes::ROUTES_VIEW => 'Ver rutas',
             PermissionTypes::ROUTES_CREATE => 'Crear rutas',
@@ -314,6 +318,7 @@ class PermissionHandler
             'client-contracts' => 'Contratos de clientes',
             'approvals' => 'Aprobaciones',
             'collections' => 'Recolecciones',
+            'services' => 'Servicios',
             'routes' => 'Rutas',
             'zones' => 'Zonas',
             'drivers' => 'Choferes',

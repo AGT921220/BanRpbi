@@ -3,10 +3,11 @@
 namespace App\Features\Services\Application;
 
 use App\Features\RpbiProfiles\Domain\RpbiProfile;
-use App\Features\RpbiProfiles\Domain\RpbiProfileResponse;
-use App\Features\RpbiProfiles\Domain\RpbiProfilesResponse;
+use App\Features\Services\Domain\ServiceDetail as ServiceDetailDto;
+use App\Features\Services\Domain\ServiceDetailsResponse;
 use App\Features\Shared\Query\BuilderFilter;
 use App\Models\Service;
+use App\Models\ServiceDetail;
 
 class SearchServiceHeaders
 {
@@ -45,14 +46,23 @@ class SearchServiceHeaders
 
         $nextService = true;
         $data['data'] = $data['data']->map(function (Service $service) use (&$nextService) {
-            $rpbiProfiles = $service->serviceDetails->map(function ($serviceDetail) {
-                return $serviceDetail->rpbiProfile;
-            })->filter();
-            $domainRpbiProfiles = $rpbiProfiles->map(function ($rpbiProfile) {
-                return new RpbiProfile(
-                    $rpbiProfile->id,
-                    $rpbiProfile->code,
-                    $rpbiProfile->name
+            if($service->id!=317){
+            //  dd($service->toArray());
+                
+            }
+            $domainServiceDetails = $service->serviceDetails->map(function (ServiceDetail $serviceDetail) {
+                $rpbiProfile = $serviceDetail->rpbiProfile;
+
+                return new ServiceDetailDto(
+                    $serviceDetail->id,
+                    $serviceDetail->weight,
+                    $rpbiProfile
+                        ? new RpbiProfile(
+                            $rpbiProfile->id,
+                            $rpbiProfile->code,
+                            $rpbiProfile->name,
+                        )
+                        : null,
                 );
             });
             $status = $nextService && $service->status !== Service::STATUS_COLLECTED ? Service::STATUS_NEXT : $service->status;
@@ -67,7 +77,7 @@ class SearchServiceHeaders
                 'driver_id' => $service->driver_id,
                 'driver_name' => $service->driver_name,
                 'manifest_id' => $service->manifest_id,
-                'rpbi_profiles' => (new RpbiProfilesResponse(count($rpbiProfiles), ...$domainRpbiProfiles))->toArray()
+                'service_details' => (new ServiceDetailsResponse(count($domainServiceDetails), ...$domainServiceDetails))->toArray(),
             ];
         });
 

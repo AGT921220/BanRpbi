@@ -56,10 +56,13 @@ final class ServiceController extends Controller
     {
 
         $serviceId = $request->input('id');
-        $rpbiProfiles = $request->input('rpbi_profiles', []);
+        $rpbiProfiles = $request->input('service_details', []);
+        info('Service ID: ' . $serviceId);
+        info('RPBI Profiles: ' . json_encode($rpbiProfiles));
         foreach ($rpbiProfiles as $profile) {
+            info('Profile: ' . json_encode($profile));
             ServiceDetail::where('service_id', $serviceId)
-                ->where('rpbi_profile_id', $profile['id'])
+                ->where('id', $profile['id'])
                 ->update([
                     'weight' => $profile['weight'],
                 ]);

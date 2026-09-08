@@ -23,7 +23,9 @@ class LoginController extends Controller
         ]);
 
         $nickname = Str::lower(trim((string) $request->input('nickname')));
-        $user = User::query()->where('nickname', $nickname)->first();
+        $user = User::query()
+            ->with('roles')
+            ->where('nickname', $nickname)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([

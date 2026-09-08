@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('cost', 10, 2)->default(0);
 
             $table->string('status')->default('pending');
-            
+            $table->integer('route_order')->nullable();
             $table->integer('folio')->nullable();
             $table->integer('order')->nullable();
 

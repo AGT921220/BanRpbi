@@ -38,6 +38,9 @@ final class PermissionTypes
     public const COLLECTIONS_COMPLETE = 'collections.complete';
     public const COLLECTIONS_ASSIGN = 'collections.assign';
 
+    // Servicios
+    public const SERVICES_REGISTER_ENTRY = 'services.register_entry';
+
     // Rutas
     public const ROUTES_VIEW = 'routes.view';
     public const ROUTES_CREATE = 'routes.create';

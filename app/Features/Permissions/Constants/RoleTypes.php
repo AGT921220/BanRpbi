@@ -19,4 +19,8 @@ final class RoleTypes
     public const FACTURACION = 'Administración / Facturación';
 
     public const CLIENTE = 'Cliente';
+
+    public const ALMACEN = 'Almacén';
+
+    public const PROCESOS = 'Procesos';
 }

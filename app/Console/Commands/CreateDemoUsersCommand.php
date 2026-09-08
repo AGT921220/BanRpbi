@@ -87,6 +87,18 @@ class CreateDemoUsersCommand extends Command
             'email' => 'cliente1@cliente.com',
             'role' => RoleTypes::CLIENTE,
         ],
+        [
+            'name' => 'Almacén 1',
+            'nickname' => 'almacen1',
+            'email' => 'almacen1@almacen.com',
+            'role' => RoleTypes::ALMACEN,
+        ],
+        [
+            'name' => 'Procesos 1',
+            'nickname' => 'procesos1',
+            'email' => 'procesos1@procesos.com',
+            'role' => RoleTypes::PROCESOS,
+        ],
     ];
 
     public function handle(PermissionRegistrar $permissionRegistrar): int
