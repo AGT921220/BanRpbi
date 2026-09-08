@@ -29,10 +29,10 @@ class TestCommand extends Command
      */
     public function handle(BulkCreateServices $bulkCreateServices, SendWhatsappTemplate $sendWhatsappTemplate): void
     {
-        // info('Se envía a crear manifiestos');
-        // CreateDailyManifestsJob::dispatch();
-        // info('Se envía a crear manifiestos');
-        // return;
+        info('Se envía a crear manifiestos');
+        CreateDailyManifestsJob::dispatch();
+        info('Se envía a crear manifiestos');
+        return;
 
 
         $to = '6144950659';

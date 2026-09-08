@@ -12,6 +12,7 @@ class Service extends Model
 
     public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_COLLECTED = 'collected';
+    public const STATUS_IN_WAREHOUSE = 'in_warehouse';
     public const STATUS_NEXT = 'next';
 
 

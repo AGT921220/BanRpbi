@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\ManifestController;
+use App\Http\Controllers\Api\ScanManifestController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ServiceOrderController;
 use App\Http\Controllers\Api\TokenPushController;
@@ -26,21 +27,23 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     // Route::get('services', [ServiceController::class, 'index']);
     Route::resource('services', ServiceController::class)
-    ->names([
-        'index' => 'api.services.index',
-        'store' => 'api.services.store',
-        'show' => 'api.services.show',
-    ]);
+        ->names([
+            'index' => 'api.services.index',
+            'store' => 'api.services.store',
+            'show' => 'api.services.show',
+        ]);
     Route::resource('services/order', ServiceOrderController::class);
 
+    Route::resource('scan-manifests', ScanManifestController::class)->only(['store']);
+
     Route::resource('manifests', ManifestController::class)
-    ->names([
-        'index' => 'api.manifests.index',
-        'store' => 'api.manifests.store',
-        'show' => 'api.manifests.show',
-        'update' => 'api.manifests.update',
-        'destroy' => 'api.manifests.destroy',
-    ]);
+        ->names([
+            'index' => 'api.manifests.index',
+            'store' => 'api.manifests.store',
+            'show' => 'api.manifests.show',
+            'update' => 'api.manifests.update',
+            'destroy' => 'api.manifests.destroy',
+        ]);
 
 
     Route::post('token-push', [TokenPushController::class, 'store']);
