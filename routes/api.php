@@ -24,7 +24,13 @@ Route::prefix('auth')->group(function () {
     });
 });
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('services', [ServiceController::class, 'index']);
+    // Route::get('services', [ServiceController::class, 'index']);
+    Route::resource('services', ServiceController::class)
+    ->names([
+        'index' => 'api.services.index',
+        'store' => 'api.services.store',
+        'show' => 'api.services.show',
+    ]);
     Route::resource('services/order', ServiceOrderController::class);
 
     Route::resource('manifests', ManifestController::class)

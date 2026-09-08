@@ -19,12 +19,12 @@ function initServicesTable() {
                 orderSequence: ["asc", "desc"],
             },
             {
-                data: "status",
+                data: "status.status",
                 name: "status",
                 orderSequence: ["asc", "desc"],
             },
             {
-                data: "client",
+                data: "client_name",
                 name: "clients.id",
                 orderSequence: ["asc", "desc"],
             },

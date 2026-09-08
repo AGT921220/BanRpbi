@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Features\Services\Application\FindServiceHeader;
 use App\Features\Services\Application\SearchServiceHeaders;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FilterRequest;
+use App\Models\Service;
+use App\Models\ServiceDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 final class ServiceController extends Controller
 {
     public function __construct(
-        private readonly SearchServiceHeaders $searchServiceHeaders
+        private readonly SearchServiceHeaders $searchServiceHeaders,
+        private readonly FindServiceHeader $findServiceHeader
     ) {}
 
     public function index(FilterRequest $request)
@@ -32,11 +36,43 @@ final class ServiceController extends Controller
             $request->merge(['filters' => $filters]);
         }
 
-        
+
         $services = ($this->searchServiceHeaders)($request->queryOptions($allowedFilters), $request->draw());
 
         return response()->json(
             $services,
         );
+    }
+    public function show(int $serviceId)
+    {
+        $service = ($this->findServiceHeader)($serviceId);
+
+        return response()->json([
+            'data' => $service,
+            'success' => true,
+        ], 200);
+    }
+    public function store(Request $request)
+    {
+
+        $serviceId = $request->input('id');
+        $rpbiProfiles = $request->input('rpbi_profiles', []);
+        foreach ($rpbiProfiles as $profile) {
+            ServiceDetail::where('service_id', $serviceId)
+                ->where('rpbi_profile_id', $profile['id'])
+                ->update([
+                    'weight' => $profile['weight'],
+                ]);
+        }
+
+        Service::where('id', $serviceId)
+            ->update([
+                'status' => Service::STATUS_COLLECTED,
+            ]);
+
+        return response()->json([
+            'message' => 'Servicio capturado correctamente.',
+            'success' => true,
+        ], 200);
     }
 }

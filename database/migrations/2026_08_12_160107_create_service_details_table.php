@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedInteger('service_id')->nullable();
             $table->foreign('service_id')->references('id')->on('services');
 
+            $table->string('weight')->nullable();
+
             $table->unsignedInteger('rpbi_profile_id')->nullable();
             $table->foreign('rpbi_profile_id')->references('id')->on('rpbi_profiles');
 

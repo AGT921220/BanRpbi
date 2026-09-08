@@ -7,7 +7,8 @@ final readonly class RpbiProfile
     public function __construct(
         private int $id,
         private string $code,
-        private string $name
+        private string $name,
+        private ?string $weight = null
     ) {}
 
     public function getId(): int
@@ -23,6 +24,10 @@ final readonly class RpbiProfile
     public function getName(): string
     {
         return $this->name;
+    }
+    public function getWeight(): ?string
+    {
+        return $this->weight;
     }
 
     public function getIcon(): string
@@ -67,6 +72,7 @@ final readonly class RpbiProfile
             'name' => $this->getName(),
             'icon' => $this->getIcon(),
             'color' => $this->getColor(),
+            'weight' => $this->getWeight(),
         ];
     }
 }

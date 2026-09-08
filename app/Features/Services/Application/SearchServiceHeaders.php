@@ -52,7 +52,7 @@ class SearchServiceHeaders
                 return new RpbiProfile(
                     $rpbiProfile->id,
                     $rpbiProfile->code,
-                    $rpbiProfile->name,
+                    $rpbiProfile->name
                 );
             });
             $status = $nextService && $service->status !== Service::STATUS_COLLECTED ? Service::STATUS_NEXT : $service->status;
