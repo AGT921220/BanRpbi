@@ -19,8 +19,8 @@ use Illuminate\Support\Str;
 
 class CreateDemoDataCommand extends Command
 {
-    protected $signature = 'demo:create-data';
-
+    protected $signature = 'demo:create-data
+                        {--force : Ejecuta el comando sin pedir confirmación}';
     protected $description = 'Crea datos de prueba';
 
     private const CLIENTS_PER_WEEKDAY = 10;
