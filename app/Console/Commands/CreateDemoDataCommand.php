@@ -27,6 +27,14 @@ class CreateDemoDataCommand extends Command
 
     public function handle(BulkCreateServices $bulkCreateServices): int
     {
+        if (
+            ! $this->option('force')
+            && ! $this->confirm('¿Deseas crear los datos demo?', false)
+        ) {
+            $this->warn('Operación cancelada.');
+
+            return self::SUCCESS;
+        }
         $this->createDefaultZones();
         $this->createDefaultContracts();
         $this->createDefaultContractRpbiProfiles();
@@ -104,7 +112,7 @@ class CreateDemoDataCommand extends Command
                 'name' => "Cliente {$number}",
                 'parentarl_surname' => "Prueba {$number}",
                 'email' => "cliente{$number}@example.com",
-                'phone' => '+52664'.str_pad((string) $number, 7, '0', STR_PAD_LEFT),
+                'phone' => '+52664' . str_pad((string) $number, 7, '0', STR_PAD_LEFT),
                 'company' => sprintf('CLIENTE %02d', $number),
                 'nra' => sprintf('NRA%06d', $number),
                 'configuration_status' => Client::STATUS_CONFIGURATION_PENDING,
@@ -114,7 +122,7 @@ class CreateDemoDataCommand extends Command
             ]);
         }
 
-        $this->info("{$totalClients} clientes demo creados (".self::CLIENTS_PER_WEEKDAY.' por día hábil).');
+        $this->info("{$totalClients} clientes demo creados (" . self::CLIENTS_PER_WEEKDAY . ' por día hábil).');
     }
 
     private function approveClientsAndGenerateServices(BulkCreateServices $bulkCreateServices): void
