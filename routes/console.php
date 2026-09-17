@@ -1,5 +1,6 @@
 <?php
 
+use App\Features\Manifests\Jobs\CreateDailyManifestsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -12,11 +13,11 @@ Artisan::command('test', function () {
 })->purpose('Display an inspiring quote');
 
 
-// Artisan::command('invoices:handle', function () {
-//     DispatchInvoiceCreationJobs::dispatch()->onQueue('invoices');
+Artisan::command('invoices:handle', function () {
+    CreateDailyManifestsJob::dispatch();
 
-//     $this->info('Facturas procesadas correctamente.');
-// });
+    $this->info('Facturas procesadas correctamente.');
+});
 
 
 
