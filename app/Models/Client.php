@@ -83,6 +83,11 @@ class Client extends Model
             ->latestOfMany();
     }
 
+    public function vigenteContracts(): HasMany
+    {
+        return $this->hasMany(ClientContract::class)->vigente();
+    }
+
     /**
      * @deprecated Use pendingContract() or activeContract()
      */
@@ -117,6 +122,10 @@ class Client extends Model
             return false;
         }
 
+        if ($this->hasActiveVigenteContract()) {
+            return false;
+        }
+
         return in_array($this->configuration_status, [
             self::STATUS_CONFIGURATION_PENDING,
             self::STATUS_REJECTED,
@@ -126,13 +135,11 @@ class Client extends Model
 
     public function hasActiveVigenteContract(): bool
     {
-        return $this->contracts()
-            ->where('status', ClientContract::STATUS_ACTIVE)
-            ->where(function ($query): void {
-                $query->whereNull('end_date')
-                    ->orWhereDate('end_date', '>=', now()->toDateString());
-            })
-            ->exists();
+        if (array_key_exists('has_vigente_contract', $this->attributes)) {
+            return (int) $this->attributes['has_vigente_contract'] === 1;
+        }
+
+        return $this->contracts()->vigente()->exists();
     }
 
     public function fullName(): string

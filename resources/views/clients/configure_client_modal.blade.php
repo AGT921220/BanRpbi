@@ -1,8 +1,6 @@
 @php
     /** @var \Illuminate\Support\Collection<int, \App\Models\Contract> $contracts */
     $contracts ??= collect();
-    /** @var \Illuminate\Support\Collection<int, \App\Models\Zone> $zones */
-    $zones ??= collect();
     $frequencyLabels = \App\Models\Contract::frequencyLabels();
 @endphp
 
@@ -35,8 +33,7 @@
                     <div class="modal-body">
                         <ul class="steps steps-counter steps-yellow my-3" id="configure-client-steps">
                             <li class="step-item active" data-step="1">Contrato</li>
-                            <li class="step-item" data-step="2">Zona</li>
-                            <li class="step-item" data-step="3">Resumen</li>
+                            <li class="step-item" data-step="2">Resumen</li>
                         </ul>
 
                         <div class="alert alert-warning d-none" id="configure-client-rejection"></div>
@@ -45,6 +42,29 @@
                         </div>
 
                         <div class="configure-step" data-step-panel="1">
+                            <div class="alert alert-warning d-none" id="configure-client-missing-zone">
+                                Este cliente no tiene zona de recolección. Asígnela al editar el cliente antes de enviar a aprobación.
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="configure-client-zone">Zona de recolección</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-map-pin"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        id="configure-client-zone"
+                                        class="form-control"
+                                        readonly
+                                        tabindex="-1"
+                                    >
+                                </div>
+                                <div class="form-hint">
+                                    Se toma del alta del cliente. Para cambiarla, edita el cliente.
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label required" for="configure-contract-id">Contrato</label>
                                 <div class="input-icon">
@@ -141,39 +161,6 @@
                         </div>
 
                         <div class="configure-step d-none" data-step-panel="2">
-                            <div class="mb-3">
-                                <label class="form-label required" for="configure-zone-id">Zona de recolección</label>
-                                <div class="input-icon">
-                                    <span class="input-icon-addon">
-                                        <i class="ti ti-map-pin"></i>
-                                    </span>
-                                    <select
-                                        name="zone_id"
-                                        id="configure-zone-id"
-                                        class="form-select"
-                                    >
-                                        <option value="">Selecciona una zona</option>
-                                        @foreach ($zones as $zone)
-                                            <option
-                                                value="{{ $zone->id }}"
-                                                data-description="{{ e($zone->description ?? '') }}"
-                                            >
-                                                {{ $zone->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="card card-sm d-none" id="configure-zone-details">
-                                <div class="card-body">
-                                    <div class="datagrid-title">Descripción</div>
-                                    <div class="datagrid-content" id="configure-zone-description">—</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="configure-step d-none" data-step-panel="3">
                             <div class="alert alert-info d-none" id="summary-active-contract-alert"></div>
                             <div class="datagrid">
                                 <div class="datagrid-item">
@@ -193,7 +180,7 @@
                                     <div class="datagrid-content" id="summary-cost">—</div>
                                 </div>
                                 <div class="datagrid-item">
-                                    <div class="datagrid-title">Zona de recolección</div>
+                                    <div class="datagrid-title">Zona del cliente</div>
                                     <div class="datagrid-content" id="summary-zone">—</div>
                                 </div>
                                 <div class="datagrid-item">

@@ -7,6 +7,7 @@ use App\Models\City;
 use App\Models\Client;
 use App\Models\State;
 use App\Models\User;
+use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -66,6 +67,8 @@ class ClientCrudTest extends TestCase
             PermissionTypes::CLIENTS_CREATE,
         ]);
 
+        $zone = Zone::factory()->create(['name' => 'Zona Norte']);
+
         $payload = [
             'name' => 'Carlos',
             'parentarl_surname' => 'López',
@@ -74,6 +77,7 @@ class ClientCrudTest extends TestCase
             'company' => 'Acme SA',
             'nra' => 'NRA-12345678',
             'rfc' => 'LOPC800101ABC',
+            'zone_id' => $zone->id,
             'street' => 'Av. Reforma',
             'num_ext' => '123',
             'num_int' => '4B',
@@ -112,6 +116,7 @@ class ClientCrudTest extends TestCase
         $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_CREATE]);
 
         Client::factory()->create(['email' => 'duplicado@example.com']);
+        $zone = Zone::factory()->create();
 
         $response = $this->from(route('clients.create'))
             ->post(route('clients.store'), [
@@ -122,6 +127,7 @@ class ClientCrudTest extends TestCase
                 'company' => 'Otra SA',
                 'nra' => 'NRA-87654321',
                 'rfc' => 'OCLC900202XYZ',
+                'zone_id' => $zone->id,
                 'street' => 'Calle Norte',
                 'num_ext' => '10',
                 'postal_code' => '64000',
@@ -143,6 +149,7 @@ class ClientCrudTest extends TestCase
             'name' => 'Original',
             'email' => 'original@example.com',
         ]);
+        $zone = Zone::factory()->create(['name' => 'Zona Sur']);
 
         $payload = [
             'name' => 'Actualizado',
@@ -152,6 +159,7 @@ class ClientCrudTest extends TestCase
             'company' => 'Nueva Empresa',
             'nra' => 'NRA-11223344',
             'rfc' => 'PEXA850101AB1',
+            'zone_id' => $zone->id,
             'street' => 'Calle Sur',
             'num_ext' => '55',
             'num_int' => null,
@@ -190,6 +198,8 @@ class ClientCrudTest extends TestCase
     {
         $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_CREATE]);
 
+        $zone = Zone::factory()->create();
+
         $response = $this->from(route('clients.create'))
             ->post(route('clients.store'), [
                 'name' => 'Carlos',
@@ -199,6 +209,7 @@ class ClientCrudTest extends TestCase
                 'company' => 'Acme SA',
                 'nra' => 'NRA-12345678',
                 'rfc' => 'LOPC800101ABC',
+                'zone_id' => $zone->id,
                 'street' => 'Av. Reforma',
                 'postal_code' => '06600',
                 'city' => 'Guadalajara',
@@ -217,6 +228,7 @@ class ClientCrudTest extends TestCase
         $client = Client::factory()->create([
             'email' => 'mismo@example.com',
         ]);
+        $zone = Zone::factory()->create();
 
         $response = $this->put(route('clients.update', $client), [
             'name' => 'Nombre',
@@ -226,6 +238,7 @@ class ClientCrudTest extends TestCase
             'company' => 'Empresa',
             'nra' => 'NRA-55667788',
             'rfc' => 'NOMA900101XXX',
+            'zone_id' => $zone->id,
             'street' => 'Calle Centro',
             'num_ext' => '1',
             'postal_code' => '01000',
@@ -293,8 +306,67 @@ class ClientCrudTest extends TestCase
             'company',
             'nra',
             'rfc',
+            'zone_id',
             'street',
             'postal_code',
         ]);
+    }
+
+    public function test_create_form_shows_active_zones(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_CREATE]);
+
+        Zone::factory()->create(['name' => 'Zona Activa']);
+        Zone::factory()->inactive()->create(['name' => 'Zona Inactiva']);
+
+        $response = $this->get(route('clients.create'));
+
+        $response->assertOk();
+        $response->assertSee('client-zone-id', false);
+        $response->assertSee('Zona Activa');
+        $response->assertDontSee('Zona Inactiva');
+    }
+
+    public function test_configure_modal_does_not_include_zone_step(): void
+    {
+        $this->actingAsUserWithPermissions([
+            PermissionTypes::CLIENTS_VIEW,
+            PermissionTypes::CLIENTS_ASSIGN_CONTRACTS,
+        ]);
+
+        $response = $this->get(route('clients.index'));
+
+        $response->assertOk();
+        $response->assertSee('configure-contract-id', false);
+        $response->assertSee('configure-client-zone', false);
+        $response->assertSee('Se toma del alta del cliente');
+        $response->assertSee('>Contrato</li>', false);
+        $response->assertSee('>Resumen</li>', false);
+        $response->assertSee('Zona del cliente');
+        $response->assertDontSee('configure-zone-id', false);
+        $response->assertDontSee('name="zone_id"', false);
+        $response->assertDontSee('>Zona</li>', false);
+    }
+
+    public function test_cannot_create_client_without_zone(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::CLIENTS_CREATE]);
+
+        $response = $this->from(route('clients.create'))
+            ->post(route('clients.store'), [
+                'name' => 'Carlos',
+                'parentarl_surname' => 'López',
+                'email' => 'sin.zona@example.com',
+                'phone' => '5512345678',
+                'company' => 'Acme SA',
+                'nra' => 'NRA-12345678',
+                'rfc' => 'LOPC800101ABC',
+                'street' => 'Av. Reforma',
+                'postal_code' => '06600',
+            ]);
+
+        $response->assertRedirect(route('clients.create'));
+        $response->assertSessionHasErrors('zone_id');
+        $this->assertDatabaseCount('clients', 0);
     }
 }

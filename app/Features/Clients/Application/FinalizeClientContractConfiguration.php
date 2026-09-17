@@ -15,6 +15,12 @@ final class FinalizeClientContractConfiguration
 {
     public function __invoke(Client $client): Client
     {
+        if ($client->hasActiveVigenteContract()) {
+            throw ValidationException::withMessages([
+                'contract_id' => 'No se puede actualizar el contrato mientras el vigente no haya llegado a su fecha de fin.',
+            ]);
+        }
+
         if (! $client->isConfigurable()) {
             throw ValidationException::withMessages([
                 'configuration_status' => 'La configuración del cliente no se puede enviar en su estado actual.',
@@ -34,7 +40,7 @@ final class FinalizeClientContractConfiguration
 
         if ($client->zone_id === null) {
             throw ValidationException::withMessages([
-                'zone_id' => 'Debe asignar una zona de recolección antes de enviar a aprobación.',
+                'zone_id' => 'El cliente no tiene zona de recolección. Asígnela al editar el cliente antes de enviar a aprobación.',
             ]);
         }
 

@@ -19,6 +19,7 @@ use App\Models\State;
 use App\Models\Zone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 final class ClientController extends Controller
@@ -40,10 +41,6 @@ final class ClientController extends Controller
                 ->with('rpbiProfiles')
                 ->orderBy('name')
                 ->get(['id', 'name', 'duration_months', 'frequency', 'notes', 'cost']),
-            'zones' => Zone::query()
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name', 'description']),
         ]);
     }
 
@@ -53,6 +50,7 @@ final class ClientController extends Controller
 
         return view('clients.create', [
             'statesCities' => $this->statesCitiesCatalog(),
+            'zones' => $this->zonesForForm(),
         ]);
     }
 
@@ -74,6 +72,7 @@ final class ClientController extends Controller
         return view('clients.edit', [
             'client' => $client->load(['state', 'city']),
             'statesCities' => $this->statesCitiesCatalog(),
+            'zones' => $this->zonesForForm($client->zone_id),
         ]);
     }
 
@@ -191,6 +190,23 @@ final class ClientController extends Controller
             'message' => 'Configuración enviada a aprobación.',
             'configuration_status' => $client->configuration_status,
         ]);
+    }
+
+    /**
+     * @return Collection<int, Zone>
+     */
+    private function zonesForForm(?int $currentZoneId = null): Collection
+    {
+        return Zone::query()
+            ->where(function ($query) use ($currentZoneId): void {
+                $query->where('is_active', true);
+
+                if ($currentZoneId !== null) {
+                    $query->orWhere('id', $currentZoneId);
+                }
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'description']);
     }
 
     /**

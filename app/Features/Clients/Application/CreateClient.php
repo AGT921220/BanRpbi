@@ -15,6 +15,7 @@ final class CreateClient
      *     company: string,
      *     nra: string,
      *     rfc: string,
+     *     zone_id: int,
      *     street: string,
      *     num_ext?: string|null,
      *     num_int?: string|null,

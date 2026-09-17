@@ -13,7 +13,6 @@ final class SaveClientConfiguration
     /**
      * @param  array{
      *     contract_id?: int|null,
-     *     zone_id?: int|null,
      *     start_date?: string|null,
      *     end_date?: string|null,
      *     notes?: string|null
@@ -21,6 +20,12 @@ final class SaveClientConfiguration
      */
     public function __invoke(Client $client, array $data, ?int $userId = null): Client
     {
+        if ($client->hasActiveVigenteContract()) {
+            throw ValidationException::withMessages([
+                'contract_id' => 'No se puede actualizar el contrato mientras el vigente no haya llegado a su fecha de fin.',
+            ]);
+        }
+
         if (! $client->isConfigurable()) {
             throw ValidationException::withMessages([
                 'configuration_status' => 'La configuración del cliente no se puede editar en su estado actual.',
@@ -28,10 +33,6 @@ final class SaveClientConfiguration
         }
 
         return DB::transaction(function () use ($client, $data, $userId): Client {
-            if (array_key_exists('zone_id', $data)) {
-                $client->zone_id = $data['zone_id'];
-            }
-
             // Borrador / reemplazo en curso. Las recolecciones siguen el contrato ACTIVE vigente.
             $client->configuration_status = Client::STATUS_CONFIGURATION_PENDING;
             $client->configuration_rejection_reason = null;

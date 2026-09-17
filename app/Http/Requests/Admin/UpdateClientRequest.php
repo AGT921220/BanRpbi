@@ -35,6 +35,19 @@ final class UpdateClientRequest extends FormRequest
             'company' => ['required', 'string', 'max:255'],
             'nra' => ['required', 'string', 'max:255'],
             'rfc' => ['required', 'string', 'max:13', 'regex:/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/'],
+            'zone_id' => [
+                'required',
+                'integer',
+                Rule::exists('zones', 'id')->where(function ($query): void {
+                    $query->where('is_active', true);
+
+                    $client = $this->route('client');
+
+                    if ($client?->zone_id) {
+                        $query->orWhere('id', $client->zone_id);
+                    }
+                }),
+            ],
             'street' => ['required', 'string', 'max:255'],
             'num_ext' => ['nullable', 'string', 'max:30'],
             'num_int' => ['nullable', 'string', 'max:30'],
@@ -61,6 +74,7 @@ final class UpdateClientRequest extends FormRequest
             'company' => 'empresa',
             'nra' => 'NRA',
             'rfc' => 'RFC',
+            'zone_id' => 'zona de recolección',
             'street' => 'calle',
             'num_ext' => 'número exterior',
             'num_int' => 'número interior',

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Requests\Admin\Concerns\ResolvesClientStateCity;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 final class StoreClientRequest extends FormRequest
@@ -29,6 +30,11 @@ final class StoreClientRequest extends FormRequest
             'company' => ['required', 'string', 'max:255'],
             'nra' => ['required', 'string', 'max:255'],
             'rfc' => ['required', 'string', 'max:13', 'regex:/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/'],
+            'zone_id' => [
+                'required',
+                'integer',
+                Rule::exists('zones', 'id')->where('is_active', true),
+            ],
             'street' => ['required', 'string', 'max:255'],
             'num_ext' => ['nullable', 'string', 'max:30'],
             'num_int' => ['nullable', 'string', 'max:30'],
@@ -55,6 +61,7 @@ final class StoreClientRequest extends FormRequest
             'company' => 'empresa',
             'nra' => 'NRA',
             'rfc' => 'RFC',
+            'zone_id' => 'zona de recolección',
             'street' => 'calle',
             'num_ext' => 'número exterior',
             'num_int' => 'número interior',

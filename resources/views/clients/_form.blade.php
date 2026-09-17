@@ -1,6 +1,8 @@
 @php
     /** @var \App\Models\Client|null $client */
     $client ??= null;
+    /** @var \Illuminate\Support\Collection<int, \App\Models\Zone> $zones */
+    $zones ??= collect();
 @endphp
 
 <x-form.input
@@ -171,6 +173,34 @@
     icon="ti ti-map-2"
     :value="old('state', $client?->state?->name)"
 />
+
+<div class="mb-3">
+    <label class="form-label required" for="client-zone-id">Zona de recolección</label>
+    <div class="input-icon">
+        <span class="input-icon-addon">
+            <i class="ti ti-map-pin"></i>
+        </span>
+        <select
+            name="zone_id"
+            id="client-zone-id"
+            class="form-select @error('zone_id') is-invalid @enderror"
+            required
+        >
+            <option value="">Selecciona una zona</option>
+            @foreach ($zones as $zone)
+                <option
+                    value="{{ $zone->id }}"
+                    @selected((string) old('zone_id', $client?->zone_id) === (string) $zone->id)
+                >
+                    {{ $zone->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    @error('zone_id')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
+</div>
 
 <script type="application/json" id="states-cities-catalog">
     @json($statesCities ?? [])

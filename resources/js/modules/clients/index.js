@@ -9,7 +9,7 @@ const STATUS_LABELS = {
     rejected: 'Rechazado',
 };
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 2;
 
 document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = document
@@ -103,7 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitleText = document.getElementById('configure-client-modal-title-text');
     const modalIcon = document.getElementById('configure-client-modal-icon');
     const contractSelect = document.getElementById('configure-contract-id');
-    const zoneSelect = document.getElementById('configure-zone-id');
+    const clientZoneInput = document.getElementById('configure-client-zone');
+    const missingZoneAlert = document.getElementById('configure-client-missing-zone');
     const startDateInput = document.getElementById('configure-start-date');
     const endDateInput = document.getElementById('configure-end-date');
     const notesInput = document.getElementById('configure-notes');
@@ -124,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeContract = null;
     let hasActiveContract = false;
     let expectedCollectionsCount = 0;
+    let clientZone = null;
 
     $(document).on('click', '.configure-client-btn', async function () {
         const clientId = $(this).data('client-id');
@@ -145,12 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateContractDetails();
         updateEndDate();
         updateInvoiceOptions();
-        updateSummary();
-        updateSubmitButton();
-    });
-
-    $(zoneSelect).on('change', () => {
-        updateZoneDetails();
         updateSummary();
         updateSubmitButton();
     });
@@ -229,10 +225,16 @@ document.addEventListener('DOMContentLoaded', () => {
         configurationStatus = data.configuration_status || 'configuration_pending';
         activeContract = data.active_contract || null;
         hasActiveContract = Boolean(data.has_active_contract);
+        clientZone = data.zone?.id
+            ? data.zone
+            : (data.zone_id ? { id: data.zone_id, name: data.zone?.name || '' } : null);
+        if (clientZoneInput) {
+            clientZoneInput.value = clientZone?.name || 'Sin zona asignada';
+        }
+        missingZoneAlert?.classList.toggle('d-none', Boolean(clientZone?.id));
         clientIdInput.value = data.id;
         clientNameLabel.textContent = data.full_name || '';
         contractSelect.value = data.contract_id ?? '';
-        zoneSelect.value = data.zone_id ?? '';
         startDateInput.value = data.start_date || new Date().toISOString().slice(0, 10);
         endDateInput.value = data.end_date || '';
         notesInput.value = data.notes || '';
@@ -251,7 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
         readonlyAlert.classList.toggle('d-none', canEdit);
         setFormEditable(canEdit);
         updateContractDetails();
-        updateZoneDetails();
 
         if (!endDateInput.value) {
             updateEndDate();
@@ -277,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setFormEditable(editable) {
-        [contractSelect, zoneSelect, startDateInput, endDateInput, notesInput, generateInvoiceCheckbox, invoiceManifestCountInput]
+        [contractSelect, startDateInput, endDateInput, notesInput, generateInvoiceCheckbox, invoiceManifestCountInput]
             .forEach((el) => {
                 el.disabled = !editable;
             });
@@ -295,7 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const generateInvoice = Boolean(generateInvoiceCheckbox.checked);
         const payload = {
             contract_id: contractSelect.value || null,
-            zone_id: zoneSelect.value || null,
             start_date: startDateInput.value || null,
             end_date: endDateInput.value || null,
             notes: notesInput.value || null,
@@ -370,20 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
         details.classList.remove('d-none');
     }
 
-    function updateZoneDetails() {
-        const option = zoneSelect.selectedOptions[0];
-        const details = document.getElementById('configure-zone-details');
-
-        if (!option?.value) {
-            details.classList.add('d-none');
-            return;
-        }
-
-        document.getElementById('configure-zone-description').textContent =
-            option.dataset.description || 'Sin descripción';
-        details.classList.remove('d-none');
-    }
-
     function updateEndDate() {
         const option = contractSelect.selectedOptions[0];
         const months = Number(option?.dataset.durationMonths || 0);
@@ -400,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateSummary() {
         const contractOption = contractSelect.selectedOptions[0];
-        const zoneOption = zoneSelect.selectedOptions[0];
         const activeAlert = document.getElementById('summary-active-contract-alert');
 
         document.getElementById('summary-client-name').textContent =
@@ -414,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('summary-cost').textContent =
             contractOption?.value ? formatCost(contractOption.dataset.cost) : '—';
         document.getElementById('summary-zone').textContent =
-            zoneOption?.value ? zoneOption.textContent.trim() : 'Sin seleccionar';
+            clientZone?.name || 'Sin zona asignada';
         document.getElementById('summary-profiles').textContent =
             contractOption?.dataset.profiles || 'Sin seleccionar';
         document.getElementById('summary-status').textContent =
@@ -447,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const ready = Boolean(
             contractSelect.value
-            && zoneSelect.value
+            && clientZone?.id
             && canEdit
             && invoiceReady,
         );

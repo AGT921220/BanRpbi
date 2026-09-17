@@ -56,12 +56,11 @@ final readonly class SearchClientHeaders
             ->withExists([
                 'contracts',
                 'activeContract as active_contract_exists',
+                'vigenteContracts as has_vigente_contract',
             ])
             ->get()
             ->map(
                 static function (Client $client) use ($canUpdate, $canDelete, $canAssignContracts): ClientHeader {
-                    $status = (string) $client->configuration_status;
-
                     return new ClientHeader(
                         id: (int) $client->id,
                         fullName: trim("{$client->name} {$client->parentarl_surname}"),
@@ -72,16 +71,10 @@ final readonly class SearchClientHeaders
                         hasContract: (bool) $client->contracts_exists,
                         hasActiveContract: (bool) $client->active_contract_exists,
                         hasCollectionZone: $client->zone_id !== null,
-                        configurationStatus: $status,
+                        configurationStatus: (string) $client->configuration_status,
                         canUpdate: $canUpdate,
                         canDelete: $canDelete,
-                        canConfigure: $canAssignContracts
-                            && $status !== Client::STATUS_PENDING_APPROVAL
-                            && in_array($status, [
-                                Client::STATUS_CONFIGURATION_PENDING,
-                                Client::STATUS_REJECTED,
-                                Client::STATUS_APPROVED,
-                            ], true),
+                        canConfigure: $canAssignContracts && $client->isConfigurable(),
                     );
                 },
             );

@@ -33,11 +33,6 @@ final class SaveClientConfigurationRequest extends FormRequest
                 'integer',
                 Rule::exists('contracts', 'id')->whereNull('deleted_at'),
             ],
-            'zone_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('zones', 'id')->where('is_active', true),
-            ],
             'start_date' => ['nullable', 'date', 'required_with:contract_id'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date', 'required_with:contract_id'],
             'notes' => ['nullable', 'string', 'max:2000'],
@@ -59,7 +54,6 @@ final class SaveClientConfigurationRequest extends FormRequest
     {
         return [
             'contract_id' => 'contrato',
-            'zone_id' => 'zona de recolección',
             'start_date' => 'fecha de inicio',
             'end_date' => 'fecha de fin',
             'notes' => 'notas',

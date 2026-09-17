@@ -62,6 +62,20 @@ class ClientContract extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<ClientContract>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<ClientContract>
+     */
+    public function scopeVigente($query)
+    {
+        return $query
+            ->where('status', self::STATUS_ACTIVE)
+            ->where(function ($query): void {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', now()->toDateString());
+            });
+    }
+
     protected static function booted(): void
     {
         static::saving(function (ClientContract $clientContract): void {

@@ -205,6 +205,72 @@ class SearchClientHeadersTest extends TestCase
         $this->assertTrue($header->canDelete);
     }
 
+    public function test_can_configure_is_true_for_new_client_with_assign_permission(): void
+    {
+        Permission::findOrCreate(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS, 'web');
+
+        $user = User::factory()->create();
+        $user->givePermissionTo([PermissionTypes::CLIENTS_ASSIGN_CONTRACTS]);
+        $this->actingAs($user);
+
+        Client::factory()->create();
+
+        $header = app(SearchClientHeaders::class)([])->data->first();
+
+        $this->assertTrue($header->canConfigure);
+        $this->assertFalse($header->hasActiveContract);
+    }
+
+    public function test_cannot_configure_while_active_contract_is_still_vigente(): void
+    {
+        Permission::findOrCreate(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS, 'web');
+
+        $user = User::factory()->create();
+        $user->givePermissionTo([PermissionTypes::CLIENTS_ASSIGN_CONTRACTS]);
+        $this->actingAs($user);
+
+        $client = Client::factory()->create([
+            'configuration_status' => Client::STATUS_APPROVED,
+        ]);
+
+        ClientContract::query()->create([
+            'client_id' => $client->id,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'status' => ClientContract::STATUS_ACTIVE,
+        ]);
+
+        $header = app(SearchClientHeaders::class)([])->data->first();
+
+        $this->assertTrue($header->hasActiveContract);
+        $this->assertFalse($header->canConfigure);
+    }
+
+    public function test_can_configure_when_active_contract_already_ended(): void
+    {
+        Permission::findOrCreate(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS, 'web');
+
+        $user = User::factory()->create();
+        $user->givePermissionTo([PermissionTypes::CLIENTS_ASSIGN_CONTRACTS]);
+        $this->actingAs($user);
+
+        $client = Client::factory()->create([
+            'configuration_status' => Client::STATUS_APPROVED,
+        ]);
+
+        ClientContract::query()->create([
+            'client_id' => $client->id,
+            'start_date' => now()->subYear()->toDateString(),
+            'end_date' => now()->subDay()->toDateString(),
+            'status' => ClientContract::STATUS_ACTIVE,
+        ]);
+
+        $header = app(SearchClientHeaders::class)([])->data->first();
+
+        $this->assertTrue($header->hasActiveContract);
+        $this->assertTrue($header->canConfigure);
+    }
+
     public function test_does_not_use_laravel_paginate(): void
     {
         $source = file_get_contents(
