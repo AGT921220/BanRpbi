@@ -114,8 +114,8 @@ class WasteProcess
         $dateStart =  !!$this->getWasteProcessDate()->getDateStart();
         $solution = !!$this->getSolution();
 
-        if ($processType == WasteProcessType::PROCESS_PRAR) {
-            return $this->isPrarFinishable(
+        if ($processType == WasteProcessType::PROCESS_ESTERILIZACION) {
+            return $this->isEsterilizacionFinishable(
                 $hourStartMachine,
                 $hourEndMachine,
                 $machineNumber,
@@ -124,21 +124,13 @@ class WasteProcess
             );
         }
 
-        if ($processType == WasteProcessType::PROCESS_CONTAINERS) {
-            return $this->isContainerFinishable(
-                $hourStartMachine,
-                true,
-                $dateStart,
-                true
-            );
-        }
-
-        if ($processType == WasteProcessType::PROCESS_PRS) {
+        if ($processType == WasteProcessType::PROCESS_INCINERACION) {
             return $hourStartMachine && $dateStart && !$this->isFinished();
         }
-        return true;
+
+        return false;
     }
-    private function isPrarFinishable(
+    private function isEsterilizacionFinishable(
         bool $hourStartMachine,
         bool $hourEndMachine,
         bool $machineNumber,
@@ -146,15 +138,6 @@ class WasteProcess
         bool $solution
     ): bool {
         return $hourStartMachine && $hourEndMachine &&
-            $machineNumber && $dateStart && $solution && !$this->isFinished();
-    }
-    private function isContainerFinishable(
-        bool $hourStartMachine,
-        bool $machineNumber,
-        bool $dateStart,
-        bool $solution
-    ): bool {
-        return $hourStartMachine &&
             $machineNumber && $dateStart && $solution && !$this->isFinished();
     }
 }

@@ -12,19 +12,17 @@ class CreateWasteProcess
     public function __invoke(
         Collection $manifests,
         int $wasteProcessTypeId,
-        int $destinationId,
         string $dateStart,
         int $userId
     ): int {
         $totalQuantity = $this->getTotalQuantity($manifests);
-        $wasteProcessId = $this->create($wasteProcessTypeId, $destinationId, $dateStart, $userId, $totalQuantity);
+        $wasteProcessId = $this->create($wasteProcessTypeId, $dateStart, $userId, $totalQuantity);
 
         $this->createDetails($manifests, $wasteProcessId, $wasteProcessTypeId);
         return $wasteProcessId;
     }
     private function create(
         int $wasteProcessTypeId,
-        int $destinationId,
         string $dateStart,
         int $userId,
         string $totalQuantity
@@ -32,7 +30,6 @@ class CreateWasteProcess
 
         $wasteProcess = new WasteProcess();
         $wasteProcess->waste_process_type_id = $wasteProcessTypeId;
-        $wasteProcess->destination_id = $destinationId;
         $wasteProcess->date_start = $dateStart;
         $wasteProcess->user_id = $userId;
         $wasteProcess->cantidad_solucion_reciclar = $totalQuantity;

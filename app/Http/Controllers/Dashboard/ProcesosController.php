@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Destination;
+use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Shared\PermissionHelper;
 use App\Features\WasteProcess\UseCases\CreateWasteProcess;
 use App\Features\WasteProcess\UseCases\FindWasteProcess;
@@ -36,7 +36,10 @@ class ProcesosController extends Controller implements HasMiddleware
     {
         return [
             new Middleware(
-                'permission:process.create_prar|process.create_prs|process.create_containers',
+                'permission:'
+                    .PermissionTypes::PROCESS_CREATE_PRAR.'|'
+                    .PermissionTypes::PROCESS_CREATE_PRS.'|'
+                    .PermissionTypes::PROCESS_CREATE_CONTAINERS,
                 only: ['create', 'store', 'edit']
             ),
         ];
@@ -49,9 +52,8 @@ class ProcesosController extends Controller implements HasMiddleware
         $fechaProcess = Carbon::now()->toDateString();
 
         $permissions = [
-            'process.create_prar' => 1,
-            'process.create_containers' => 2,
-            'process.create_prs' => 3
+            PermissionTypes::PROCESS_CREATE_PRS => WasteProcessType::PROCESS_INCINERACION,
+            PermissionTypes::PROCESS_CREATE_PRAR => WasteProcessType::PROCESS_ESTERILIZACION,
         ];
 
         $availableProcess = [];
@@ -61,13 +63,9 @@ class ProcesosController extends Controller implements HasMiddleware
             }
         }
         $processos = WasteProcessType::whereIn('id', $availableProcess)->get();
-        $destinos = Destination::where('is_process', Destination::IS_PROCESS)
-            ->whereIn('process_id', $availableProcess)
-            ->get();
 
         return view('dashboard.procesos.create', compact(
             'fechaProcess',
-            'destinos',
             'processos'
         ));
     }
@@ -108,7 +106,6 @@ class ProcesosController extends Controller implements HasMiddleware
             $processId = $this->createWasteProcess->__invoke(
                 $manifests,
                 $request->input('waste_process_type_id'),
-                $request->input('destination_id'),
                 $request->input('date_start'),
                 auth()->user()->id
             );
@@ -131,16 +128,12 @@ class ProcesosController extends Controller implements HasMiddleware
         $isFinished = $process->isFinished();
 
         // return $process->getDetails();
-        if ($process->getWasteProcessTypeId() == WasteProcessType::PROCESS_PRAR) {
-            return view('dashboard.procesos.edit_prar', compact('process', 'reactors', 'isFinished'));
+        if ($process->getWasteProcessTypeId() == WasteProcessType::PROCESS_INCINERACION) {
+            return view('dashboard.procesos.edit_incineracion', compact('process', 'isFinished', 'reactors'));
         }
 
-        if ($process->getWasteProcessTypeId() == WasteProcessType::PROCESS_CONTAINERS) {
-            // return $process->toArray();
-            return view('dashboard.procesos.edit_containers', compact('process', 'isFinished', 'reactors'));
-        }
-        if ($process->getWasteProcessTypeId() == WasteProcessType::PROCESS_PRS) {
-            return view('dashboard.procesos.edit_prs', compact('process', 'isFinished', 'reactors'));
+        if ($process->getWasteProcessTypeId() == WasteProcessType::PROCESS_ESTERILIZACION) {
+            return view('dashboard.procesos.edit_esterilizacion', compact('process', 'reactors', 'isFinished'));
         }
 
         return $process->toArray();

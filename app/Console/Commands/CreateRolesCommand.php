@@ -147,6 +147,7 @@ class CreateRolesCommand extends Command
             PermissionTypes::ROUTES_VIEW,
             PermissionTypes::ZONES_VIEW,
             PermissionTypes::MANIFESTS_VIEW,
+            PermissionTypes::PROCESS_SHOW,
             PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
             PermissionTypes::BATCHES_VIEW,
             PermissionTypes::CERTIFICATES_VIEW,
@@ -321,6 +322,10 @@ class CreateRolesCommand extends Command
     {
         return [
             PermissionTypes::DASHBOARD_VIEW,
+            PermissionTypes::PROCESS_SHOW,
+            PermissionTypes::PROCESS_CREATE_PRAR,
+            PermissionTypes::PROCESS_CREATE_PRS,
+            PermissionTypes::PROCESS_CREATE_CONTAINERS,
             PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
             PermissionTypes::ENVIRONMENTAL_PROCESSES_CREATE,
             PermissionTypes::ENVIRONMENTAL_PROCESSES_UPDATE,

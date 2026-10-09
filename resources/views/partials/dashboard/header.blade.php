@@ -252,8 +252,16 @@
                             @endcanany
 
                             {{-- PROCESOS AMBIENTALES --}}
-                            @canany([PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW, PermissionTypes::BATCHES_VIEW,
-                                PermissionTypes::CERTIFICATES_VIEW, PermissionTypes::LOGBOOKS_VIEW])
+                            @canany([
+                                PermissionTypes::PROCESS_SHOW,
+                                PermissionTypes::PROCESS_CREATE_PRAR,
+                                PermissionTypes::PROCESS_CREATE_PRS,
+                                PermissionTypes::PROCESS_CREATE_CONTAINERS,
+                                PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
+                                PermissionTypes::BATCHES_VIEW,
+                                PermissionTypes::CERTIFICATES_VIEW,
+                                PermissionTypes::LOGBOOKS_VIEW,
+                            ])
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#navbar-procesos" data-bs-toggle="dropdown"
                                         data-bs-auto-close="outside" role="button" aria-expanded="false">
@@ -267,12 +275,16 @@
                                     </a>
 
                                     <div class="dropdown-menu">
-                                        @can(PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW)
+                                        @canany([
+                                            PermissionTypes::PROCESS_CREATE_PRAR,
+                                            PermissionTypes::PROCESS_CREATE_PRS,
+                                            PermissionTypes::PROCESS_CREATE_CONTAINERS,
+                                        ])
                                             <a href="/procesos/create" class="dropdown-item">
                                                 <i class="ti ti-plus me-2"></i>
                                                 Crear
                                             </a>
-                                        @endcan
+                                        @endcanany
 
                                         @can(PermissionTypes::LOGBOOKS_VIEW)
                                             <a href="#" class="dropdown-item">

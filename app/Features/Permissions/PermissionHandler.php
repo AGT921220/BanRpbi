@@ -72,6 +72,11 @@ class PermissionHandler
             PermissionTypes::DRIVER_SHIFTS_START,
             PermissionTypes::DRIVER_SHIFTS_FINISH,
 
+            PermissionTypes::PROCESS_SHOW,
+            PermissionTypes::PROCESS_CREATE_PRAR,
+            PermissionTypes::PROCESS_CREATE_PRS,
+            PermissionTypes::PROCESS_CREATE_CONTAINERS,
+
             PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
             PermissionTypes::ENVIRONMENTAL_PROCESSES_CREATE,
             PermissionTypes::ENVIRONMENTAL_PROCESSES_UPDATE,
@@ -197,6 +202,11 @@ class PermissionHandler
             PermissionTypes::DRIVER_SHIFTS_VIEW => 'Ver jornadas de chofer',
             PermissionTypes::DRIVER_SHIFTS_START => 'Iniciar jornada de chofer',
             PermissionTypes::DRIVER_SHIFTS_FINISH => 'Finalizar jornada de chofer',
+
+            PermissionTypes::PROCESS_SHOW => 'Ver procesos',
+            PermissionTypes::PROCESS_CREATE_PRAR => 'Crear proceso PRAR',
+            PermissionTypes::PROCESS_CREATE_PRS => 'Crear proceso PRS',
+            PermissionTypes::PROCESS_CREATE_CONTAINERS => 'Crear proceso de contenedores',
 
             PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW => 'Ver procesos ambientales',
             PermissionTypes::ENVIRONMENTAL_PROCESSES_CREATE => 'Crear procesos ambientales',
@@ -325,6 +335,7 @@ class PermissionHandler
             'manifests' => 'Manifiestos',
             'waste_capture' => 'Captura de residuos',
             'driver_shifts' => 'Jornadas de chofer',
+            'process' => 'Procesos',
             'environmental_processes' => 'Procesos ambientales',
             'batches' => 'Bachadas',
             'certificates' => 'Certificados',

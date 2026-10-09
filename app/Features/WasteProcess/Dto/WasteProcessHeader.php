@@ -61,16 +61,15 @@ class WasteProcessHeader
     public function getWasteProcessName(): string
     {
 
-        if ($this->wasteProcessTypeId == WasteProcessType::PROCESS_PRAR) {
-            return 'PRAR';
+        if ($this->wasteProcessTypeId == WasteProcessType::PROCESS_INCINERACION) {
+            return 'Incineración';
         }
 
-        if ($this->wasteProcessTypeId == WasteProcessType::PROCESS_CONTAINERS) {
-            return 'CONTENEDORES';
+        if ($this->wasteProcessTypeId == WasteProcessType::PROCESS_ESTERILIZACION) {
+            return 'Esterilización';
         }
-        if ($this->wasteProcessTypeId == WasteProcessType::PROCESS_PRS) {
-            return 'PRS';
-        }
+
+        return '';
     }
     public function getSolution(): ?string
     {

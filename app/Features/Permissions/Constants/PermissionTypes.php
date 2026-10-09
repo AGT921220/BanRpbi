@@ -77,6 +77,12 @@ final class PermissionTypes
     public const DRIVER_SHIFTS_START = 'driver_shifts.start';
     public const DRIVER_SHIFTS_FINISH = 'driver_shifts.finish';
 
+    // Procesos
+    public const PROCESS_SHOW = 'process.show';
+    public const PROCESS_CREATE_PRAR = 'process.create_prar';
+    public const PROCESS_CREATE_PRS = 'process.create_prs';
+    public const PROCESS_CREATE_CONTAINERS = 'process.create_containers';
+
     // Procesos ambientales
     public const ENVIRONMENTAL_PROCESSES_VIEW = 'environmental_processes.view';
     public const ENVIRONMENTAL_PROCESSES_CREATE = 'environmental_processes.create';

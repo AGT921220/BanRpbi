@@ -50,15 +50,15 @@ class BuildWasteProcess
         $manifestIds = $wasteProcess->wasteProcessDetails->pluck('manifest_id')->unique();
         $manifestFolios = Manifest::whereIn('id', $manifestIds)->pluck('folio')->implode(',');
 
-        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_PRAR) {
-            return $this->getPrarDetails($wasteProcess, $manifestFolios);
+        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_INCINERACION) {
+            return $this->getIncineracionDetails($wasteProcess, $manifestFolios);
         }
-        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_CONTAINERS) {
-            return $this->getContainerDetails($wasteProcess, $manifestFolios);
+
+        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_ESTERILIZACION) {
+            return $this->getEsterilizacionDetails($wasteProcess, $manifestFolios);
         }
-        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_PRS) {
-            return $this->getPrsDetails($wasteProcess, $manifestFolios);
-        }
+
+        return [];
     }
     private function getDetails(WasteProcess $wasteProcess): array
     {
@@ -74,7 +74,7 @@ class BuildWasteProcess
                 ];
         })->toArray();
     }
-    private function getPrarDetails(WasteProcess $wasteProcess, string $manifestFolios): array
+    private function getEsterilizacionDetails(WasteProcess $wasteProcess, string $manifestFolios): array
     {
         return [
             [
@@ -111,31 +111,7 @@ class BuildWasteProcess
         ];
     }
 
-    private function getContainerDetails(WasteProcess $wasteProcess, string $manifestFolios): array
-    {
-        return [[
-            'waste_process_id' => $wasteProcess->waste_process_id,
-            'cantidad_contenedores' => $wasteProcess->cantidad_solucion_reciclar ?? 0,
-            'id' => $wasteProcess->id,
-            'manifest_id' => $manifestFolios,
-            'manifest_detail_id' => $wasteProcess->manifest_detail_id,
-            'client_profile' => $wasteProcess->solution ?? '',
-            // 'cantidad_contenedores' => $wasteProcess->cantidad_contenedores,
-            'cantidad_contenedores_proceso_interno' => $wasteProcess->cantidad_contenedores_proceso_interno ?? 0,
-            'agua_reciclada_presion' => $wasteProcess->agua_reciclada_presion ?? 0,
-            'contenedores_recuperados' => $wasteProcess->contenedores_recuperados ?? 0,
-            'contenedores_inutilizables' => $wasteProcess->contenedores_inutilizables ?? 0,
-            'agua_residual_proceso' => $wasteProcess->agua_residual_proceso ?? 0,
-            'lodos_generados_proceso' => $wasteProcess->lodos_generados_proceso ?? 0,
-            'solidos_generados_proceso' => $wasteProcess->solidos_generados_proceso ?? 0,
-            'others' => $wasteProcess->other ?? 0,
-            'psi' => $wasteProcess->psi ?? 0,
-            'client' => $this->getClients($wasteProcess),
-            'container' => 'Pendiente',
-            'comments' => $wasteProcess->comments ?? '',
-        ]];
-    }
-    private function getPrsDetails(WasteProcess $wasteProcess, string $manifestFolios): array
+    private function getIncineracionDetails(WasteProcess $wasteProcess, string $manifestFolios): array
     {
 
         return [[
