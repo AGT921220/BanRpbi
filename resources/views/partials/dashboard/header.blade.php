@@ -8,42 +8,24 @@
 <header class="navbar navbar-expand-md d-print-none">
     <div class="container-xl">
 
-        <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbar-menu"
-            aria-controls="navbar-menu"
-            aria-expanded="false"
-            aria-label="Mostrar navegación"
-        >
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu"
+            aria-controls="navbar-menu" aria-expanded="false" aria-label="Mostrar navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
             <a href="{{ route('dashboard') }}" aria-label="BAN RPBI">
-                <img
-                    src="{{ asset('images/logo.png') }}"
-                    alt="BAN RPBI"
-                    class="navbar-brand-image"
-                    style="width: 50px; height: auto;"
-                >
+                <img src="{{ asset('images/logo.png') }}" alt="BAN RPBI" class="navbar-brand-image"
+                    style="width: 50px; height: auto;">
             </a>
         </div>
 
         <div class="navbar-nav flex-row order-md-last">
             <div class="nav-item dropdown">
-                <a
-                    href="#"
-                    class="nav-link d-flex lh-1 p-0 px-2"
-                    data-bs-toggle="dropdown"
-                    aria-label="Abrir menú de usuario"
-                    aria-expanded="false"
-                >
-                    <span
-                        class="avatar avatar-sm"
-                        style="background-image: url('{{ asset('images/empty-user.png') }}')"
-                    ></span>
+                <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown"
+                    aria-label="Abrir menú de usuario" aria-expanded="false">
+                    <span class="avatar avatar-sm"
+                        style="background-image: url('{{ asset('images/empty-user.png') }}')"></span>
 
                     <div class="d-none d-xl-block ps-2">
                         <div>{{ auth()->user()->name }}</div>
@@ -108,10 +90,7 @@
                             {{-- DASHBOARD --}}
                             @can(PermissionTypes::DASHBOARD_VIEW)
                                 <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                    <a
-                                        class="nav-link"
-                                        href="{{ route('dashboard') }}"
-                                    >
+                                    <a class="nav-link" href="{{ route('dashboard') }}">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-layout-dashboard"></i>
                                         </span>
@@ -124,20 +103,11 @@
                             @endcan
 
                             {{-- VENTAS --}}
-                            @canany([
-                                PermissionTypes::CLIENTS_VIEW,
-                                PermissionTypes::CONTRACTS_VIEW,
-                                PermissionTypes::APPROVALS_VIEW,
-                            ])
+                            @canany([PermissionTypes::CLIENTS_VIEW, PermissionTypes::CONTRACTS_VIEW,
+                                PermissionTypes::APPROVALS_VIEW])
                                 <li class="nav-item dropdown">
-                                    <a
-                                        class="nav-link dropdown-toggle"
-                                        href="#navbar-ventas"
-                                        data-bs-toggle="dropdown"
-                                        data-bs-auto-close="outside"
-                                        role="button"
-                                        aria-expanded="false"
-                                    >
+                                    <a class="nav-link dropdown-toggle" href="#navbar-ventas" data-bs-toggle="dropdown"
+                                        data-bs-auto-close="outside" role="button" aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-briefcase"></i>
                                         </span>
@@ -173,23 +143,12 @@
                             @endcanany
 
                             {{-- LOGÍSTICA --}}
-                            @canany([
-                                PermissionTypes::COLLECTIONS_VIEW,
-                                PermissionTypes::COLLECTIONS_ASSIGN,
-                                PermissionTypes::ROUTES_VIEW,
-                                PermissionTypes::ZONES_VIEW,
-                                PermissionTypes::DRIVERS_VIEW,
-                                PermissionTypes::MANIFESTS_VIEW,
-                            ])
+                            @canany([PermissionTypes::COLLECTIONS_VIEW, PermissionTypes::COLLECTIONS_ASSIGN,
+                                PermissionTypes::ROUTES_VIEW, PermissionTypes::ZONES_VIEW, PermissionTypes::DRIVERS_VIEW,
+                                PermissionTypes::MANIFESTS_VIEW])
                                 <li class="nav-item dropdown">
-                                    <a
-                                        class="nav-link dropdown-toggle"
-                                        href="#navbar-logistica"
-                                        data-bs-toggle="dropdown"
-                                        data-bs-auto-close="outside"
-                                        role="button"
-                                        aria-expanded="false"
-                                    >
+                                    <a class="nav-link dropdown-toggle" href="#navbar-logistica" data-bs-toggle="dropdown"
+                                        data-bs-auto-close="outside" role="button" aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-truck-delivery"></i>
                                         </span>
@@ -200,19 +159,11 @@
                                     </a>
 
                                     <div class="dropdown-menu">
-                                        @canany([
-                                            PermissionTypes::COLLECTIONS_VIEW,
-                                            PermissionTypes::COLLECTIONS_ASSIGN,
-                                        ])
+                                        @canany([PermissionTypes::COLLECTIONS_VIEW, PermissionTypes::COLLECTIONS_ASSIGN])
                                             <div class="dropend">
-                                                <a
-                                                    class="dropdown-item dropdown-toggle"
-                                                    href="#navbar-recolecciones"
-                                                    data-bs-toggle="dropdown"
-                                                    data-bs-auto-close="outside"
-                                                    role="button"
-                                                    aria-expanded="false"
-                                                >
+                                                <a class="dropdown-item dropdown-toggle" href="#navbar-recolecciones"
+                                                    data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
+                                                    aria-expanded="false">
                                                     <i class="ti ti-calendar-event me-2"></i>
                                                     Recolecciones
                                                 </a>
@@ -263,10 +214,7 @@
                             @endcanany
 
                             {{-- OPERACIÓN --}}
-                            @canany([
-                                PermissionTypes::WASTE_CAPTURE_VIEW,
-                                PermissionTypes::DRIVER_SHIFTS_VIEW,
-                            ])
+                            @canany([PermissionTypes::WASTE_CAPTURE_VIEW, PermissionTypes::DRIVER_SHIFTS_VIEW])
                                 {{-- <li class="nav-item dropdown">
                                     <a
                                         class="nav-link dropdown-toggle"
@@ -304,21 +252,11 @@
                             @endcanany
 
                             {{-- PROCESOS AMBIENTALES --}}
-                            @canany([
-                                PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
-                                PermissionTypes::BATCHES_VIEW,
-                                PermissionTypes::CERTIFICATES_VIEW,
-                                PermissionTypes::LOGBOOKS_VIEW,
-                            ])
+                            @canany([PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW, PermissionTypes::BATCHES_VIEW,
+                                PermissionTypes::CERTIFICATES_VIEW, PermissionTypes::LOGBOOKS_VIEW])
                                 <li class="nav-item dropdown">
-                                    <a
-                                        class="nav-link dropdown-toggle"
-                                        href="#navbar-procesos"
-                                        data-bs-toggle="dropdown"
-                                        data-bs-auto-close="outside"
-                                        role="button"
-                                        aria-expanded="false"
-                                    >
+                                    <a class="nav-link dropdown-toggle" href="#navbar-procesos" data-bs-toggle="dropdown"
+                                        data-bs-auto-close="outside" role="button" aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-recycle"></i>
                                         </span>
@@ -330,30 +268,21 @@
 
                                     <div class="dropdown-menu">
                                         @can(PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW)
-                                            <a href="#" class="dropdown-item">
-                                                <i class="ti ti-recycle me-2"></i>
-                                                Procesos
-                                            </a>
-                                        @endcan
-
-                                        @can(PermissionTypes::BATCHES_VIEW)
-                                            <a href="#" class="dropdown-item">
-                                                <i class="ti ti-layers-intersect me-2"></i>
-                                                Bachadas
-                                            </a>
-                                        @endcan
-
-                                        @can(PermissionTypes::CERTIFICATES_VIEW)
-                                            <a href="#" class="dropdown-item">
-                                                <i class="ti ti-certificate me-2"></i>
-                                                Certificados
+                                            <a href="/procesos/create" class="dropdown-item">
+                                                <i class="ti ti-plus me-2"></i>
+                                                Crear
                                             </a>
                                         @endcan
 
                                         @can(PermissionTypes::LOGBOOKS_VIEW)
                                             <a href="#" class="dropdown-item">
-                                                <i class="ti ti-clipboard-text me-2"></i>
-                                                Bitácoras
+                                                <i class="ti ti-flame me-2"></i>
+                                                Bitácora Incineración
+                                            </a>
+
+                                            <a href="#" class="dropdown-item">
+                                                <i class="ti ti-temperature me-2"></i>
+                                                Bitácora Esterilización
                                             </a>
                                         @endcan
                                     </div>
@@ -361,20 +290,12 @@
                             @endcanany
 
                             {{-- FACTURACIÓN --}}
-                            @canany([
-                                PermissionTypes::INVOICES_VIEW,
-                                PermissionTypes::INVOICES_CREATE,
-                                PermissionTypes::PAYMENTS_VIEW,
-                            ])
+                            @canany([PermissionTypes::INVOICES_VIEW, PermissionTypes::INVOICES_CREATE,
+                                PermissionTypes::PAYMENTS_VIEW])
                                 <li class="nav-item dropdown">
-                                    <a
-                                        class="nav-link dropdown-toggle"
-                                        href="#navbar-facturacion"
-                                        data-bs-toggle="dropdown"
-                                        data-bs-auto-close="outside"
-                                        role="button"
-                                        aria-expanded="false"
-                                    >
+                                    <a class="nav-link dropdown-toggle" href="#navbar-facturacion"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
+                                        aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-receipt"></i>
                                         </span>
@@ -385,19 +306,11 @@
                                     </a>
 
                                     <div class="dropdown-menu">
-                                        @canany([
-                                            PermissionTypes::INVOICES_VIEW,
-                                            PermissionTypes::INVOICES_CREATE,
-                                        ])
+                                        @canany([PermissionTypes::INVOICES_VIEW, PermissionTypes::INVOICES_CREATE])
                                             <div class="dropend">
-                                                <a
-                                                    class="dropdown-item dropdown-toggle"
-                                                    href="#navbar-facturas"
-                                                    data-bs-toggle="dropdown"
-                                                    data-bs-auto-close="outside"
-                                                    role="button"
-                                                    aria-expanded="false"
-                                                >
+                                                <a class="dropdown-item dropdown-toggle" href="#navbar-facturas"
+                                                    data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
+                                                    aria-expanded="false">
                                                     <i class="ti ti-file-invoice me-2"></i>
                                                     Facturas
                                                 </a>
@@ -429,19 +342,11 @@
                             @endcanany
 
                             {{-- CONSULTAS --}}
-                            @canany([
-                                PermissionTypes::REPORTS_VIEW,
-                                PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,
-                            ])
+                            @canany([PermissionTypes::REPORTS_VIEW, PermissionTypes::CUSTOMER_DOCUMENTS_VIEW])
                                 <li class="nav-item dropdown" style="display: none">
-                                    <a
-                                        class="nav-link dropdown-toggle"
-                                        href="#navbar-consultas"
-                                        data-bs-toggle="dropdown"
-                                        data-bs-auto-close="outside"
-                                        role="button"
-                                        aria-expanded="false"
-                                    >
+                                    <a class="nav-link dropdown-toggle" href="#navbar-consultas"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
+                                        aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-search"></i>
                                         </span>
@@ -470,21 +375,12 @@
                             @endcanany
 
                             {{-- ADMINISTRACIÓN --}}
-                            @canany([
-                                PermissionTypes::USERS_VIEW,
-                                PermissionTypes::ROLES_VIEW,
-                                PermissionTypes::CATALOGS_VIEW,
-                                PermissionTypes::SETTINGS_VIEW,
-                            ])
+                            @canany([PermissionTypes::USERS_VIEW, PermissionTypes::ROLES_VIEW,
+                                PermissionTypes::CATALOGS_VIEW, PermissionTypes::SETTINGS_VIEW])
                                 <li class="nav-item dropdown">
-                                    <a
-                                        class="nav-link dropdown-toggle"
-                                        href="#navbar-administracion"
-                                        data-bs-toggle="dropdown"
-                                        data-bs-auto-close="outside"
-                                        role="button"
-                                        aria-expanded="false"
-                                    >
+                                    <a class="nav-link dropdown-toggle" href="#navbar-administracion"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
+                                        aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-settings"></i>
                                         </span>

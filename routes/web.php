@@ -6,6 +6,7 @@ use App\Http\Controllers\ClientAccessManifestController;
 use App\Http\Controllers\Dashboard\DriverController;
 use App\Http\Controllers\Dashboard\InvoiceController;
 use App\Http\Controllers\Dashboard\ManifestController;
+use App\Http\Controllers\Dashboard\ProcesosController;
 use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\TestController;
 use Illuminate\Support\Facades\Route;
@@ -51,4 +52,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('invoices.create');
     Route::resource('invoices', InvoiceController::class)
         ->only(['index']);
+
+            Route::resource('procesos', ProcesosController::class)
+        ->only(['store', 'create', 'edit', 'update', 'destroy', 'show']);
+
 });

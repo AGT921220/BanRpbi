@@ -1,0 +1,177 @@
+<?php
+
+namespace App\Features\WasteProcess\Helpers;
+
+use App\Features\WasteProcess\Dto\WasteProcess as DtoWasteProcess;
+use App\Features\WasteProcess\Dto\WasteProcessDate;
+use App\Features\WasteProcess\Dto\WasteProcessHeader;
+use App\Features\WasteProcess\Dto\WasteProcessMachine;
+use App\Models\WasteProcess;
+use App\Models\WasteProcessType;
+
+class BuildWasteProcess
+{
+    public function __invoke(WasteProcess $wasteProcess): DtoWasteProcess
+    {
+        $wateProcessDate = new WasteProcessDate($wasteProcess->date_start, $wasteProcess->created_at);
+        $wasteProcessMachine = new WasteProcessMachine(
+            $wasteProcess->machine_number,
+            $wasteProcess->hour_start_machine,
+            $wasteProcess->hour_machine
+        );
+
+        $wasteProcessHeader = new WasteProcessHeader(
+            $wasteProcess->id,
+            $wateProcessDate,
+            $wasteProcessMachine,
+            $wasteProcess->user_id,
+            $wasteProcess->waste_process_type_id,
+        );
+
+        return new DtoWasteProcess($wasteProcessHeader, $this->getDetails($wasteProcess));
+    }
+    private function getDetails($wasteProcess): array
+    {
+        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_PRAR) {
+            return $this->getPrarDetails($wasteProcess);
+        }
+        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_CONTAINERS) {
+            return $this->getContainerDetails($wasteProcess);
+        }
+        if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_PRS) {
+            return $this->getPrsDetails($wasteProcess);
+        }
+    }
+    private function getPrarDetails(WasteProcess $wasteProcess): array
+    {
+        $details = [];
+        foreach ($wasteProcess->wasteProcessDetails as $detail) {
+            $clientProfile = $detail->manifestDetail->clientProfile;
+            $client  = $clientProfile->client;
+            $details[] = [
+                'waste_process_id' => $detail->waste_process_id,
+                'id' => $detail->id,
+                'manifest_id' => $detail->manifest_id,
+                'manifest_detail_id' => $detail->manifest_detail_id,
+                'cantidad_solucion_reciclar' => $detail->cantidad_solucion_reciclar,
+                'acido' => $detail->acido,
+                'sosa_caustica' => $detail->sosa_caustica,
+                'eca_12' => $detail->eca_12,
+                'eca_22' => $detail->eca_22,
+                'eca_1350' => $detail->eca_1350,
+                'eca_49' => $detail->eca_49,
+                'eca_20pa' => $detail->eca_20pa,
+                'sulfactante_c500' => $detail->sulfactante_c500,
+                'solucion_clarif_t42' => $detail->solucion_clarif_t42,
+                'solucion_flocl_146' => $detail->solucion_flocl_146,
+                'ph_inicial' => $detail->ph_inicial,
+                'ph_final' => $detail->ph_final,
+                'lodos_generados_porcentaje' => $detail->lodos_generados_porcentaje,
+                'lodos_generados_tnk' => $detail->lodos_generados_tnk_lodos,
+                'ingreso_filtro_prensa' => $detail->ingreso_filtro_prensa,
+                'lodos_generados_disposicion' => $detail->lodos_generados_disposicion,
+                'agua_retorno_proceso_filtro_prensa' => $detail->agua_retorno_proceso_filtro_prensa,
+                'ph_lodos' => $detail->ph_lodos,
+                'cantidad_total_agua_reciclada' => $detail->cantidad_total_agua_reciclada,
+                'client_profile' => $clientProfile->name,
+                'client' => $client->name,
+            ];
+        }
+        return $details;
+    }
+
+    private function getContainerDetails(WasteProcess $wasteProcess): array
+    {
+        $details = [];
+        foreach ($wasteProcess->wasteProcessDetails as $detail) {
+            $clientProfile = $detail->manifestDetail->clientProfile;
+            $client  = $clientProfile->client;
+            $container = $detail->manifestDetail->serviceDetail->containerNew
+                ?? $detail->manifestDetail->serviceDetail->container;
+            $details[] = [
+                'waste_process_id' => $detail->waste_process_id,
+                'id' => $detail->id,
+                'manifest_id' => $detail->manifest_id,
+                'manifest_detail_id' => $detail->manifest_detail_id,
+                'client_profile' => $clientProfile->name,
+                'cantidad_contenedores' => $detail->cantidad_contenedores,
+                'cantidad_contenedores_proceso_interno' => $detail->cantidad_contenedores_proceso_interno,
+                'agua_reciclada_presion' => $detail->agua_reciclada_presion,
+                'contenedores_recuperados' => $detail->contenedores_recuperados,
+                'contenedores_inutilizables' => $detail->contenedores_inutilizables,
+                'agua_residual_proceso' => $detail->agua_residual_proceso,
+                'lodos_generados_proceso' => $detail->lodos_generados_proceso,
+                'solidos_generados_proceso' => $detail->solidos_generados_proceso,
+                'client' => $client->name,
+                'container' => $container->code,
+
+            ];
+        }
+        return $details;
+    }
+    private function getPrsDetails(WasteProcess $wasteProcess): array
+    {
+        $details = [];
+        foreach ($wasteProcess->wasteProcessDetails as $detail) {
+            $clientProfile = $detail->manifestDetail->clientProfile;
+            $client  = $clientProfile->client;
+            $container = $detail->manifestDetail->serviceDetail->containerNew
+                ?? $detail->manifestDetail->serviceDetail->container;
+            $details[] = [
+                'waste_process_id' => $detail->waste_process_id,
+                'id' => $detail->id,
+                'manifest_id' => $detail->manifest_id,
+                'manifest_detail_id' => $detail->manifest_detail_id,
+                'client_profile' => $clientProfile->name,
+                'client' => $client->name,
+                'container' => $container->code,
+                'cantidad_ingresado' => $detail->cantidad_ingresado,
+                'temperatura_1' => $detail->temperatura_1,
+                'temperatura_2' => $detail->temperatura_2,
+                'temperatura_3' => $detail->temperatura_3,
+                'cantidad_recuperados' => $detail->cantidad_recuperados,
+                'porcentaje_recuperado' => $detail->porcentaje_recuperado,
+                'cantidad_sedimentos' => $detail->cantidad_sedimentos,
+                'porcentaje_sedimentos' => $detail->porcentaje_sedimentos,
+                'factor_consumo_kw' => $detail->factor_consumo_kw,
+                'consumo_kw_hrs' => $detail->consumo_kw_hrs,
+                'costo_kw_hr' => $detail->costo_kw_hr,
+                'costo_total_operacion' => $detail->costo_total_operacion
+            ];
+        }
+        return $details;
+    }
+}
+
+// $table->integer('manifest_id')->unsigned();
+// $table->foreign('manifest_id')
+//     ->references('id')
+//     ->on('manifests');
+
+// $table->integer('manifest_detail_id')->unsigned();
+// $table->foreign('manifest_detail_id')
+//     ->references('id')
+//     ->on('manifest_details');
+
+
+//     //SOLUCIONES GASTADAS
+//     $table->decimal('cantidad_solucion_reciclar', 8, 2)->nullable();
+//     $table->decimal('acido', 8, 2)->nullable();
+//     $table->decimal('sosa_caustica', 8, 2)->nullable();
+//     $table->decimal('eca_12', 8, 2)->nullable();
+//     $table->decimal('eca_22', 8, 2)->nullable();
+//     $table->decimal('eca_1350', 8, 2)->nullable();
+//     $table->decimal('eca_49', 8, 2)->nullable();
+//     $table->decimal('eca_20pa', 8, 2)->nullable();
+//     $table->decimal('sulfactante_c500', 8, 2)->nullable();
+//     $table->decimal('solucion_clarif_t42', 8, 2)->nullable();
+//     $table->decimal('solucion_flocl_146', 8, 2)->nullable();
+//     $table->decimal('ph_inicial', 5, 2)->nullable();
+//     $table->decimal('ph_final', 5, 2)->nullable();
+//     $table->decimal('lodos_generados_porcentaje', 5, 2)->nullable();
+//     $table->decimal('lodos_generados_tnk_lodos', 8, 2)->nullable();
+//     $table->decimal('ingreso_filtro_prensa', 8, 2)->nullable();
+//     $table->decimal('lodos_generados_disposicion', 8, 2)->nullable();
+//     $table->decimal('agua_retorno_proceso_filtro_prensa', 8, 2)->nullable();
+//     $table->decimal('ph_lodos', 5, 2)->nullable();
+//     $table->decimal('cantidad_total_agua_reciclada', 8, 2)->nullable();
