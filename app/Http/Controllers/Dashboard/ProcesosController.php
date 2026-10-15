@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Features\Permissions\Constants\PermissionTypes;
-use App\Features\Shared\PermissionHelper;
 use App\Features\WasteProcess\UseCases\CreateWasteProcess;
 use App\Features\WasteProcess\UseCases\FindWasteProcess;
+use App\Features\WasteProcess\UseCases\SearchProcessManifests;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Process\EditWasteProcess;
-use App\Manifest;
+use App\Models\Manifest;
 use App\Models\Reactor;
-use App\Models\WasteProcessDetail;
 use App\Models\WasteProcessType;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -23,13 +22,16 @@ class ProcesosController extends Controller implements HasMiddleware
 {
     private CreateWasteProcess $createWasteProcess;
     private FindWasteProcess $findWasteProcess;
+    private SearchProcessManifests $searchProcessManifests;
 
     public function __construct(
         CreateWasteProcess $createWasteProcess,
-        FindWasteProcess $findWasteProcess
+        FindWasteProcess $findWasteProcess,
+        SearchProcessManifests $searchProcessManifests
     ) {
         $this->createWasteProcess = $createWasteProcess;
         $this->findWasteProcess = $findWasteProcess;
+        $this->searchProcessManifests = $searchProcessManifests;
     }
 
     public static function middleware(): array
@@ -50,6 +52,53 @@ class ProcesosController extends Controller implements HasMiddleware
         //     return back()->with('error', 'No tienes permisos para acceder a esta sección');
         // }
         $fechaProcess = Carbon::now()->toDateString();
+        $processos = $this->creatableTypes();
+        $manifests = ($this->searchProcessManifests)();
+
+        return view('dashboard.procesos.create', compact(
+            'fechaProcess',
+            'processos',
+            'manifests'
+        ));
+    }
+
+    public function store(Request $request)
+    {
+        $processos = $this->creatableTypes();
+        $data = $request->validate([
+            'waste_process_type_id' => ['required', 'integer', 'in:'.$processos->pluck('id')->implode(',')],
+            'date_start' => ['required', 'date'],
+            'manifest_ids' => ['required', 'array', 'min:1'],
+            'manifest_ids.*' => ['integer', 'distinct', 'exists:manifests,id'],
+        ]);
+
+        $manifests = Manifest::query()
+            ->with(['service.serviceDetails'])
+            ->whereIn('id', $data['manifest_ids'])
+            ->whereNull('deleted_at')
+            ->get();
+
+        try {
+            $processId = DB::transaction(function () use ($manifests, $data) {
+                return $this->createWasteProcess->__invoke(
+                    $manifests,
+                    (int) $data['waste_process_type_id'],
+                    $data['date_start'],
+                    auth()->user()->id
+                );
+            });
+        } catch (\Throwable $th) {
+            report($th);
+
+            return redirect('/procesos/create')->with('error', $th->getMessage())->withInput();
+        }
+
+        return redirect("/procesos/$processId/edit")->with('success', 'Proceso creado correctamente');
+    }
+
+    private function creatableTypes(): Collection
+    {
+        $this->ensureProcessTypes();
 
         $permissions = [
             PermissionTypes::PROCESS_CREATE_PRS => WasteProcessType::PROCESS_INCINERACION,
@@ -62,61 +111,31 @@ class ProcesosController extends Controller implements HasMiddleware
                 $availableProcess[] = $processId;
             }
         }
-        $processos = WasteProcessType::whereIn('id', $availableProcess)->get();
 
-        return view('dashboard.procesos.create', compact(
-            'fechaProcess',
-            'processos'
-        ));
+        return WasteProcessType::query()
+            ->whereIn('id', $availableProcess)
+            ->orderBy('id')
+            ->get();
     }
 
-    public function store(Request $request)
+    private function ensureProcessTypes(): void
     {
-        $manifestIds = json_decode($request->input('manifest_ids'));
-        // dd($manifestIds);
-        $manifestDetailIds = json_decode($request->input('detail_manifest_ids'));
-        $manifests = Manifest::select('id', 'service_id', 'manejo_id', 'folio')
-            ->with(['manifestDetails' => function ($query) use ($manifestDetailIds) {
-                $query->select('id', 'manifest_id', 'client_profile_id', 'service_detail_id')
-                    ->whereIn('id', $manifestDetailIds)
-                    ->whereHas('serviceDetail', function ($query) {
-                        $query->whereNull('cancelled_at');
-                    })
-                    ->with('serviceDetail')
-                    ->with('clientProfile')
-                    ->whereDoesntHave('wasteProcessDetail', function ($query) {
-                        $query->where('is_completed', WasteProcessDetail::IS_COMPLETED);
-                    });
-            }])
-            ->whereIn('id', $manifestIds)
-            ->get();
+        $types = [
+            WasteProcessType::PROCESS_INCINERACION => 'Incineración',
+            WasteProcessType::PROCESS_ESTERILIZACION => 'Esterilización',
+        ];
 
-        // dd($manifests->toArray());
-        // $manifestDetailErrors = $this->getManifestDetailErrors($manifests, $manifestDetailIds);
+        foreach ($types as $id => $name) {
+            $type = WasteProcessType::query()->find($id);
+            if ($type !== null) {
+                continue;
+            }
 
-        // if (count($manifestDetailErrors) > 0) {
-        //     return redirect('/salidas/create')
-        //         ->with('errorHtml', "<h3>Faltaron agregar perfiles</h3><br><ul><li>" . implode(
-        //             '</li><li>',
-        //             $manifestDetailErrors
-        //         ) . "</li></ul>");
-        // }
-        try {
-            DB::beginTransaction();
-            $processId = $this->createWasteProcess->__invoke(
-                $manifests,
-                $request->input('waste_process_type_id'),
-                $request->input('date_start'),
-                auth()->user()->id
-            );
-            DB::commit();
-        } catch (\Throwable $th) {
-            report($th);
-            DB::rollBack();
-            return redirect('/procesos/create')->with('error', $th->getMessage());
+            $type = new WasteProcessType();
+            $type->id = $id;
+            $type->name = $name;
+            $type->save();
         }
-
-        return redirect("/procesos/$processId/edit")->with('success', "Proceso creado correctamente");
     }
 
     public function edit(int $processId)

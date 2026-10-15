@@ -6,6 +6,7 @@ use App\Features\Approvals\Application\ApproveClientConfiguration;
 use App\Features\Approvals\Application\ListPendingApprovals;
 use App\Features\Approvals\Application\RejectClientConfiguration;
 use App\Features\Invoices\Jobs\CreateInvoiceFromNextServices;
+use App\Features\Manifests\Jobs\CreateInitialServiceManifestJob;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Services\Application\BulkCreateServices;
 use App\Http\Controllers\Controller;
@@ -13,6 +14,7 @@ use App\Http\Requests\Admin\RejectClientConfigurationRequest;
 use App\Models\Client;
 use App\Models\ClientConfigurationApproval;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Carbon;
 
 final class ApprovalController extends Controller
 {
@@ -27,7 +29,7 @@ final class ApprovalController extends Controller
     {
         $this->authorize(PermissionTypes::APPROVALS_VIEW);
 
-        
+
         // return ($this->listPendingApprovals)();
         return view('approvals.index', [
             'clients' => ($this->listPendingApprovals)(),
@@ -49,13 +51,17 @@ final class ApprovalController extends Controller
                 client: $client,
             );
             $clientContract = $client->activeContract;
-            if($clientContract !== null&& !!$clientContract->generate_initial_invoice) {
-            CreateInvoiceFromNextServices::dispatch(
-                $client->id,
-                $clientContract->initial_invoice_manifest_count
-            )->onQueue('invoices');
-            }
+            if ($clientContract !== null && !!$clientContract->generate_initial_invoice) {
+                CreateInvoiceFromNextServices::dispatch(
+                    $client->id,
+                    $clientContract->initial_invoice_manifest_count
+                )->onQueue('invoices');
+                if (Carbon::parse($clientContract->start_date)->startOfDay()->lessThanOrEqualTo(Carbon::today())) {
+                    CreateInitialServiceManifestJob::dispatch($client->id);
+                    //AQUI APLICA OTRO JOB PARA CREAR EL MANIFIESTO SI EL PRIMER SERVICIO ES HOY MISMO
 
+                }
+            }
         }
 
         $message = $client->configuration_status === Client::STATUS_APPROVED

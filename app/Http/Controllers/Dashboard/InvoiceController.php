@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Features\Invoices\Application\FindInvoice;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
@@ -10,6 +11,11 @@ use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
+    private FindInvoice $findInvoice;
+    public function __construct(FindInvoice $findInvoice)
+    {
+        $this->findInvoice = $findInvoice;
+    }
     public function index(): View
     {
         $this->authorize(PermissionTypes::INVOICES_VIEW);
@@ -31,6 +37,11 @@ class InvoiceController extends Controller
 
     public function show(int $invoiceId)
     {
+        return response()->json(
+            ['data' => $this->findInvoice->__invoke($invoiceId)],
+            200
+        );
+
         return response()->json(
             ['data' => $this->getInvoice($invoiceId)],
             200
@@ -89,7 +100,7 @@ class InvoiceController extends Controller
             'certified_at' => $invoice->updated_at?->format('Y-m-d\TH:i:s'),
             'service_date' => $invoice->service?->service_date,
             'client' => $client,
-            'issuer' => config('business.transportista'),
+            // 'issuer' => config('business.transportista'),
             'items' => $details->map(function ($detail) use ($unitPrice, $manifestId) {
                 $rpbiProfile = $detail->rpbiProfile;
 

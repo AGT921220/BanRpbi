@@ -1,208 +1,164 @@
-@extends('layouts.dashboard')
+@extends('layouts.app')
+
+@section('title', 'Generar proceso')
+@section('page-title', 'Generar proceso')
 
 @section('content')
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header mb-2" style="display: flex;justify-content: space-between;">
-                        <h1>Generar Proceso</h1>
+    <div class="container-xl">
+        <form method="POST" action="{{ route('procesos.store') }}" id="process-create-form">
+            @csrf
 
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="ti ti-flask me-2"></i>
+                                Proceso
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label required" for="waste_process_type_id">Tipo de proceso</label>
+                                <select
+                                    name="waste_process_type_id"
+                                    id="waste_process_type_id"
+                                    class="form-select @error('waste_process_type_id') is-invalid @enderror"
+                                    required
+                                >
+                                    <option value="">Selecciona el tipo</option>
+                                    @foreach ($processos as $process)
+                                        <option
+                                            value="{{ $process->id }}"
+                                            @selected((string) old('waste_process_type_id') === (string) $process->id)
+                                        >
+                                            {{ $process->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('waste_process_type_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label required" for="date_start">Fecha de inicio</label>
+                                <input
+                                    type="date"
+                                    name="date_start"
+                                    id="date_start"
+                                    class="form-control @error('date_start') is-invalid @enderror"
+                                    value="{{ old('date_start', $fechaProcess) }}"
+                                    required
+                                >
+                                @error('date_start')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
+                </div>
 
-                        <form method="POST" action="/procesos" class="manifest_process_form" enctype="multipart/form-data">
-                            @csrf
-
-
-
-                            <div class="form-group">
-                                <label>Fecha de Inicio</label>
-                                <input type="date" class="form-control" value="{{ $fechaProcess }}" name="date_start"
-                                    required>
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="ti ti-file-certificate me-2"></i>
+                                Manifiestos
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-secondary text-center py-4" id="manifests-placeholder">
+                                Selecciona el tipo de proceso para ver los manifiestos que puedes incluir.
                             </div>
 
+                            <div id="process-manifests" class="d-none">
+                                @if ($manifests->isEmpty())
+                                    <div class="text-secondary text-center py-4">
+                                        No hay manifiestos disponibles.
+                                    </div>
+                                @else
+                                    <div class="table-responsive">
+                                        <table class="table table-vcenter card-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            class="form-check-input"
+                                                            id="select-all-manifests"
+                                                            aria-label="Seleccionar todos"
+                                                        >
+                                                    </th>
+                                                    <th>N° manifiesto</th>
+                                                    <th>Cliente</th>
+                                                    <th>Fecha</th>
+                                                    <th>Perfiles</th>
+                                                    <th class="text-end">Peso</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($manifests as $manifest)
+                                                    <tr>
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                class="form-check-input manifest-check"
+                                                                name="manifest_ids[]"
+                                                                value="{{ $manifest['id'] }}"
+                                                                data-label="{{ $manifest['id'] }} · {{ $manifest['client'] }}"
+                                                                @checked(in_array($manifest['id'], array_map('intval', old('manifest_ids', [])), true))
+                                                                aria-label="Seleccionar manifiesto {{ $manifest['id'] }}"
+                                                            >
+                                                        </td>
+                                                        <td>{{ $manifest['id'] }}</td>
+                                                        <td>{{ $manifest['client'] }}</td>
+                                                        <td>{{ $manifest['date'] }}</td>
+                                                        <td>{{ $manifest['profiles'] !== '' ? $manifest['profiles'] : '—' }}</td>
+                                                        <td class="text-end">{{ $manifest['weight'] }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
 
-                            <div class="form-group">
-                                <div class="col-md-12">
-                                    <label>Tipo de Procesos:</label>
-                                    <select class="form-control waste_process_type_id" name="waste_process_type_id"
-                                        id="waste_process_type_id" >
-                                        @foreach ($processos as $process)
-                                            <option value="{{ $process->id }}"> {{ $process->name }}
-                                        @endforeach
-                                    </select>
-                                </div>
+                                @error('manifest_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
-
-
-                            <div class="form-group">
-                                <label>Manifiestos(Ingresa los # de Manifiestos separados por una coma) 1,77,22,96</label>
-                                <input type="text" class="form-control manualManifestIds" value="">
-                                <button type="button" class="btn btn-primary manualManifestIdsBtn">Agregar</button>
-                            </div>
-
-
-                            <h4>Manifiestos</h4>
-                            <table class="table" style="overflow-x:scroll">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align: center" scope="col">Seleccionar</th>
-                                        <th style="text-align: center" scope="col">No. Manifiesto</th>
-                                        <th style="text-align: center" scope="col">No. Detalle</th>
-                                        <th style="text-align: center" scope="col">No. Preinventario</th>
-                                        <th style="text-align: center" scope="col">Cliente</th>
-                                        <th style="text-align: center" scope="col">Numero de Perfil</th>
-                                        <th style="text-align: center" scope="col">Fraccion Arancelaria</th>
-                                        <th style="text-align: center" scope="col">Nombre de Residuo</th>
-                                        <th style="text-align: center" scope="col">RA</th>
-                                        <th style="text-align: center" scope="col">Tipo de Contenedor</th>
-                                        <th style="text-align: center" scope="col">Cantidad</th>
-                                        <th style="text-align: center" scope="col">Peso/Volumen(NETO)</th>
-                                        <th style="text-align: center" scope="col">Unidad(Kgs./L)</th>
-                                    </tr>
-
-                                </thead>
-                                <tbody style="text-align: center" class="tbody_details">
-                                    <tr class="manifest_item">
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <input type="hidden" name="manifest_ids" id="manifestInput">
-                            <input type="hidden" name="detail_manifest_ids" id="manifestDetailInput">
-
-
-                            <button class="btn btn-primary btn-block submit_manifest_btn floatCreateBtn" type="button" data-toggle="modal"
-                                data-target="#myModal">Crear Proceso</button>
-                        </form>
+                        </div>
+                        <div class="card-footer d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary" id="open-process-confirm">
+                                <i class="ti ti-plus me-1"></i>
+                                Crear proceso
+                            </button>
+                        </div>
                     </div>
-
-
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog modal-lg" role="document" style="width: auto ">
+    <div class="modal modal-blur fade" id="process-confirm-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="myModalLabel">Manifiestos Seleccionados</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h5 class="modal-title">Manifiestos seleccionados</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body manifest_added">
-                    <table class="table table_manifest_added" style="overflow-x:scroll">
-                        <thead>
-                            <tr>
-                                <th style="text-align: center" scope="col">No. Manifiesto</th>
-                                <th style="text-align: center" scope="col">No. Detalle</th>
-                                <th style="text-align: center" scope="col">No. Preinventario</th>
-                                <th style="text-align: center" scope="col">Numero de Perfil</th>
-                                <th style="text-align: center" scope="col">Fraccion Arancelaria</th>
-                                <th style="text-align: center" scope="col">Nombre de Residuo</th>
-                                <th style="text-align: center" scope="col">RA</th>
-                                <th style="text-align: center" scope="col">Tipo de Contenedor</th>
-                                <th style="text-align: center" scope="col">Cantidad</th>
-                                <th style="text-align: center" scope="col">Peso/Volumen(NETO)</th>
-                                <th style="text-align: center" scope="col">Unidad(Kgs./L)</th>
-                            </tr>
-
-                        </thead>
-                        <tbody style="text-align: center" class="tbody_details_added">
-                        </tbody>
-                    </table>
-
+                <div class="modal-body">
+                    <ul class="mb-0" id="selected-manifests"></ul>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-success submit_process_validate">Validar Manifiestos</button>
-
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary submit_process">Crear</button>
+                    <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" form="process-create-form">Crear</button>
                 </div>
             </div>
         </div>
     </div>
 @endsection
-<style>
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 60px;
-        height: 34px;
-    }
 
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        -webkit-transition: .4s;
-        transition: .4s;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        -webkit-transition: .4s;
-        transition: .4s;
-    }
-
-    input:checked+.slider {
-        background-color: #2196F3;
-    }
-
-    input:focus+.slider {
-        box-shadow: 0 0 1px #2196F3;
-    }
-
-    input:checked+.slider:before {
-        -webkit-transform: translateX(26px);
-        -ms-transform: translateX(26px);
-        transform: translateX(26px);
-    }
-
-    /* Rounded sliders */
-    .slider.round {
-        border-radius: 34px;
-    }
-
-    .slider.round:before {
-        border-radius: 50%;
-    }
-
-    .check_manifest {
-        min-width: 25px;
-        min-height: 25px;
-        cursor: pointer;
-    }
-
-
-
-    .manifest_item:has(.check_manifest:checked) {
-        background-color: #009300 !important;
-    }
-
-    /* .manifest_item.checked {
-    background-color: #009300 !important;
-} */
-</style>
-<script src="{{ asset(mix('js/procesos/create.js')) }}" defer></script>
-<script src="{{ asset(mix('js/registro.js')) }}" defer></script>
+@push('scripts')
+    @vite('resources/js/modules/procesos/create.js')
+@endpush

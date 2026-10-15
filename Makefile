@@ -43,7 +43,7 @@ import-db:
 	@$(MAKE) update-bulk-passwords
 
 db-export:
-	@docker exec -i ${DB_HOST} mysqldump -u ${DB_USERNAME} -p${DB_PASSWORD} --no-tablespaces ${DB_DATABASE} > storage/app/gan.sql
+	@docker exec -i ${DB_HOST} mysqldump -u ${DB_USERNAME} -p${DB_PASSWORD} --no-tablespaces ${DB_DATABASE} > storage/app/rpbi.sql
 
 update-bulk-passwords:
 	@docker exec -i php-ban php artisan users:update-bulk-passwords --force

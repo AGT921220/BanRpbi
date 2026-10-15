@@ -128,7 +128,7 @@ function paintHeader(doc, img, issuer, invoice) {
     doc.text(10, 46, "UUID / Folio fiscal:");
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...COLORS.uuidText);
-    doc.text(42, 46, String(invoice.uuid || "PENDIENTE"));
+    // doc.text(42, 46, String(invoice.uuid || "PENDIENTE"));
 }
 
 function paintReceptor(doc, client) {

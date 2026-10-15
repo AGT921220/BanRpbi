@@ -18,7 +18,7 @@ class CreateWasteProcess
         $totalQuantity = $this->getTotalQuantity($manifests);
         $wasteProcessId = $this->create($wasteProcessTypeId, $dateStart, $userId, $totalQuantity);
 
-        $this->createDetails($manifests, $wasteProcessId, $wasteProcessTypeId);
+        $this->createDetails($manifests, $wasteProcessId);
         return $wasteProcessId;
     }
     private function create(
@@ -39,35 +39,46 @@ class CreateWasteProcess
     }
     private function createDetails(Collection $manifests, int $wasteProcessId): void
     {
-        $manifests->each(function ($manifest) use ($wasteProcessId) {
-            $manifestId = $manifest->id;
-            $manifest->manifestDetails->each(function ($manifestDetail) use ($wasteProcessId, $manifestId) {
+        $detailIds = $manifests->flatMap(function ($manifest) {
+            return $manifest->service?->serviceDetails?->pluck('id') ?? collect();
+        });
+        $completedIds = WasteProcessDetail::query()
+            ->where('is_completed', true)
+            ->whereIn('service_detail_id', $detailIds)
+            ->pluck('service_detail_id');
+
+        $manifests->each(function ($manifest) use ($wasteProcessId, $completedIds) {
+            $details = $manifest->service?->serviceDetails ?? collect();
+            $details->each(function ($detail) use ($wasteProcessId, $manifest, $completedIds) {
+                if ($completedIds->contains($detail->id)) {
+                    return;
+                }
+
                 $wasteProcessDetail = new WasteProcessDetail();
                 $wasteProcessDetail->waste_process_id = $wasteProcessId;
-                $wasteProcessDetail->manifest_id = $manifestId;
-                $wasteProcessDetail->manifest_detail_id = $manifestDetail->id;
-
-                // $weight = $manifestDetail->serviceDetail->weight_new??$manifestDetail->serviceDetail->weight;
-                // $wasteProcessDetail->total_weight = $manifestDetail->serviceDetail->quantity*$weight;
-                // $wasteProcessDetail->total_weight = $manifestDetail->serviceDetail->quantity;
-                $wasteProcessDetail->total_weight = $manifestDetail
-                ->serviceDetail->weight_new??$manifestDetail->serviceDetail->weight;
-                $wasteProcessDetail->process_weight = 0;
+                $wasteProcessDetail->manifest_id = $manifest->id;
+                $wasteProcessDetail->service_detail_id = $detail->id;
+                $wasteProcessDetail->total_weight = is_numeric($detail->weight) ? $detail->weight : '0';
+                $wasteProcessDetail->process_weight = '0';
                 $wasteProcessDetail->save();
             });
         });
     }
+
     private function getTotalQuantity(Collection $manifests): string
     {
-        $totalQuantity = '0';
-        $manifests->each(function ($manifest) use (&$totalQuantity) {
-            $manifest->manifestDetails->each(function ($manifestDetail) use (&$totalQuantity) {
-                $weight = $manifestDetail->serviceDetail->weight_new??$manifestDetail->serviceDetail->weight;
-                // $quantity = $manifestDetail->serviceDetail->quantity*$weight;
+        $total = $manifests->sum(function ($manifest) {
+            $details = $manifest->service?->serviceDetails ?? collect();
 
-                $totalQuantity = bcadd($totalQuantity, $weight, 2);
+            return $details->sum(function ($detail) {
+                if (! is_numeric($detail->weight)) {
+                    return 0;
+                }
+
+                return (float) $detail->weight;
             });
         });
-        return $totalQuantity;
+
+        return number_format($total, 2, '.', '');
     }
 }
