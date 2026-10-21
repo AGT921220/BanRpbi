@@ -39,6 +39,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         ? 'ti ti-file-pencil'
                         : 'ti ti-file-plus';
 
+                        const pdfLabel = 'Ver contrato PDF';
+                        const pdfIcon = 'ti ti-file-text';
+
+                    if (row.can_show_contract_pdf) {
+                        actions += `
+                            <a
+                                data-id="${row.contract_id}"
+                                class="btn btn-sm btn-outline-secondary createContractPdf-btn"
+                                target="_blank"
+                            >
+                                <i class="${pdfIcon} me-1"></i>
+                                ${pdfLabel}
+                            </a>
+                        `;
+                    }   
                     actions += `
                         <button
                             type="button"
@@ -127,7 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let expectedCollectionsCount = 0;
     let clientZone = null;
 
-    $(document).on('click', '.configure-client-btn', async function () {
+    $(document).on('click', '.createContractPdf-btn', async function () {
+
+        try {
+            alert("CREANDO PDF")
+        } catch (error) {
+            showToast('danger', extractError(error, 'No se pudo cargar la configuración.'));
+        }
+    });
+
+
+        $(document).on('click', '.configure-client-btn', async function () {
         const clientId = $(this).data('client-id');
 
         try {

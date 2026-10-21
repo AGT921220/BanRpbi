@@ -51,6 +51,7 @@ final readonly class SearchClientHeaders
         $canUpdate = Gate::allows(PermissionTypes::CLIENTS_UPDATE);
         $canDelete = Gate::allows(PermissionTypes::CLIENTS_DELETE);
         $canAssignContracts = Gate::allows(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS);
+        $canShowContractPdf = Gate::allows(PermissionTypes::CONTRACTS_VIEW_PDF);
 
         $data = $dataQuery
             ->withExists([
@@ -60,7 +61,8 @@ final readonly class SearchClientHeaders
             ])
             ->get()
             ->map(
-                static function (Client $client) use ($canUpdate, $canDelete, $canAssignContracts): ClientHeader {
+                static function (Client $client) use ($canUpdate, $canDelete, $canAssignContracts,
+                    $canShowContractPdf): ClientHeader {
                     return new ClientHeader(
                         id: (int) $client->id,
                         fullName: trim("{$client->name} {$client->parentarl_surname}"),
@@ -74,6 +76,7 @@ final readonly class SearchClientHeaders
                         configurationStatus: (string) $client->configuration_status,
                         canUpdate: $canUpdate,
                         canDelete: $canDelete,
+                        canShowContractPdf: $canShowContractPdf,
                         canConfigure: $canAssignContracts && $client->isConfigurable(),
                     );
                 },

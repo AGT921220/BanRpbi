@@ -17,6 +17,7 @@ final readonly class ClientHeader
         public string $configurationStatus,
         public bool $canUpdate,
         public bool $canDelete,
+        public bool $canShowContractPdf,
         public bool $canConfigure,
     ) {}
 
@@ -52,6 +53,7 @@ final readonly class ClientHeader
             'configuration_status' => $this->configurationStatus,
             'can_update' => $this->canUpdate,
             'can_delete' => $this->canDelete,
+            'can_show_contract_pdf' => $this->canShowContractPdf,
             'can_configure' => $this->canConfigure,
         ];
     }
