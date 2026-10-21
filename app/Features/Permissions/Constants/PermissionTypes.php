@@ -21,6 +21,7 @@ final class PermissionTypes
     public const CONTRACTS_UPDATE = 'contracts.update';
     public const CONTRACTS_DELETE = 'contracts.delete';
     public const CONTRACTS_RENEW = 'contracts.renew';
+    public const CONTRACTS_VIEW_PDF = 'contracts.view_pdf';
 
     // Contratos de clientes
     public const CLIENT_CONTRACTS_APPROVE = 'client_contracts.approve';

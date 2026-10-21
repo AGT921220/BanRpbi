@@ -190,6 +190,7 @@ class CreateRolesCommand extends Command
             PermissionTypes::CONTRACTS_UPDATE,
             PermissionTypes::CONTRACTS_DELETE,
             PermissionTypes::CONTRACTS_RENEW,
+            PermissionTypes::CONTRACTS_VIEW_PDF,
             PermissionTypes::APPROVALS_VIEW,
             PermissionTypes::ZONES_VIEW,
             PermissionTypes::CUSTOMER_DOCUMENTS_VIEW,

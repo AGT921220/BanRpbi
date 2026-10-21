@@ -26,6 +26,7 @@ class PermissionHandler
             PermissionTypes::CONTRACTS_UPDATE,
             PermissionTypes::CONTRACTS_DELETE,
             PermissionTypes::CONTRACTS_RENEW,
+            PermissionTypes::CONTRACTS_VIEW_PDF,
 
             PermissionTypes::CLIENT_CONTRACTS_APPROVE,
             PermissionTypes::CLIENT_CONTRACTS_REJECT,
@@ -158,6 +159,7 @@ class PermissionHandler
             PermissionTypes::CONTRACTS_UPDATE => 'Editar contratos',
             PermissionTypes::CONTRACTS_DELETE => 'Eliminar contratos',
             PermissionTypes::CONTRACTS_RENEW => 'Renovar contratos',
+            PermissionTypes::CONTRACTS_VIEW_PDF => 'Ver PDF de contrato',
 
             PermissionTypes::CLIENT_CONTRACTS_APPROVE => 'Aprobar contratos de clientes',
             PermissionTypes::CLIENT_CONTRACTS_REJECT => 'Rechazar contratos de clientes',

@@ -80,8 +80,8 @@ export function buildInvoice(doc, invoice, img, qrImage) {
 }
 
 function paintHeader(doc, img, issuer, invoice) {
-    fillRect(doc, 0, 0, 210, 38, COLORS.headerFill, COLORS.headerBorder);
-    fillRect(doc, 0, 38, 210, 2, COLORS.headerBarFill, COLORS.headerBarFill);
+    // fillRect(doc, 0, 0, 210, 38, COLORS.headerFill, COLORS.headerBorder);
+    // fillRect(doc, 0, 38, 210, 2, COLORS.headerBarFill, COLORS.headerBarFill);
 
     const logo = logoToPng(img);
     doc.addImage(logo, "PNG", 10, 6, 22, 22);
@@ -125,9 +125,9 @@ function paintHeader(doc, img, issuer, invoice) {
     doc.setTextColor(...COLORS.uuidLabel);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.text(10, 46, "UUID / Folio fiscal:");
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...COLORS.uuidText);
+    // doc.text(10, 46, "UUID / Folio fiscal:");
+    // doc.setFont("helvetica", "normal");
+    // doc.setTextColor(...COLORS.uuidText);
     // doc.text(42, 46, String(invoice.uuid || "PENDIENTE"));
 }
 
