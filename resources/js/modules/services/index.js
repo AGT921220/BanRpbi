@@ -136,12 +136,14 @@ function initServiceDateEvents() {
     });
 
     $("#service-today").on("click", function () {
-        openServiceDatePicker();
+        setServiceDate(new Date());
     });
 
-    $("#service-date-title, #service-date-text").on("click", function () {
-        openServiceDatePicker();
-    });
+    $("#service-date-title, #service-date-text")
+        .css("cursor", "pointer")
+        .on("click", function () {
+            openServiceDatePicker();
+        });
 }
 
 function openServiceDatePicker() {
@@ -151,9 +153,13 @@ function openServiceDatePicker() {
         return;
     }
 
-    if (typeof input.showPicker === "function") {
-        input.showPicker();
-        return;
+    try {
+        if (typeof input.showPicker === "function") {
+            input.showPicker();
+            return;
+        }
+    } catch (_error) {
+        // showPicker puede fallar si el gesto no es válido; se usa click nativo.
     }
 
     input.focus();

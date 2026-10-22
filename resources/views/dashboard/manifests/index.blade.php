@@ -27,6 +27,7 @@
                                 <th>Status</th>
                                 <th>Cliente</th>
                                 <th>Fecha</th>
+                                <th>Factura</th>
                                 <th class="w-1">Acciones</th>
                             </tr>
                         </thead>

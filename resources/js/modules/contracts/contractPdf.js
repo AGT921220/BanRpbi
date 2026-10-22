@@ -19,10 +19,11 @@ $(document).on("click", ".btn-contract-pdf", async function (e) {
         );
         const data = response.data;
 
-        let doc = new jsPDF();
+        let doc = new jsPDF({ unit: "pt", format: "letter" });
+        // Por ahora el builder reproduce el DOC de referencia con datos fijos/vacíos.
         doc = buildContractPdf(doc, data);
         doc.setProperties({
-            title: `Contrato ${data.client_contract_id}`,
+            title: "CONTRATO DE PRESTACION DE SERVICIOS",
             author: "BAN RPBI",
             creator: "BAN RPBI",
         });

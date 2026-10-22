@@ -31,6 +31,7 @@
                     type="button"
                     class="btn btn-primary"
                     id="service-today"
+                    title="Ir a hoy"
                 >
                     <i class="ti ti-calendar-event me-1"></i>
                     Hoy
@@ -46,21 +47,22 @@
                     <i class="ti ti-chevron-right"></i>
                 </button>
 
-                <!-- Calendario -->
-                <label
-                    class="btn btn-icon btn-outline-secondary mb-0 position-relative"
+                <!-- Calendario: el input cubre el botón para abrir el picker nativo -->
+                <span
+                    class="btn btn-icon btn-outline-secondary mb-0 position-relative overflow-hidden p-0"
                     title="Seleccionar fecha"
+                    style="width: 2.2rem; height: 2.2rem;"
                 >
-                    <i class="ti ti-calendar"></i>
-
+                    <i class="ti ti-calendar" style="pointer-events: none;"></i>
                     <input
                         type="date"
                         id="service-date"
-                        class="position-absolute opacity-0"
-                        style="width: 1px; height: 1px;"
+                        class="position-absolute top-0 start-0 w-100 h-100 border-0"
+                        style="opacity: 0; cursor: pointer;"
                         value="{{ $serviceDate ?? '' }}"
+                        aria-label="Seleccionar fecha"
                     >
-                </label>
+                </span>
 
             </div>
         </div>

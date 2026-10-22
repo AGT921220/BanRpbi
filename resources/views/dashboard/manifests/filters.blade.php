@@ -5,7 +5,7 @@
             <div>
                 <h3 class="card-title mb-1">Filtros</h3>
                 <div class="text-secondary small">
-                    Filtra los manifiestos por fecha y estado de facturación. Los filtros se conservan al paginar.
+                    Filtra por fecha y estado de facturación; se aplican al seleccionar. Se conservan al paginar.
                 </div>
             </div>
 
@@ -16,7 +16,14 @@
             <div class="col-md-4">
                 <label class="form-label" for="manifest-service-date">Fecha de servicio</label>
                 <div class="input-icon">
-                    <span class="input-icon-addon">
+                    <span
+                        class="input-icon-addon"
+                        id="manifest-service-date-icon"
+                        role="button"
+                        tabindex="0"
+                        title="Abrir calendario"
+                        style="cursor: pointer;"
+                    >
                         <i class="ti ti-calendar"></i>
                     </span>
                     <input

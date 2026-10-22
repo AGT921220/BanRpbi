@@ -34,24 +34,39 @@ function initManifestsTable() {
                 orderSequence: ["asc", "desc"],
             },
             {
+                data: "invoice_id",
+                name: "services.invoice_id",
+                orderSequence: ["asc", "desc"],
+                render(data, _type, row) {
+                    const hasInvoice = !!row.invoice_id || !!data;
+
+                    if (!hasInvoice) {
+                        return '<span class="text-secondary">No</span>';
+                    }
+
+                    return `
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge bg-success-lt text-success">Sí</span>
+                            <a
+                                href="#"
+                                data-id="${row.invoice_id}"
+                                class="btn btn-sm btn-outline-primary btn-invoice-pdf"
+                                title="Generar Factura PDF"
+                            >
+                                <i class="ti ti-file-invoice me-1"></i>
+                                Generar Factura
+                            </a>
+                        </div>
+                    `;
+                },
+            },
+            {
                 data: null,
                 name: "actions",
                 orderable: false,
                 searchable: false,
                 className: "text-end",
                 render(_data, _type, row) {
-                    const hasInvoice = !!row.invoice_id;
-                    const invoiceButton = hasInvoice
-                        ? `<a
-        data-id="${row.invoice_id}"
-        class="btn btn-sm btn-outline-primary btn-invoice-pdf"
-        title="Descargar Factura"
-    >
-        <i class="ti ti-file-type-pdf me-1"></i>
-        Factura
-    </a>`
-                        : "";
-
                     return `
     <a
         data-id="${row.id}"
@@ -61,7 +76,6 @@ function initManifestsTable() {
         <i class="ti ti-file-type-pdf me-1"></i>
         Manifiesto
     </a>
-    ${invoiceButton}
 `;
                 },
             },
@@ -83,9 +97,18 @@ function initManifestsTable() {
 }
 
 function initManifestFilters() {
-    $("#apply-filters").on("click", function () {
+    const applyFilters = () => {
         activeFilters = buildFilters();
         reloadManifests();
+    };
+
+    $("#apply-filters").on("click", applyFilters);
+
+    $("#manifest-service-date").on("change", applyFilters);
+    $('input[name="invoice_status"]').on("change", applyFilters);
+
+    $("#manifest-service-date-icon").on("click", function () {
+        openManifestDatePicker();
     });
 
     $("#clear-filters").on("click", function () {
@@ -94,6 +117,26 @@ function initManifestFilters() {
         activeFilters = [];
         reloadManifests();
     });
+}
+
+function openManifestDatePicker() {
+    const input = document.getElementById("manifest-service-date");
+
+    if (!input) {
+        return;
+    }
+
+    try {
+        if (typeof input.showPicker === "function") {
+            input.showPicker();
+            return;
+        }
+    } catch (_error) {
+        // fallback abajo
+    }
+
+    input.focus();
+    input.click();
 }
 
 function buildFilters() {
