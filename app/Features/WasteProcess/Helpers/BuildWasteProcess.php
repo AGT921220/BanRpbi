@@ -7,7 +7,7 @@ use App\Features\WasteProcess\Dto\WasteProcessDate;
 use App\Features\WasteProcess\Dto\WasteProcessFinish;
 use App\Features\WasteProcess\Dto\WasteProcessHeader;
 use App\Features\WasteProcess\Dto\WasteProcessMachine;
-use App\Manifest;
+use App\Models\Manifest;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessDetail;
 use App\Models\WasteProcessType;
@@ -20,8 +20,12 @@ class BuildWasteProcess
         $wateProcessDate = new WasteProcessDate($wasteProcess->date_start, $wasteProcess->created_at);
         $wasteProcessMachine = new WasteProcessMachine(
             $wasteProcess->machine_number,
-            Carbon::parse($wasteProcess->hour_start_machine)->format('H:i'),
-            Carbon::parse($wasteProcess->hour_machine)->format('H:i')
+            $wasteProcess->hour_start_machine
+                ? Carbon::parse($wasteProcess->hour_start_machine)->format('H:i')
+                : null,
+            $wasteProcess->hour_machine
+                ? Carbon::parse($wasteProcess->hour_machine)->format('H:i')
+                : null,
         );
         $wasteProcessFinished = new WasteProcessFinish(
             $wasteProcess->is_finished,
@@ -48,7 +52,7 @@ class BuildWasteProcess
     private function getParams($wasteProcess): array
     {
         $manifestIds = $wasteProcess->wasteProcessDetails->pluck('manifest_id')->unique();
-        $manifestFolios = Manifest::whereIn('id', $manifestIds)->pluck('folio')->implode(',');
+        $manifestFolios = Manifest::query()->whereIn('id', $manifestIds)->pluck('id')->implode(',');
 
         if ($wasteProcess->waste_process_type_id == WasteProcessType::PROCESS_INCINERACION) {
             return $this->getIncineracionDetails($wasteProcess, $manifestFolios);
@@ -63,15 +67,23 @@ class BuildWasteProcess
     private function getDetails(WasteProcess $wasteProcess): array
     {
         return $wasteProcess->wasteProcessDetails->map(function (WasteProcessDetail $detail) {
-            return
-                [
-                    'id' => $detail->id,
-                    'total_weight' => $detail->total_weight,
-                    'process_weight' => $detail->process_weight,
-                    'captured_weight' => $detail->total_captured_weight,
-                    'remaing_weight' => $detail->total_weight - $detail->total_captured_weight,
-                    'profile' => $detail->manifestDetail->clientProfile->name
-                ];
+            $captured = (float) ($detail->total_captured_weight ?? 0);
+            $total = (float) $detail->total_weight;
+
+            return [
+                'id' => $detail->id,
+                'manifest_id' => $detail->manifest_id,
+                'service_detail_id' => $detail->service_detail_id,
+                'total_weight' => $detail->total_weight,
+                'process_weight' => $detail->process_weight,
+                'captured_weight' => number_format($captured, 2, '.', ''),
+                'remaing_weight' => number_format(max($total - $captured, 0), 2, '.', ''),
+                'is_finished' => (bool) $detail->is_finished,
+                'is_completed' => (bool) $detail->is_completed,
+                'profile' => $detail->serviceDetail?->rpbiProfile?->name,
+                'client' => $detail->manifest?->service?->client?->company
+                    ?: trim(($detail->manifest?->service?->client?->name ?? '').' '.($detail->manifest?->service?->client?->parentarl_surname ?? '')),
+            ];
         })->toArray();
     }
     private function getEsterilizacionDetails(WasteProcess $wasteProcess, string $manifestFolios): array
@@ -140,10 +152,16 @@ class BuildWasteProcess
     }
     private function getClients(WasteProcess $wasteProcess): string
     {
-        $clients = $wasteProcess->wasteProcessDetails->map(function (WasteProcessDetail $detail) {
-            return $detail->manifest->client->name;
-        })->unique()->values()->implode(',');
+        return $wasteProcess->wasteProcessDetails
+            ->map(function (WasteProcessDetail $detail) {
+                $client = $detail->manifest?->service?->client;
 
-        return $clients;
+                return $client?->company
+                    ?: trim(($client?->name ?? '').' '.($client?->parentarl_surname ?? ''));
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->implode(',');
     }
 }

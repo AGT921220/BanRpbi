@@ -52,4 +52,6 @@
 
 @push('scripts')
     @vite('resources/js/modules/clients/index.js')
+    @vite('resources/js/modules/contracts/contractPdf.js')
+    @vite('resources/js/modules/contracts/contractPdfBuilder.js')
 @endpush

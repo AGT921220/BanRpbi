@@ -26,6 +26,7 @@
                                 <th>N° Manifiesto</th>
                                 <th>Status</th>
                                 <th>Cliente</th>
+                                <th>Fecha</th>
                                 <th class="w-1">Acciones</th>
                             </tr>
                         </thead>

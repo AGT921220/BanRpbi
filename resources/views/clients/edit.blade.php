@@ -8,6 +8,12 @@
         <i class="ti ti-arrow-left me-1"></i>
         Volver
     </a>
+    @can(\App\Features\Permissions\Constants\PermissionTypes::CLIENT_CONTRACTS_VIEW_HISTORY)
+        <a href="{{ route('clients.contracts.history', $client) }}" class="btn btn-outline-primary">
+            <i class="ti ti-history me-1"></i>
+            Historial de contratos
+        </a>
+    @endcan
 @endsection
 
 @section('content')

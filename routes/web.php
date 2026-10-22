@@ -45,6 +45,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('services.assign');
     Route::post('services/assign', [ServiceController::class, 'storeAssignment'])
         ->name('services.assign.store');
+    Route::get('services/{service}', [ServiceController::class, 'show'])
+        ->name('services.show');
     Route::resource('services', ServiceController::class)
         ->only(['index']);
 
@@ -53,7 +55,7 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('invoices', InvoiceController::class)
         ->only(['index']);
 
-            Route::resource('procesos', ProcesosController::class)
-        ->only(['store', 'create', 'edit', 'update', 'destroy', 'show']);
+    Route::resource('procesos', ProcesosController::class)
+        ->only(['index', 'store', 'create', 'edit', 'update', 'destroy', 'show']);
 
 });

@@ -28,6 +28,7 @@ class PermissionHandler
             PermissionTypes::CONTRACTS_RENEW,
             PermissionTypes::CONTRACTS_VIEW_PDF,
 
+            PermissionTypes::CLIENT_CONTRACTS_VIEW_HISTORY,
             PermissionTypes::CLIENT_CONTRACTS_APPROVE,
             PermissionTypes::CLIENT_CONTRACTS_REJECT,
 
@@ -161,6 +162,7 @@ class PermissionHandler
             PermissionTypes::CONTRACTS_RENEW => 'Renovar contratos',
             PermissionTypes::CONTRACTS_VIEW_PDF => 'Ver PDF de contrato',
 
+            PermissionTypes::CLIENT_CONTRACTS_VIEW_HISTORY => 'Ver historial de contratos de clientes',
             PermissionTypes::CLIENT_CONTRACTS_APPROVE => 'Aprobar contratos de clientes',
             PermissionTypes::CLIENT_CONTRACTS_REJECT => 'Rechazar contratos de clientes',
             PermissionTypes::APPROVALS_VIEW => 'Ver aprobaciones',

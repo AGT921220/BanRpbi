@@ -34,10 +34,15 @@ final class ContractController extends Controller
             search: $request->filled('search')
                 ? $request->string('search')->toString()
                 : null,
+            frequency: $request->filled('frequency')
+                ? $request->string('frequency')->toString()
+                : null,
         );
 
         return view('contracts.index', [
             'contracts' => $contracts,
+            'frequencies' => Contract::frequencyLabels(),
+            'selectedFrequency' => $request->string('frequency')->toString(),
         ]);
     }
 
@@ -86,11 +91,7 @@ final class ContractController extends Controller
     {
         $this->authorize(PermissionTypes::CONTRACTS_DELETE);
 
-        ($this->deleteContract)($contract);
-
-        return redirect()
-            ->route('contracts.index')
-            ->with('success', 'Contrato eliminado correctamente.');
+        abort(403, 'La eliminación de contratos del catálogo no está disponible.');
     }
 
     /**

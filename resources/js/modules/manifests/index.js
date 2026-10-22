@@ -1,8 +1,17 @@
-import { createDataTable } from "../../shared/datatable.js";
+import { createDataTable, getDataTableData } from "../../shared/datatable.js";
+
+const TABLE_ID = "manifests-table";
+
+let activeFilters = [];
 
 $(function () {
+    initManifestFilters();
+    initManifestsTable();
+});
+
+function initManifestsTable() {
     createDataTable(
-        "manifests-table",
+        TABLE_ID,
         [
             {
                 data: "id",
@@ -20,22 +29,19 @@ $(function () {
                 orderSequence: ["asc", "desc"],
             },
             {
+                data: "date",
+                name: "services.service_date",
+                orderSequence: ["asc", "desc"],
+            },
+            {
                 data: null,
                 name: "actions",
                 orderable: false,
                 searchable: false,
                 className: "text-end",
                 render(_data, _type, row) {
-                    let hasInvoice = !!row.invoice_id;
-
-                    let testInvoice =     `<a
-        class="btn btn-sm btn-outline-warning btn-invoice-pdf-test"
-        title="Factura Test"
-    >
-        <i class="ti ti-file-type-pdf me-1"></i>
-        Factura Test
-    </a>`
-                    let invoiceButton = hasInvoice
+                    const hasInvoice = !!row.invoice_id;
+                    const invoiceButton = hasInvoice
                         ? `<a
         data-id="${row.invoice_id}"
         class="btn btn-sm btn-outline-primary btn-invoice-pdf"
@@ -43,9 +49,9 @@ $(function () {
     >
         <i class="ti ti-file-type-pdf me-1"></i>
         Factura
-    </a>
-`
+    </a>`
                         : "";
+
                     return `
     <a
         data-id="${row.id}"
@@ -56,7 +62,6 @@ $(function () {
         Manifiesto
     </a>
     ${invoiceButton}
-
 `;
                 },
             },
@@ -64,64 +69,65 @@ $(function () {
         {
             entityName: "manifiestos",
             pageLength: 10,
-
-            ajax: async (data, callback) => {
-                try {
-                    const params = new URLSearchParams({
-                        offset: data.start,
-                        limit: data.length,
-                        draw: data.draw,
-                    });
-
-                    const order = data.order?.[0];
-
-                    if (order) {
-                        const column = data.columns?.[order.column];
-
-                        if (
-                            column?.name &&
-                            column.name !== "actions" &&
-                            ["asc", "desc"].includes(order.dir)
-                        ) {
-                            params.set("order_by", column.name);
-                            params.set("order_direction", order.dir);
-                        }
-                    }
-
-                    const response = await fetch(
-                        `/admin/manifest-headers?${params.toString()}`,
-                        {
-                            headers: {
-                                Accept: "application/json",
-                            },
-                        },
-                    );
-
-                    if (!response.ok) {
-                        throw new Error(
-                            "No se pudieron cargar los manifiestos.",
-                        );
-                    }
-
-                    const payload = await response.json();
-
-                    callback({
-                        draw: payload.draw ?? data.draw,
-                        recordsTotal: payload.recordsTotal ?? 0,
-                        recordsFiltered: payload.recordsFiltered ?? 0,
-                        data: payload.data ?? [],
-                    });
-                } catch (error) {
-                    console.error(error);
-
-                    callback({
-                        draw: data.draw,
-                        recordsTotal: 0,
-                        recordsFiltered: 0,
-                        data: [],
-                    });
-                }
+            ajax: (data, callback) => {
+                getDataTableData(data, callback, {
+                    url: "/admin/manifest-headers",
+                    loaderText: "Cargando manifiestos...",
+                    params: {
+                        filters: activeFilters,
+                    },
+                });
             },
         },
     );
-});
+}
+
+function initManifestFilters() {
+    $("#apply-filters").on("click", function () {
+        activeFilters = buildFilters();
+        reloadManifests();
+    });
+
+    $("#clear-filters").on("click", function () {
+        $("#manifest-service-date").val("");
+        $("#invoice-status-all").prop("checked", true);
+        activeFilters = [];
+        reloadManifests();
+    });
+}
+
+function buildFilters() {
+    const filters = [];
+    const serviceDate = $("#manifest-service-date").val();
+    const invoiceStatus = $('input[name="invoice_status"]:checked').val();
+
+    if (serviceDate) {
+        filters.push({
+            operator: "where",
+            field: "services.service_date",
+            value: serviceDate,
+        });
+    }
+
+    if (invoiceStatus === "1") {
+        filters.push({
+            operator: "where_not_null",
+            field: "services.invoice_id",
+        });
+    }
+
+    if (invoiceStatus === "0") {
+        filters.push({
+            operator: "where_null",
+            field: "services.invoice_id",
+        });
+    }
+
+    return filters;
+}
+
+function reloadManifests() {
+    const table = $(`#${TABLE_ID}`).DataTable();
+
+    table.ajax.reload();
+}

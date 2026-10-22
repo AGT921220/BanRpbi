@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Features\Manifests\Domain\ManifestStatusTransitions;
 use App\Features\Services\Application\FindServiceHeader;
 use App\Features\Services\Application\SearchServiceHeaders;
+use App\Features\Services\Domain\ServiceStatusTransitions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FilterRequest;
+use App\Models\Manifest;
 use App\Models\Service;
 use App\Models\ServiceDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 final class ServiceController extends Controller
 {
@@ -21,11 +25,10 @@ final class ServiceController extends Controller
     public function index(FilterRequest $request)
     {
         $allowedFilters = ['service_date', 'driver_id'];
-        $now = Carbon::now();
-        $filters = $request->input('filters', []) ?:  [];
+        $filters = $request->input('filters', []) ?: [];
         $currentUser = auth()->user();
 
-        if (!!$currentUser->driver) {
+        if ($currentUser?->driver) {
             $filters = array_merge($filters, [
                 [
                     'field' => 'driver_id',
@@ -36,13 +39,11 @@ final class ServiceController extends Controller
             $request->merge(['filters' => $filters]);
         }
 
-
         $services = ($this->searchServiceHeaders)($request->queryOptions($allowedFilters), $request->draw());
 
-        return response()->json(
-            $services,
-        );
+        return response()->json($services);
     }
+
     public function show(int $serviceId)
     {
         $service = ($this->findServiceHeader)($serviceId);
@@ -52,30 +53,78 @@ final class ServiceController extends Controller
             'success' => true,
         ], 200);
     }
+
     public function store(Request $request)
     {
+        $data = $request->validate([
+            'id' => ['required', 'integer', 'exists:services,id'],
+            'service_details' => ['required', 'array', 'min:1'],
+            'service_details.*.id' => ['required', 'integer'],
+            'service_details.*.weight' => ['nullable', 'numeric', 'min:0'],
+        ]);
 
-        $serviceId = $request->input('id');
-        $rpbiProfiles = $request->input('service_details', []);
-        info('Service ID: ' . $serviceId);
-        info('RPBI Profiles: ' . json_encode($rpbiProfiles));
-        foreach ($rpbiProfiles as $profile) {
-            info('Profile: ' . json_encode($profile));
-            ServiceDetail::where('service_id', $serviceId)
-                ->where('id', $profile['id'])
-                ->update([
-                    'weight' => $profile['weight'],
-                ]);
-        }
+        $serviceId = (int) $data['id'];
+        $rpbiProfiles = $data['service_details'];
 
-        Service::where('id', $serviceId)
-            ->update([
-                'status' => Service::STATUS_COLLECTED,
+        try {
+            $header = DB::transaction(function () use ($serviceId, $rpbiProfiles) {
+                $service = Service::query()
+                    ->whereKey($serviceId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $currentUser = auth()->user();
+                if ($currentUser?->driver && (int) $service->driver_id !== (int) $currentUser->driver->id) {
+                    throw ValidationException::withMessages([
+                        'id' => 'La recolección no está asignada a este chofer.',
+                    ]);
+                }
+
+                ServiceStatusTransitions::assertCanTransition(
+                    (string) $service->status,
+                    Service::STATUS_COLLECTED,
+                );
+
+                foreach ($rpbiProfiles as $profile) {
+                    ServiceDetail::query()
+                        ->where('service_id', $serviceId)
+                        ->where('id', $profile['id'])
+                        ->update([
+                            'weight' => $profile['weight'],
+                        ]);
+                }
+
+                $service->status = Service::STATUS_COLLECTED;
+                $service->save();
+
+                $service->manifests()
+                    ->get()
+                    ->each(function (Manifest $manifest): void {
+                        if (in_array($manifest->status, [
+                            Manifest::STATUS_PENDING,
+                            Manifest::STATUS_COLLECTED,
+                        ], true) || $manifest->status === null || $manifest->status === '') {
+                            ManifestStatusTransitions::transition(
+                                $manifest,
+                                Manifest::STATUS_COLLECTED,
+                            );
+                        }
+                    });
+
+                return ($this->findServiceHeader)($serviceId);
+            });
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\InvalidArgumentException $e) {
+            throw ValidationException::withMessages([
+                'status' => $e->getMessage(),
             ]);
+        }
 
         return response()->json([
             'message' => 'Servicio capturado correctamente.',
             'success' => true,
+            'data' => $header,
         ], 200);
     }
 }

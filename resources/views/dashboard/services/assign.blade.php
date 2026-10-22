@@ -47,13 +47,14 @@
                         <div class="card-body">
                             @if ($services->isEmpty())
                                 <div class="text-secondary text-center py-4">
-                                    No hay recolecciones para esta fecha.
+                                    No hay recolecciones con manifiesto válido para esta fecha.
                                 </div>
                             @else
                                 <div class="divide-y" id="services-checklist">
                                     @foreach ($services as $service)
                                         @php
                                             $isAssigned = $service->driver_id !== null;
+                                            $manifestId = $service->manifests->first()?->id;
                                             $clientLabel = $service->client?->company
                                                 ?: trim(($service->client?->name ?? '').' '.($service->client?->parentarl_surname ?? ''));
                                         @endphp
@@ -73,10 +74,11 @@
                                             </span>
                                             <span class="col">
                                                 <span class="fw-bold">
-                                                    #{{ $service->id }} — {{ $clientLabel ?: 'Sin cliente' }}
+                                                    Manifiesto #{{ $manifestId }} — {{ $clientLabel ?: 'Sin cliente' }}
                                                 </span>
                                                 <span class="d-block text-secondary">
-                                                    Zona: {{ $service->zone?->name ?? 'Sin zona' }}
+                                                    Recolección #{{ $service->id }}
+                                                    · Zona: {{ $service->zone?->name ?? 'Sin zona' }}
                                                     · Estado:
                                                     {{ $service->status === \App\Models\Service::STATUS_SCHEDULED ? 'Programada' : 'Pendiente' }}
                                                 </span>

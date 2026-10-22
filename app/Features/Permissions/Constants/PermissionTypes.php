@@ -24,6 +24,7 @@ final class PermissionTypes
     public const CONTRACTS_VIEW_PDF = 'contracts.view_pdf';
 
     // Contratos de clientes
+    public const CLIENT_CONTRACTS_VIEW_HISTORY = 'client_contracts.view_history';
     public const CLIENT_CONTRACTS_APPROVE = 'client_contracts.approve';
     public const CLIENT_CONTRACTS_REJECT = 'client_contracts.reject';
 

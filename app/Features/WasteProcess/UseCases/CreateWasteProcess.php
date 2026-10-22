@@ -2,83 +2,155 @@
 
 namespace App\Features\WasteProcess\UseCases;
 
+use App\Features\Manifests\Domain\ManifestStatusTransitions;
+use App\Features\WasteProcess\Helpers\ServiceDetailBalance;
+use App\Models\Manifest;
+use App\Models\ProcessLogbook;
+use App\Models\Service;
+use App\Models\ServiceDetail;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessDetail;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CreateWasteProcess
 {
+    public function __construct(
+        private readonly ServiceDetailBalance $balance,
+    ) {}
 
+    /**
+     * @param  Collection<int, Manifest>|list<int>  $manifestsOrServiceDetailIds
+     */
     public function __invoke(
         Collection $manifests,
         int $wasteProcessTypeId,
         string $dateStart,
-        int $userId
-    ): int {
-        $totalQuantity = $this->getTotalQuantity($manifests);
-        $wasteProcessId = $this->create($wasteProcessTypeId, $dateStart, $userId, $totalQuantity);
-
-        $this->createDetails($manifests, $wasteProcessId);
-        return $wasteProcessId;
-    }
-    private function create(
-        int $wasteProcessTypeId,
-        string $dateStart,
         int $userId,
-        string $totalQuantity
+        ?array $serviceDetailIds = null,
     ): int {
+        return (int) DB::transaction(function () use (
+            $manifests,
+            $wasteProcessTypeId,
+            $dateStart,
+            $userId,
+            $serviceDetailIds,
+        ): int {
+            $lines = $this->resolveEligibleLines($manifests, $serviceDetailIds);
 
-        $wasteProcess = new WasteProcess();
-        $wasteProcess->waste_process_type_id = $wasteProcessTypeId;
-        $wasteProcess->date_start = $dateStart;
-        $wasteProcess->user_id = $userId;
-        $wasteProcess->cantidad_solucion_reciclar = $totalQuantity;
-        $wasteProcess->save();
+            if ($lines->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'manifest_ids' => 'No hay líneas elegibles con remanente para procesar.',
+                ]);
+            }
 
-        return $wasteProcess->id;
-    }
-    private function createDetails(Collection $manifests, int $wasteProcessId): void
-    {
-        $detailIds = $manifests->flatMap(function ($manifest) {
-            return $manifest->service?->serviceDetails?->pluck('id') ?? collect();
-        });
-        $completedIds = WasteProcessDetail::query()
-            ->where('is_completed', true)
-            ->whereIn('service_detail_id', $detailIds)
-            ->pluck('service_detail_id');
+            $totalQuantity = number_format(
+                $lines->sum(fn (array $line) => $line['remaining']),
+                2,
+                '.',
+                '',
+            );
 
-        $manifests->each(function ($manifest) use ($wasteProcessId, $completedIds) {
-            $details = $manifest->service?->serviceDetails ?? collect();
-            $details->each(function ($detail) use ($wasteProcessId, $manifest, $completedIds) {
-                if ($completedIds->contains($detail->id)) {
-                    return;
+            $wasteProcess = new WasteProcess();
+            $wasteProcess->waste_process_type_id = $wasteProcessTypeId;
+            $wasteProcess->date_start = $dateStart;
+            $wasteProcess->user_id = $userId;
+            $wasteProcess->cantidad_solucion_reciclar = $totalQuantity;
+            $wasteProcess->save();
+
+            foreach ($lines as $line) {
+                WasteProcessDetail::query()->create([
+                    'waste_process_id' => $wasteProcess->id,
+                    'manifest_id' => $line['manifest_id'],
+                    'service_detail_id' => $line['service_detail_id'],
+                    'total_weight' => number_format($line['remaining'], 2, '.', ''),
+                    'process_weight' => '0',
+                ]);
+            }
+
+            $manifestIds = $lines->pluck('manifest_id')->unique();
+
+            foreach ($manifestIds as $manifestId) {
+                $manifest = Manifest::query()->lockForUpdate()->find($manifestId);
+
+                if (! $manifest) {
+                    continue;
                 }
 
-                $wasteProcessDetail = new WasteProcessDetail();
-                $wasteProcessDetail->waste_process_id = $wasteProcessId;
-                $wasteProcessDetail->manifest_id = $manifest->id;
-                $wasteProcessDetail->service_detail_id = $detail->id;
-                $wasteProcessDetail->total_weight = is_numeric($detail->weight) ? $detail->weight : '0';
-                $wasteProcessDetail->process_weight = '0';
-                $wasteProcessDetail->save();
-            });
+                if (ManifestStatusTransitions::canTransition(
+                    (string) $manifest->status,
+                    Manifest::STATUS_IN_PROCESS,
+                )) {
+                    ManifestStatusTransitions::transition($manifest, Manifest::STATUS_IN_PROCESS);
+                }
+            }
+
+            ProcessLogbook::query()->create([
+                'waste_process_id' => $wasteProcess->id,
+                'user_id' => $userId,
+                'action' => 'process_created',
+                'payload' => [
+                    'waste_process_type_id' => $wasteProcessTypeId,
+                    'service_detail_ids' => $lines->pluck('service_detail_id')->values()->all(),
+                ],
+            ]);
+
+            return (int) $wasteProcess->id;
         });
     }
 
-    private function getTotalQuantity(Collection $manifests): string
+    /**
+     * @param  Collection<int, Manifest>  $manifests
+     * @param  list<int>|null  $serviceDetailIds
+     * @return Collection<int, array{manifest_id:int,service_detail_id:int,remaining:float}>
+     */
+    private function resolveEligibleLines(Collection $manifests, ?array $serviceDetailIds): Collection
     {
-        $total = $manifests->sum(function ($manifest) {
-            $details = $manifest->service?->serviceDetails ?? collect();
+        $selected = $serviceDetailIds
+            ? collect($serviceDetailIds)->map(fn ($id) => (int) $id)->all()
+            : null;
 
-            return $details->sum(function ($detail) {
-                if (! is_numeric($detail->weight)) {
-                    return 0;
+        $lines = collect();
+
+        foreach ($manifests as $manifest) {
+            $service = $manifest->service;
+
+            if (! $service || $service->status !== Service::STATUS_COLLECTED) {
+                continue;
+            }
+
+            $details = ServiceDetail::query()
+                ->where('service_id', $service->id)
+                ->when($selected, fn ($q) => $q->whereIn('id', $selected))
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($details as $detail) {
+                $openInOther = WasteProcessDetail::query()
+                    ->where('service_detail_id', $detail->id)
+                    ->where('is_finished', 0)
+                    ->whereHas('process', fn ($q) => $q->where('is_finished', 0))
+                    ->exists();
+
+                if ($openInOther) {
+                    continue;
                 }
 
-                return (float) $detail->weight;
-            });
-        });
+                $remaining = $this->balance->remainingWeight((int) $detail->id);
 
-        return number_format($total, 2, '.', '');
+                if ($remaining <= 0) {
+                    continue;
+                }
+
+                $lines->push([
+                    'manifest_id' => (int) $manifest->id,
+                    'service_detail_id' => (int) $detail->id,
+                    'remaining' => $remaining,
+                ]);
+            }
+        }
+
+        return $lines;
     }
 }

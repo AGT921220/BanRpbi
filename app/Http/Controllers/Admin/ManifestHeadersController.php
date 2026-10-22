@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Features\Manifests\Application\SearchManifestHeaders;
-use App\Features\Shared\Query\QueryOptions;
+use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FilterRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ManifestHeadersController extends Controller
 {
@@ -17,22 +16,23 @@ class ManifestHeadersController extends Controller
 
     public function index(FilterRequest $request): JsonResponse
     {
-        $offset = max($request->integer('offset', 0), 0);
-        $limit = $request->integer('limit', 20);
+        $this->authorize(PermissionTypes::MANIFESTS_VIEW);
 
-        if ($limit <= 0) {
-            $limit = 20;
-        }
-
-        $draw = max($request->integer('draw', 1), 1);
+        $allowedFilters = [
+            'service_date',
+            'services.service_date',
+            'invoice_id',
+            'services.invoice_id',
+            'invoices.id',
+            'clients.id',
+            'manifests.status',
+            'status',
+        ];
 
         return response()->json(
-            ($this->searchManifestHeaders)($request->queryOptions(), $request->draw()
-                // filters: [
-                //     $request->input('order_by')?QueryOptions::orderBy($request->input('order_by'),
-                //     $request->input('order_direction')):'asc',
-                // ],
-                // draw: $draw,
+            ($this->searchManifestHeaders)(
+                $request->queryOptions($allowedFilters),
+                $request->draw(),
             ),
         );
     }

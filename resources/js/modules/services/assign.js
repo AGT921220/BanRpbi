@@ -34,8 +34,28 @@ function initServiceDateEvents() {
     });
 
     $("#service-today").on("click", function () {
-        navigateToDate(formatDate(new Date()));
+        openServiceDatePicker();
     });
+
+    $("#service-date-title, #service-date-text").on("click", function () {
+        openServiceDatePicker();
+    });
+}
+
+function openServiceDatePicker() {
+    const input = document.querySelector(DATE_INPUT);
+
+    if (!input) {
+        return;
+    }
+
+    if (typeof input.showPicker === "function") {
+        input.showPicker();
+        return;
+    }
+
+    input.focus();
+    input.click();
 }
 
 function initSelectAll() {

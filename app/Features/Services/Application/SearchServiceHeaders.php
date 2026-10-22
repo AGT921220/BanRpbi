@@ -2,12 +2,14 @@
 
 namespace App\Features\Services\Application;
 
+use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\RpbiProfiles\Domain\RpbiProfile;
 use App\Features\Services\Domain\ServiceDetail as ServiceDetailDto;
 use App\Features\Services\Domain\ServiceDetailsResponse;
 use App\Features\Shared\Query\BuilderFilter;
 use App\Models\Service;
 use App\Models\ServiceDetail;
+use Illuminate\Support\Facades\Gate;
 
 class SearchServiceHeaders
 {
@@ -25,6 +27,7 @@ class SearchServiceHeaders
             builder: Service::select(
                 'services.id',
                 'services.status',
+                'services.invoice_id',
                 'clients.company',
                 'services.service_date',
                 'zones.name as zone',
@@ -44,12 +47,19 @@ class SearchServiceHeaders
             draw: $draw,
         );
 
+        $canView = Gate::allows(PermissionTypes::COLLECTIONS_VIEW);
+        $canManifestPdf = Gate::allows(PermissionTypes::MANIFESTS_DOWNLOAD)
+            || Gate::allows(PermissionTypes::MANIFESTS_VIEW);
+        $canInvoicePdf = Gate::allows(PermissionTypes::INVOICES_DOWNLOAD_PDF)
+            || Gate::allows(PermissionTypes::INVOICES_VIEW);
+
         $nextService = true;
-        $data['data'] = $data['data']->map(function (Service $service) use (&$nextService) {
-            if($service->id!=317){
-            //  dd($service->toArray());
-                
-            }
+        $data['data'] = $data['data']->map(function (Service $service) use (
+            &$nextService,
+            $canView,
+            $canManifestPdf,
+            $canInvoicePdf,
+        ) {
             $domainServiceDetails = $service->serviceDetails->map(function (ServiceDetail $serviceDetail) {
                 $rpbiProfile = $serviceDetail->rpbiProfile;
 
@@ -65,8 +75,11 @@ class SearchServiceHeaders
                         : null,
                 );
             });
-            $status = $nextService && $service->status !== Service::STATUS_COLLECTED ? Service::STATUS_NEXT : $service->status;
+            $status = $nextService && $service->status !== Service::STATUS_COLLECTED
+                ? Service::STATUS_NEXT
+                : $service->status;
             $nextService = $service->status !== Service::STATUS_COLLECTED ? false : true;
+
             return [
                 'id' => $service->id,
                 'status' => $this->resolveServiceStatus($status),
@@ -77,6 +90,10 @@ class SearchServiceHeaders
                 'driver_id' => $service->driver_id,
                 'driver_name' => $service->driver_name,
                 'manifest_id' => $service->manifest_id,
+                'invoice_id' => $service->invoice_id,
+                'can_view' => $canView,
+                'can_manifest_pdf' => $canManifestPdf && filled($service->manifest_id),
+                'can_invoice_pdf' => $canInvoicePdf && filled($service->invoice_id),
                 'service_details' => (new ServiceDetailsResponse(count($domainServiceDetails), ...$domainServiceDetails))->toArray(),
             ];
         });

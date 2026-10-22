@@ -164,7 +164,7 @@ class ContractCrudTest extends TestCase
         }
     }
 
-    public function test_authorized_user_can_delete_contract(): void
+    public function test_delete_contract_is_disabled(): void
     {
         $this->actingAsUserWithPermissions([PermissionTypes::CONTRACTS_DELETE]);
 
@@ -172,8 +172,22 @@ class ContractCrudTest extends TestCase
 
         $response = $this->delete(route('contracts.destroy', $contract));
 
-        $response->assertRedirect(route('contracts.index'));
-        $this->assertSoftDeleted('contracts', ['id' => $contract->id]);
+        $response->assertForbidden();
+        $this->assertDatabaseHas('contracts', ['id' => $contract->id, 'deleted_at' => null]);
+    }
+
+    public function test_contracts_can_be_filtered_by_frequency(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::CONTRACTS_VIEW]);
+
+        Contract::factory()->create(['name' => 'Semanal X', 'frequency' => 'weekly']);
+        Contract::factory()->create(['name' => 'Mensual Y', 'frequency' => 'monthly']);
+
+        $response = $this->get(route('contracts.index', ['frequency' => 'weekly']));
+
+        $response->assertOk();
+        $response->assertSee('Semanal X');
+        $response->assertDontSee('Mensual Y');
     }
 
     public function test_contracts_can_be_filtered_by_name(): void

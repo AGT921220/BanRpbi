@@ -4,18 +4,21 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Features\Invoices\Application\FindInvoice;
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Features\Shared\Infrastructure\Facturapi\FacturapiClient;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Invoice;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
-    private FindInvoice $findInvoice;
-    public function __construct(FindInvoice $findInvoice)
-    {
-        $this->findInvoice = $findInvoice;
-    }
+    public function __construct(
+        private readonly FindInvoice $findInvoice,
+        private readonly FacturapiClient $facturapiClient,
+    ) {}
+
     public function index(): View
     {
         $this->authorize(PermissionTypes::INVOICES_VIEW);
@@ -35,87 +38,33 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function show(int $invoiceId)
+    public function show(int $invoiceId): JsonResponse
     {
-        return response()->json(
-            ['data' => $this->findInvoice->__invoke($invoiceId)],
-            200
-        );
+        $this->authorize(PermissionTypes::INVOICES_VIEW);
 
-        return response()->json(
-            ['data' => $this->getInvoice($invoiceId)],
-            200
-        );
+        return response()->json([
+            'data' => ($this->findInvoice)($invoiceId),
+        ]);
     }
 
-    private function getInvoice(int $invoiceId): array
+    public function downloadPdf(int $invoiceId): Response|JsonResponse
     {
-        $invoice = Invoice::with(['client' => function ($q) {
-            $q->select([
-                'id',
-                'company as name',
-                'nra',
-                'rfc',
-                'email',
-                'phone',
-                'postal_code',
-                'street',
-                'num_ext',
-                'num_int',
-                'colony',
-                'state_id',
-                'city_id',
-            ])->with(['state' => function ($q) {
-                $q->select(['id', 'name']);
-            }])
-                ->with(['city' => function ($q) {
-                    $q->select(['id', 'name']);
-                }]);
-        }, 'service' => function ($q) {
-            $q->with(['serviceDetails' => function ($q) {
-                $q->with('rpbiProfile');
-            }, 'manifests' => function ($q) {
-                $q->select(['id', 'service_id']);
-            }]);
-            $q->select(['id', 'client_id', 'service_date']);
-        }])->findOrFail($invoiceId);
+        $this->authorize(PermissionTypes::INVOICES_DOWNLOAD_PDF);
 
-        $client = $invoice->client ?? $invoice->service?->client;
-        $unitPrice = 100;
-        $details = $invoice->service?->serviceDetails ?? collect();
-        $manifestId = $invoice->service?->manifests?->first()?->id;
+        $invoice = Invoice::query()->findOrFail($invoiceId);
 
-        return [
-            'folio' => $invoice->id,
-            'uuid' => $invoice->external_id,
-            'status' => $invoice->status,
-            'verification_url' => $invoice->verification_url,
-            'sello_cfdi' => $invoice->sello_cfdi,
-            'sello_sat' => $invoice->sello_sat,
-            'cadena_complemento' => $invoice->cadena_complemento,
-            'serie_sat' => $invoice->serie_sat,
-            'qr_code' => $invoice->qr_code,
-            'iva_percentage' => $invoice->iva_percentaje ?: '16',
-            'created_at' => $invoice->created_at?->format('d/m/Y H:i:s'),
-            'certified_at' => $invoice->updated_at?->format('Y-m-d\TH:i:s'),
-            'service_date' => $invoice->service?->service_date,
-            'client' => $client,
-            // 'issuer' => config('business.transportista'),
-            'items' => $details->map(function ($detail) use ($unitPrice, $manifestId) {
-                $rpbiProfile = $detail->rpbiProfile;
+        if (! filled($invoice->external_id) || ! config('app.facturapi_enabled')) {
+            return response()->json([
+                'message' => 'No hay PDF oficial disponible para esta factura.',
+                'data' => ($this->findInvoice)($invoiceId),
+            ], 404);
+        }
 
-                return [
-                    'id' => $rpbiProfile?->id,
-                    'name' => $rpbiProfile?->name,
-                    'code' => $rpbiProfile?->code,
-                    'description' => $rpbiProfile?->description,
-                    'product_key' => '76121900',
-                    'quantity' => 1,
-                    'price' => $unitPrice,
-                    'discount' => 0,
-                    'manifest_id' => $manifestId,
-                ];
-            })->values(),
-        ];
+        $pdf = $this->facturapiClient->downloadInvoicePdf((string) $invoice->external_id);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="factura-'.$invoice->id.'.pdf"',
+        ]);
     }
 }

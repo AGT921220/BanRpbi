@@ -19,6 +19,8 @@ final readonly class ClientHeader
         public bool $canDelete,
         public bool $canShowContractPdf,
         public bool $canConfigure,
+        public bool $canViewContractHistory = false,
+        public ?int $clientContractId = null,
     ) {}
 
     /**
@@ -35,7 +37,10 @@ final readonly class ClientHeader
      *     configuration_status: string,
      *     can_update: bool,
      *     can_delete: bool,
-     *     can_configure: bool
+     *     can_show_contract_pdf: bool,
+     *     can_configure: bool,
+     *     can_view_contract_history: bool,
+     *     client_contract_id: int|null
      * }
      */
     public function toArray(): array
@@ -55,6 +60,8 @@ final readonly class ClientHeader
             'can_delete' => $this->canDelete,
             'can_show_contract_pdf' => $this->canShowContractPdf,
             'can_configure' => $this->canConfigure,
+            'can_view_contract_history' => $this->canViewContractHistory,
+            'client_contract_id' => $this->clientContractId,
         ];
     }
 }

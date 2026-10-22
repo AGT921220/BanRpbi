@@ -2,16 +2,18 @@
 
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Dashboard\ClientContractHistoryController;
 use App\Http\Controllers\Admin\InvoiceBillableServiceHeadersController;
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\InvoiceHeadersController;
 use App\Http\Controllers\Admin\ManifestHeadersController;
 use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ServiceHeadersController;
+use App\Http\Controllers\Dashboard\ServiceController as DashboardServiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ZoneController;
 use App\Http\Controllers\Api\ClientHeaderController;
+use App\Http\Controllers\Dashboard\ClientContractController;
 use App\Http\Controllers\Dashboard\InvoiceController;
 use App\Http\Controllers\Dashboard\ManifestController;
 use Illuminate\Support\Facades\Route;
@@ -36,8 +38,17 @@ Route::get('manifests/{id}', [ManifestController::class, 'show'])
 
 Route::get('invoices/{id}', [InvoiceController::class, 'show'])
         ->name('invoices.show');
-    
-                Route::resource('service-headers', ServiceHeadersController::class)
+
+Route::get('invoices/{id}/pdf', [InvoiceController::class, 'downloadPdf'])
+        ->name('invoices.download-pdf');
+
+Route::get('services/{service}', [DashboardServiceController::class, 'show'])
+        ->name('admin.services.show');
+
+Route::resource('client-contracts', ClientContractController::class)
+        ->only(['show']);
+
+Route::resource('service-headers', ServiceHeadersController::class)
         ->only(['index']);
 });
 
@@ -52,6 +63,9 @@ Route::get('invoices/{id}', [InvoiceController::class, 'show'])
 
     Route::resource('clients', ClientController::class)
         ->except(['show']);
+
+    Route::get('clients/{client}/contracts', [ClientContractHistoryController::class, 'index'])
+        ->name('clients.contracts.history');
 
     Route::get('clients/{client}/configuration', [ClientController::class, 'showConfiguration'])
         ->name('clients.configuration.show');

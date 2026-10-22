@@ -20,8 +20,10 @@ final class ListServicesForAssignment
                 'client:id,company,name,parentarl_surname',
                 'zone:id,name',
                 'driver:id,name,parentarl_surname,maternal_surname',
+                'manifests:id,service_id',
             ])
             ->whereDate('service_date', $date)
+            ->whereHas('manifests')
             ->orderBy('id')
             ->get();
     }

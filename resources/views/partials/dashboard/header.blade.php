@@ -104,6 +104,7 @@
 
                             {{-- VENTAS --}}
                             @canany([PermissionTypes::CLIENTS_VIEW, PermissionTypes::CONTRACTS_VIEW,
+                                PermissionTypes::CLIENT_CONTRACTS_VIEW_HISTORY,
                                 PermissionTypes::APPROVALS_VIEW])
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#navbar-ventas" data-bs-toggle="dropdown"
@@ -280,6 +281,10 @@
                                             PermissionTypes::PROCESS_CREATE_PRS,
                                             PermissionTypes::PROCESS_CREATE_CONTAINERS,
                                         ])
+                                            <a href="{{ route('procesos.index') }}" class="dropdown-item">
+                                                <i class="ti ti-list me-2"></i>
+                                                Listado
+                                            </a>
                                             <a href="/procesos/create" class="dropdown-item">
                                                 <i class="ti ti-plus me-2"></i>
                                                 Crear

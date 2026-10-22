@@ -51,7 +51,8 @@ final readonly class SearchClientHeaders
         $canUpdate = Gate::allows(PermissionTypes::CLIENTS_UPDATE);
         $canDelete = Gate::allows(PermissionTypes::CLIENTS_DELETE);
         $canAssignContracts = Gate::allows(PermissionTypes::CLIENTS_ASSIGN_CONTRACTS);
-        $canShowContractPdf = Gate::allows(PermissionTypes::CONTRACTS_VIEW_PDF);
+        $canShowContractPdfPermission = Gate::allows(PermissionTypes::CONTRACTS_VIEW_PDF);
+        $canViewContractHistory = Gate::allows(PermissionTypes::CLIENT_CONTRACTS_VIEW_HISTORY);
 
         $data = $dataQuery
             ->withExists([
@@ -59,10 +60,27 @@ final readonly class SearchClientHeaders
                 'activeContract as active_contract_exists',
                 'vigenteContracts as has_vigente_contract',
             ])
+            ->with([
+                'activeContract.contract.rpbiProfiles',
+            ])
             ->get()
             ->map(
-                static function (Client $client) use ($canUpdate, $canDelete, $canAssignContracts,
-                    $canShowContractPdf): ClientHeader {
+                static function (Client $client) use (
+                    $canUpdate,
+                    $canDelete,
+                    $canAssignContracts,
+                    $canShowContractPdfPermission,
+                    $canViewContractHistory,
+                ): ClientHeader {
+                    $active = $client->activeContract;
+                    $pdfReady = $canShowContractPdfPermission
+                        && $active
+                        && filled($active->contract_id)
+                        && filled($active->start_date)
+                        && (int) $active->status === \App\Models\ClientContract::STATUS_ACTIVE
+                        && $active->contract
+                        && $active->contract->rpbiProfiles->isNotEmpty();
+
                     return new ClientHeader(
                         id: (int) $client->id,
                         fullName: trim("{$client->name} {$client->parentarl_surname}"),
@@ -76,8 +94,10 @@ final readonly class SearchClientHeaders
                         configurationStatus: (string) $client->configuration_status,
                         canUpdate: $canUpdate,
                         canDelete: $canDelete,
-                        canShowContractPdf: $canShowContractPdf,
+                        canShowContractPdf: $pdfReady,
                         canConfigure: $canAssignContracts && $client->isConfigurable(),
+                        canViewContractHistory: $canViewContractHistory,
+                        clientContractId: $active?->id,
                     );
                 },
             );

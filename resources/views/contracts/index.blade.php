@@ -24,7 +24,7 @@
 
             <div class="card-body border-bottom py-3">
                 <form method="GET" action="{{ route('contracts.index') }}" class="row g-2 align-items-end">
-                    <div class="col-md-8 col-lg-6">
+                    <div class="col-md-6 col-lg-5">
                         <label class="form-label" for="contracts-search">Buscar</label>
                         <div class="input-icon">
                             <span class="input-icon-addon">
@@ -36,9 +36,20 @@
                                 id="contracts-search"
                                 class="form-control"
                                 value="{{ request('search') }}"
-                                placeholder="Nombre, notas o frecuencia"
+                                placeholder="Nombre o notas"
                             >
                         </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <label class="form-label" for="contracts-frequency">Frecuencia</label>
+                        <select name="frequency" id="contracts-frequency" class="form-select">
+                            <option value="">Todas</option>
+                            @foreach (\App\Models\Contract::frequencyLabels() as $value => $label)
+                                <option value="{{ $value }}" @selected(request('frequency') === $value)>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-auto">
                         <button type="submit" class="btn btn-primary">
@@ -46,7 +57,7 @@
                             Buscar
                         </button>
                     </div>
-                    @if (request()->filled('search'))
+                    @if (request()->filled('search') || request()->filled('frequency'))
                         <div class="col-auto">
                             <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">
                                 <i class="ti ti-x me-1"></i>
@@ -102,21 +113,6 @@
                                                 <i class="ti ti-pencil me-1"></i>
                                                 Editar
                                             </a>
-                                        @endcan
-
-                                        @can(\App\Features\Permissions\Constants\PermissionTypes::CONTRACTS_DELETE)
-                                            <form
-                                                action="{{ route('contracts.destroy', $contract) }}"
-                                                method="POST"
-                                                onsubmit="return confirm('¿Eliminar este contrato del catálogo?')"
-                                            >
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="ti ti-trash me-1"></i>
-                                                    Eliminar
-                                                </button>
-                                            </form>
                                         @endcan
                                     </div>
                                 </td>

@@ -44,6 +44,22 @@ class FacturapiClient
 
         return new Response(200, ['Content-Type' => 'application/json'], $body);
     }
+
+    public function downloadInvoicePdf(string $externalInvoiceId): string
+    {
+        $response = $this->httpClient->request(
+            'GET',
+            $this->getBaseUri().'invoices/'.$externalInvoiceId.'/pdf',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer '.$this->getToken(),
+                    'Accept' => 'application/pdf',
+                ],
+            ],
+        );
+
+        return (string) $response->getBody();
+    }
     private function getBaseUri(): string
     {
         return $this->baseUri;

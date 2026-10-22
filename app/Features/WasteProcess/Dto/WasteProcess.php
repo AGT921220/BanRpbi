@@ -40,10 +40,17 @@ class WasteProcess
     }
     private function getTotalDurationHours(): string
     {
-        $start = Carbon::parse($this->getWasteProcessMachine()->getStartHourMachine());
-        $end = Carbon::parse($this->getWasteProcessMachine()->getHourMachine());
-        $diff = $start->diff($end);
-        return $diff->format('%H:%I:%S');
+        $startHour = $this->getWasteProcessMachine()->getStartHourMachine();
+        $endHour = $this->getWasteProcessMachine()->getHourMachine();
+
+        if (! $startHour || ! $endHour) {
+            return '—';
+        }
+
+        $start = Carbon::parse($startHour);
+        $end = Carbon::parse($endHour);
+
+        return $start->diff($end)->format('%H:%I:%S');
     }
     public function getWasteProcessId(): int
     {

@@ -4,13 +4,6 @@
 
 @section('page-title', 'Dashboard')
 
-@section('page-actions')
-    <a href="#" class="btn btn-primary">
-        <i class="ti ti-plus me-2"></i>
-        Nueva recolección
-    </a>
-@endsection
-
 @section('content')
     <div class="container-xl">
             <div class="col-12 mb-3">

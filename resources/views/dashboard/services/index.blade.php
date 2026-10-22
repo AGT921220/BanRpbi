@@ -25,7 +25,7 @@
                     <table
                         id="services-table"
                         class="table table-vcenter card-table w-100"
-                        data-url="{{ route('manifest-headers.index') }}"
+                        data-url="{{ route('service-headers.index') }}"
                     >
                         <thead>
                             <tr>
@@ -45,4 +45,8 @@
 
 @push('scripts')
     @vite('resources/js/modules/services/index.js')
+    @vite('resources/js/modules/manifests/manifestPdf.js')
+    @vite('resources/js/modules/manifests/manifestPdfBuilder.js')
+    @vite('resources/js/modules/invoices/invoicePdf.js')
+    @vite('resources/js/modules/invoices/invoicePdfBuilder.js')
 @endpush

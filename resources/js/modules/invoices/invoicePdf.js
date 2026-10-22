@@ -7,21 +7,29 @@ $(document).on("click", ".btn-invoice-pdf", async function (e) {
     e.preventDefault();
 
     const id = $(this).data("id");
-    const url = `/admin/invoices/${id}`;
+
+    if (!id) {
+        showToast("warning", "No hay factura disponible.");
+        return;
+    }
 
     try {
-        const invoiceData = await getInvoice(url);
+        const invoiceData = await getInvoice(`/admin/invoices/${id}`);
 
-        createInvoice(invoiceData);
+        if (invoiceData.has_official_pdf) {
+            window.open(`/admin/invoices/${id}/pdf`, "_blank");
+            return;
+        }
+
+        await createInvoice(invoiceData);
     } catch (error) {
         console.error(error);
         showToast("danger", "Error al generar la factura");
-        return;
     }
 });
 
 async function getInvoice(url) {
-    return get(url, "Creando Factura!").then((response) => {
+    return get(url, "Cargando factura...").then((response) => {
         if (response && response.data) {
             return response.data;
         }
@@ -30,36 +38,41 @@ async function getInvoice(url) {
 }
 
 async function createInvoice(invoice) {
-    var doc = new jsPDF();
+    let doc = new jsPDF();
 
     const qrPayload = String(
         invoice.verification_url || invoice.uuid || invoice.folio || "",
     );
 
-    const qrImage = await QRCode.toDataURL(qrPayload, {
-        width: 300,
-        margin: 1,
-        color: {
-            dark: "#000000",
-            light: "#ffffff",
-        },
+    const qrImage = qrPayload
+        ? await QRCode.toDataURL(qrPayload, {
+              width: 300,
+              margin: 1,
+              color: {
+                  dark: "#000000",
+                  light: "#ffffff",
+              },
+          })
+        : null;
+
+    const img = await loadImage("/images/logo.png");
+    doc = buildInvoice(doc, invoice, img, qrImage);
+
+    doc.setProperties({
+        title: "Factura " + (invoice.folio ?? ""),
+        author: "BAN RPBI",
+        creator: "BAN RPBI",
     });
 
-    var img = new Image();
-    img.onload = function () {
-        doc = buildInvoice(doc, invoice, img, qrImage);
+    const url = URL.createObjectURL(doc.output("blob"));
+    window.open(url, "_blank");
+}
 
-        doc.setProperties({
-            title: "Factura " + invoice.folio,
-            author: "BAN RPBI",
-            creator: "BAN RPBI",
-        });
-        var pdfBlob = doc.output("blob");
-        var url = URL.createObjectURL(pdfBlob);
-        setTimeout(() => {
-            window.open(url, "_blank");
-        }, 500);
-    };
-
-    img.src = "/images/logo.png";
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
 }

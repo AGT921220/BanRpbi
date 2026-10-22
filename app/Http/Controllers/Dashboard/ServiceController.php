@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Services\Application\AssignServicesToDriver;
+use App\Features\Services\Application\FindServiceHeader;
 use App\Features\Services\Application\ListServicesForAssignment;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AssignServicesToDriverRequest;
 use App\Models\Driver;
+use App\Models\Service;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,6 +21,7 @@ final class ServiceController extends Controller
     public function __construct(
         private readonly ListServicesForAssignment $listServicesForAssignment,
         private readonly AssignServicesToDriver $assignServicesToDriver,
+        private readonly FindServiceHeader $findServiceHeader,
     ) {}
 
     public function index(): View
@@ -25,6 +29,28 @@ final class ServiceController extends Controller
         $this->authorize(PermissionTypes::COLLECTIONS_VIEW);
 
         return view('dashboard.services.index');
+    }
+
+    public function show(Service $service): View|JsonResponse
+    {
+        $this->authorize(PermissionTypes::COLLECTIONS_VIEW);
+
+        $header = ($this->findServiceHeader)((int) $service->id);
+
+        if (request()->wantsJson()) {
+            return response()->json(['data' => $header]);
+        }
+
+        return view('dashboard.services.show', [
+            'service' => $service->load([
+                'client',
+                'zone',
+                'driver',
+                'serviceDetails.rpbiProfile',
+                'manifests',
+            ]),
+            'header' => $header,
+        ]);
     }
 
     public function assign(Request $request): View

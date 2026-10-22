@@ -101,7 +101,7 @@ export function buildManifest(doc, manifest, img, qrImage) {
         doc.text(60, 48, client.street);
 
         doc.setFontSize(6);
-        doc.text(152, 48, client.num_ext);
+        doc.text(152, 48, client.num_ext??"");
         doc.setFontSize(7);
 
         doc.text(185, 48, client.num_int ? client.num_int : "");

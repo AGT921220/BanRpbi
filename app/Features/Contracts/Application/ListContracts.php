@@ -10,6 +10,7 @@ final class ListContracts
     public function __invoke(
         int $perPage = 15,
         ?string $search = null,
+        ?string $frequency = null,
     ): LengthAwarePaginator {
         return Contract::query()
             ->with('rpbiProfiles')
@@ -19,10 +20,13 @@ final class ListContracts
                     $query->where(function ($query) use ($search): void {
                         $query
                             ->where('name', 'like', "%{$search}%")
-                            ->orWhere('notes', 'like', "%{$search}%")
-                            ->orWhere('frequency', 'like', "%{$search}%");
+                            ->orWhere('notes', 'like', "%{$search}%");
                     });
                 }
+            )
+            ->when(
+                filled($frequency) && in_array($frequency, Contract::FREQUENCIES, true),
+                fn ($query) => $query->where('frequency', $frequency),
             )
             ->orderBy('name')
             ->paginate($perPage)

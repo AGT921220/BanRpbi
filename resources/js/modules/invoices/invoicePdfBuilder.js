@@ -62,13 +62,19 @@ export function buildInvoice(doc, invoice, img, qrImage) {
     const client = invoice.client || {};
     const issuer = invoice.issuer || {};
     const items = invoice.items || [];
-    const ivaPercentage = Number(invoice.iva_percentage || 16);
-    const subtotal = items.reduce(
-        (sum, item) => sum + Number(item.quantity || 1) * Number(item.price || 0),
-        0,
-    );
-    const iva = subtotal * (ivaPercentage / 100);
-    const total = subtotal + iva;
+    const ivaPercentage = invoice.iva_percentage != null && invoice.iva_percentage !== ""
+        ? Number(invoice.iva_percentage)
+        : null;
+    const subtotal = items.reduce((sum, item) => {
+        const quantity = item.quantity != null ? Number(item.quantity) : null;
+        const price = item.price != null ? Number(item.price) : null;
+        if (quantity == null || price == null || Number.isNaN(quantity) || Number.isNaN(price)) {
+            return sum;
+        }
+        return sum + quantity * price - Number(item.discount || 0);
+    }, 0);
+    const iva = ivaPercentage != null ? subtotal * (ivaPercentage / 100) : null;
+    const total = iva != null ? subtotal + iva : subtotal;
 
     paintHeader(doc, img, issuer, invoice);
     paintReceptor(doc, client);
@@ -125,10 +131,26 @@ function paintHeader(doc, img, issuer, invoice) {
     doc.setTextColor(...COLORS.uuidLabel);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    // doc.text(10, 46, "UUID / Folio fiscal:");
-    // doc.setFont("helvetica", "normal");
-    // doc.setTextColor(...COLORS.uuidText);
-    // doc.text(42, 46, String(invoice.uuid || "PENDIENTE"));
+    doc.text(10, 46, "UUID / Folio fiscal:");
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...COLORS.uuidText);
+    const uuidLines = doc.splitTextToSize(String(invoice.uuid || "—"), 155);
+    doc.text(uuidLines, 42, 46);
+
+    if (invoice.payment_form || invoice.payment_method || invoice.currency) {
+        doc.setFontSize(6.5);
+        doc.text(
+            10,
+            52,
+            [
+                invoice.currency ? `Moneda: ${invoice.currency}` : null,
+                invoice.payment_form ? `Forma de pago: ${invoice.payment_form}` : null,
+                invoice.payment_method ? `Método de pago: ${invoice.payment_method}` : null,
+            ]
+                .filter(Boolean)
+                .join("  |  "),
+        );
+    }
 }
 
 function paintReceptor(doc, client) {
@@ -185,6 +207,21 @@ function paintItems(doc, items) {
         const isEven = index % 2 === 0;
         const rowFill = isEven ? COLORS.tableRowFill : COLORS.tableRowAltFill;
 
+        if (y + rowHeight > 270) {
+            doc.addPage();
+            y = 16;
+            fillRect(doc, 10, y, 189, 7, COLORS.tableHeaderFill, COLORS.tableHeaderBorder);
+            doc.setTextColor(...COLORS.tableHeaderText);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(7);
+            doc.text(12, y + 5, "Clave");
+            doc.text(32, y + 5, "Descripción");
+            doc.text(128, y + 5, "Cant.");
+            doc.text(148, y + 5, "P. unitario");
+            doc.text(176, y + 5, "Importe");
+            y += 7;
+        }
+
         fillRect(doc, 10, y, 189, rowHeight, rowFill, COLORS.tableRowBorder);
 
         if (item.empty) {
@@ -196,17 +233,20 @@ function paintItems(doc, items) {
             return;
         }
 
-        const quantity = Number(item.quantity || 1);
-        const price = Number(item.price || 0);
-        const amount = quantity * price;
+        const quantity = item.quantity != null ? Number(item.quantity) : null;
+        const price = item.price != null ? Number(item.price) : null;
+        const amount =
+            quantity != null && price != null
+                ? quantity * price - Number(item.discount || 0)
+                : null;
 
         doc.setTextColor(...COLORS.tableCodeText);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
-        doc.text(12, y + 5, String(item.code || ""));
+        doc.text(12, y + 5, String(item.code || "—"));
 
         doc.setTextColor(...COLORS.tableText);
-        doc.text(32, y + 5, String(item.name || ""));
+        doc.text(32, y + 5, String(item.name || "—"));
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6);
         doc.setTextColor(...COLORS.tableMuted);
@@ -214,11 +254,11 @@ function paintItems(doc, items) {
 
         doc.setTextColor(...COLORS.tableText);
         doc.setFontSize(7.5);
-        doc.text(140, y + 7, String(quantity), { align: "right" });
-        doc.text(168, y + 7, formatMoney(price), { align: "right" });
+        doc.text(140, y + 7, quantity != null ? String(quantity) : "—", { align: "right" });
+        doc.text(168, y + 7, price != null ? formatMoney(price) : "—", { align: "right" });
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...COLORS.tableAmountText);
-        doc.text(196, y + 7, formatMoney(amount), { align: "right" });
+        doc.text(196, y + 7, amount != null ? formatMoney(amount) : "—", { align: "right" });
 
         y += rowHeight;
     });
@@ -239,9 +279,9 @@ function paintTotals(doc, y, subtotal, iva, ivaPercentage, total) {
     doc.text(196, boxY + 6, formatMoney(subtotal), { align: "right" });
 
     doc.setTextColor(...COLORS.totalsLabel);
-    doc.text(140, boxY + 12, `IVA ${ivaPercentage}%`);
+    doc.text(140, boxY + 12, ivaPercentage != null ? `IVA ${ivaPercentage}%` : "IVA");
     doc.setTextColor(...COLORS.totalsText);
-    doc.text(196, boxY + 12, formatMoney(iva), { align: "right" });
+    doc.text(196, boxY + 12, iva != null ? formatMoney(iva) : "—", { align: "right" });
 
     fillRect(doc, 137, boxY + 16, 62, 8, COLORS.totalsBarFill, COLORS.totalsBarBorder);
     doc.setTextColor(...COLORS.totalsBarText);
