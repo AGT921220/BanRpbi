@@ -15,7 +15,6 @@ use App\Features\WasteProcess\UseCases\UpdateWasteProcessHeader;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Process\UpdateWasteProcessRequest;
 use App\Models\Manifest;
-use App\Models\ProcessLogbook;
 use App\Models\Reactor;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessType;
@@ -25,7 +24,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ProcesosController extends Controller implements HasMiddleware
@@ -115,11 +113,6 @@ class ProcesosController extends Controller implements HasMiddleware
         $reactors = Reactor::query()->where('status', Reactor::STATUS_ACTIVE)->orderBy('name')->get();
         $isFinished = $processDto->isFinished();
         $typeId = $processDto->getWasteProcessTypeId();
-        $logbooks = ProcessLogbook::query()
-            ->with('user:id,name')
-            ->where('waste_process_id', $processId)
-            ->orderByDesc('id')
-            ->get();
 
         return view('dashboard.procesos.edit', [
             'process' => $processDto,
@@ -129,7 +122,6 @@ class ProcesosController extends Controller implements HasMiddleware
             'typeId' => $typeId,
             'isIncineracion' => $typeId === WasteProcessType::PROCESS_INCINERACION,
             'isEsterilizacion' => $typeId === WasteProcessType::PROCESS_ESTERILIZACION,
-            'logbooks' => $logbooks,
             'canFinish' => $processDto->isFinishable(),
         ]);
     }
@@ -187,15 +179,6 @@ class ProcesosController extends Controller implements HasMiddleware
             $data['comments'] ?? null,
         );
 
-        ProcessLogbook::query()->create([
-            'waste_process_id' => $process->id,
-            'user_id' => auth()->id(),
-            'action' => 'process_updated',
-            'payload' => [
-                'date_start' => $data['date_start'],
-            ],
-        ]);
-
         if (! empty($data['finish'])) {
             $details = collect($data['details'] ?? [])->map(fn (array $row) => (object) [
                 'id' => (int) $row['id'],
@@ -222,7 +205,6 @@ class ProcesosController extends Controller implements HasMiddleware
                 'details.serviceDetail.rpbiProfile',
                 'details.manifest',
                 'certificates.folios',
-                'logbooks.user',
             ])
             ->findOrFail($proceso);
 

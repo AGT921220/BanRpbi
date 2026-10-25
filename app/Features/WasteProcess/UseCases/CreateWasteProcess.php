@@ -5,7 +5,6 @@ namespace App\Features\WasteProcess\UseCases;
 use App\Features\Manifests\Domain\ManifestStatusTransitions;
 use App\Features\WasteProcess\Helpers\ServiceDetailBalance;
 use App\Models\Manifest;
-use App\Models\ProcessLogbook;
 use App\Models\Service;
 use App\Models\ServiceDetail;
 use App\Models\WasteProcess;
@@ -85,16 +84,6 @@ class CreateWasteProcess
                     ManifestStatusTransitions::transition($manifest, Manifest::STATUS_IN_PROCESS);
                 }
             }
-
-            ProcessLogbook::query()->create([
-                'waste_process_id' => $wasteProcess->id,
-                'user_id' => $userId,
-                'action' => 'process_created',
-                'payload' => [
-                    'waste_process_type_id' => $wasteProcessTypeId,
-                    'service_detail_ids' => $lines->pluck('service_detail_id')->values()->all(),
-                ],
-            ]);
 
             return (int) $wasteProcess->id;
         });

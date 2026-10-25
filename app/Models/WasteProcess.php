@@ -47,11 +47,6 @@ class WasteProcess extends Model
         return $this->hasMany(ProcessCertificate::class);
     }
 
-    public function logbooks(): HasMany
-    {
-        return $this->hasMany(ProcessLogbook::class);
-    }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

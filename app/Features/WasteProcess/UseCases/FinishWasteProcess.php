@@ -7,7 +7,6 @@ use App\Features\WasteProcess\Helpers\ServiceDetailBalance;
 use App\Models\Manifest;
 use App\Models\ProcessCertificate;
 use App\Models\ProcessFolio;
-use App\Models\ProcessLogbook;
 use App\Models\Service;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessDetail;
@@ -97,18 +96,6 @@ class FinishWasteProcess
                         ->where('service_detail_id', $detail->service_detail_id)
                         ->update(['is_completed' => WasteProcessDetail::IS_COMPLETED]);
                 }
-
-                ProcessLogbook::query()->create([
-                    'waste_process_id' => $wasteProcessId,
-                    'user_id' => $userId,
-                    'action' => $isCompleted ? 'detail_exhausted' : 'detail_partial_close',
-                    'payload' => [
-                        'waste_process_detail_id' => $detail->id,
-                        'service_detail_id' => $detail->service_detail_id,
-                        'process_weight' => $weight,
-                        'remaining_after' => round(max($available - $treatedAfter, 0), 2),
-                    ],
-                ]);
             }
 
             $process->is_finished = 1;
@@ -117,16 +104,7 @@ class FinishWasteProcess
             $process->save();
 
             $this->updateManifestStatuses($wasteProcessId);
-            $this->createCertificates($process, $userId);
-
-            ProcessLogbook::query()->create([
-                'waste_process_id' => $wasteProcessId,
-                'user_id' => $userId,
-                'action' => 'process_finished',
-                'payload' => [
-                    'details' => $detailIds,
-                ],
-            ]);
+            $this->createCertificates($process);
         });
     }
 
@@ -172,7 +150,7 @@ class FinishWasteProcess
         }
     }
 
-    private function createCertificates(WasteProcess $process, int $userId): void
+    private function createCertificates(WasteProcess $process): void
     {
         $rows = WasteProcessDetail::query()
             ->where('waste_process_id', $process->id)
@@ -200,16 +178,6 @@ class FinishWasteProcess
                 'client_id' => (int) $clientId,
                 'process_certificate_id' => $certificate->id,
                 'waste_process_id' => $process->id,
-            ]);
-
-            ProcessLogbook::query()->create([
-                'waste_process_id' => $process->id,
-                'user_id' => $userId,
-                'action' => 'certificate_created',
-                'payload' => [
-                    'client_id' => (int) $clientId,
-                    'certificate_id' => $certificate->id,
-                ],
             ]);
         }
     }

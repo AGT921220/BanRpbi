@@ -190,25 +190,6 @@
                             </div>
                         @endunless
                     </div>
-
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h3 class="card-title">Bitácora</h3>
-                        </div>
-                        <div class="list-group list-group-flush">
-                            @forelse ($logbooks as $entry)
-                                <div class="list-group-item">
-                                    <strong>{{ $entry->action }}</strong>
-                                    <span class="text-secondary small">
-                                        — {{ $entry->user?->name ?? 'Sistema' }}
-                                        · {{ $entry->created_at?->format('d/m/Y H:i') }}
-                                    </span>
-                                </div>
-                            @empty
-                                <div class="list-group-item text-secondary">Sin registros todavía.</div>
-                            @endforelse
-                        </div>
-                    </div>
                 </div>
             </div>
         </form>
