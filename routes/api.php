@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\ManifestController;
+use App\Http\Controllers\Api\ProcessController;
 use App\Http\Controllers\Api\ScanManifestController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ServiceOrderController;
@@ -47,4 +48,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::post('token-push', [TokenPushController::class, 'store']);
+    Route::post('procesos', [ProcessController::class, 'store']);
 });

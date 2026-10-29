@@ -40,7 +40,9 @@ class LoginController extends Controller
         return response()->json([
             'token_type' => 'Bearer',
             'token' => $token,
-            'user' => $user,
+            'user' => array_merge($user->toArray(), [
+                'permissions' => $user->getAllPermissions()->pluck('name')->values(),
+            ]),
         ]);
     }
 }

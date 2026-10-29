@@ -105,7 +105,7 @@ class CreateInvoiceFromNextServices implements ShouldQueue
             // "series" => "F"
         ];
         $facturapiEnabled = config('app.facturapi_enabled');
-        info($facturapiEnabled);
+        info('facturapiEnabled: ' . ($facturapiEnabled ? 'true' : 'false'));
         if (!$facturapiEnabled) {
             $body = json_encode($this->makeFakeFacturapiResponse());
             return json_decode($body, true);

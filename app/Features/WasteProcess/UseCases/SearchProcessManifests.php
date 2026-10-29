@@ -45,6 +45,7 @@ class SearchProcessManifests
             })
             ->with(['service.serviceDetails.rpbiProfile'])
             ->orderByDesc('manifests.id')
+            ->where('manifests.status', Manifest::STATUS_COLLECTED)
             ->get()
             ->map(function (Manifest $manifest) {
                 $details = $manifest->service?->serviceDetails ?? collect();
