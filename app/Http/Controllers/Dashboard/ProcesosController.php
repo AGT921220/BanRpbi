@@ -160,18 +160,21 @@ class ProcesosController extends Controller implements HasMiddleware
             ),
             new WasteProcessContainer(),
             new WasteProcessPrs(
-                isset($data['cantidad_ingresado']) ? (string) $data['cantidad_ingresado'] : null,
-                isset($data['temperatura_1']) ? (string) $data['temperatura_1'] : null,
-                isset($data['temperatura_2']) ? (string) $data['temperatura_2'] : null,
-                isset($data['temperatura_3']) ? (string) $data['temperatura_3'] : null,
-                isset($data['cantidad_recuperados']) ? (string) $data['cantidad_recuperados'] : null,
-                isset($data['porcentaje_recuperado']) ? (string) $data['porcentaje_recuperado'] : null,
-                isset($data['cantidad_sedimentos']) ? (string) $data['cantidad_sedimentos'] : null,
-                isset($data['porcentaje_sedimentos']) ? (string) $data['porcentaje_sedimentos'] : null,
-                isset($data['factor_consumo_kw']) ? (string) $data['factor_consumo_kw'] : null,
-                isset($data['consumo_kw_hrs']) ? (string) $data['consumo_kw_hrs'] : null,
-                isset($data['costo_kw_hr']) ? (string) $data['costo_kw_hr'] : null,
-                isset($data['costo_total_operacion']) ? (string) $data['costo_total_operacion'] : null,
+                isset($data['temp_camara_primaria']) ? (string) $data['temp_camara_primaria'] : null,
+                isset($data['temp_camara_secundaria']) ? (string) $data['temp_camara_secundaria'] : null,
+                isset($data['temp_entrada_venturi']) ? (string) $data['temp_entrada_venturi'] : null,
+                isset($data['temp_salida_venturi']) ? (string) $data['temp_salida_venturi'] : null,
+                isset($data['temp_salida_chimenea']) ? (string) $data['temp_salida_chimenea'] : null,
+                isset($data['oxigeno']) ? (string) $data['oxigeno'] : null,
+                isset($data['presion_negativa']) ? (string) $data['presion_negativa'] : null,
+                isset($data['consumo_gas_lp']) ? (string) $data['consumo_gas_lp'] : null,
+                isset($data['consumo_promedio_agua']) ? (string) $data['consumo_promedio_agua'] : null,
+                isset($data['evaporacion_agua_tratada']) ? (string) $data['evaporacion_agua_tratada'] : null,
+                isset($data['patologicos']) ? (string) $data['patologicos'] : null,
+                isset($data['cultivos_cepas']) ? (string) $data['cultivos_cepas'] : null,
+                isset($data['sangre']) ? (string) $data['sangre'] : null,
+                isset($data['ceniza_generada']) ? (string) $data['ceniza_generada'] : null,
+                isset($data['descarga_lavador']) ? (string) $data['descarga_lavador'] : null,
             ),
             isset($data['machine_number']) ? (int) $data['machine_number'] : null,
             $data['hour_machine'] ?? null,
@@ -180,10 +183,18 @@ class ProcesosController extends Controller implements HasMiddleware
         );
 
         if (! empty($data['finish'])) {
-            $details = collect($data['details'] ?? [])->map(fn (array $row) => (object) [
-                'id' => (int) $row['id'],
-                'value' => $row['value'],
-            ]);
+            $details = $process->waste_process_type_id === WasteProcessType::PROCESS_INCINERACION
+                ? $process->details()
+                    ->where('is_finished', false)
+                    ->get()
+                    ->map(fn ($detail) => (object) [
+                        'id' => (int) $detail->id,
+                        'value' => $detail->total_weight,
+                    ])
+                : collect($data['details'] ?? [])->map(fn (array $row) => (object) [
+                    'id' => (int) $row['id'],
+                    'value' => $row['value'],
+                ]);
 
             ($this->finishWasteProcess)($process->id, $details, (int) auth()->id());
 
@@ -203,7 +214,7 @@ class ProcesosController extends Controller implements HasMiddleware
             ->with([
                 'type',
                 'details.serviceDetail.rpbiProfile',
-                'details.manifest',
+                'details.manifest.service.client',
                 'certificates.folios',
             ])
             ->findOrFail($proceso);

@@ -21,7 +21,6 @@ class CreateManifestJob implements ShouldQueue
     public function handle(): void
     {
         $this->createManifestForService($this->serviceId);
-        info('Se Envía Whatsapp');
     }
 
     private function createManifestForService(int $serviceId)
@@ -32,8 +31,8 @@ class CreateManifestJob implements ShouldQueue
         }
         $manifest = new Manifest();
         $manifest->public_uuid = Str::uuid()->toString();
-
         $manifest->service_id = $serviceId;
         $manifest->save();
+        SendManifestCreatedWhatsAppJob::dispatch($manifest->id);
     }
 }

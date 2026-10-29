@@ -34,6 +34,20 @@
                                 <div class="datagrid-title">Fecha</div>
                                 <div class="datagrid-content">{{ $process->date_start }}</div>
                             </div>
+                            @if ($process->waste_process_type_id === \App\Models\WasteProcessType::PROCESS_INCINERACION)
+                                <div class="datagrid-item">
+                                    <div class="datagrid-title">Hora de carga</div>
+                                    <div class="datagrid-content">{{ $process->hour_start_machine ? \Illuminate\Support\Carbon::parse($process->hour_start_machine)->format('H:i') : '—' }}</div>
+                                </div>
+                                <div class="datagrid-item">
+                                    <div class="datagrid-title">Paro de carga</div>
+                                    <div class="datagrid-content">{{ $process->hour_machine ? \Illuminate\Support\Carbon::parse($process->hour_machine)->format('H:i') : '—' }}</div>
+                                </div>
+                                <div class="datagrid-item">
+                                    <div class="datagrid-title">Observaciones</div>
+                                    <div class="datagrid-content">{{ $process->comments ?: '—' }}</div>
+                                </div>
+                            @endif
                             <div class="datagrid-item">
                                 <div class="datagrid-title">Estado</div>
                                 <div class="datagrid-content">
@@ -44,54 +58,116 @@
                     </div>
                 </div>
 
+                @if ($process->waste_process_type_id === \App\Models\WasteProcessType::PROCESS_INCINERACION)
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Parámetros de incineración</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="datagrid">
+                                @foreach ([
+                                    'temp_camara_primaria' => 'Temp. cámara primaria',
+                                    'temp_camara_secundaria' => 'Temp. cámara secundaria',
+                                    'temp_entrada_venturi' => 'Temperatura entrada Venturi',
+                                    'temp_salida_venturi' => 'Temperatura salida Venturi',
+                                    'temp_salida_chimenea' => 'Temperatura salida chimenea',
+                                    'oxigeno' => 'O2 (Oxígeno)',
+                                    'presion_negativa' => 'Presión negativa (IN H2O)',
+                                    'consumo_gas_lp' => 'Consumo de gas LP',
+                                    'consumo_promedio_agua' => 'Consumo promedio de agua',
+                                    'evaporacion_agua_tratada' => 'Evaporación agua tratada',
+                                    'patologicos' => 'Patológicos',
+                                    'cultivos_cepas' => 'Cultivos y cepas',
+                                    'sangre' => 'Sangre',
+                                    'ceniza_generada' => 'Ceniza generada',
+                                    'descarga_lavador' => 'Descarga de lavador',
+                                ] as $field => $label)
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">{{ $label }}</div>
+                                        <div class="datagrid-content">{{ $process->{$field} ?? '—' }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="card mt-3">
                     <div class="card-header">
-                        <h3 class="card-title">Líneas</h3>
+                        <h3 class="card-title">
+                            {{ $process->waste_process_type_id === \App\Models\WasteProcessType::PROCESS_INCINERACION ? 'Cantidades por manifiesto' : 'Líneas' }}
+                        </h3>
                     </div>
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
-                            <thead>
-                                <tr>
-                                    <th>Manifiesto</th>
-                                    <th>Perfil</th>
-                                    <th>Disponible</th>
-                                    <th>Capturado</th>
-                                    <th>Remanente</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($process->details as $detail)
-                                    @php
-                                        $available = $balance->availableWeight((int) $detail->service_detail_id);
-                                        $treated = $balance->treatedWeight((int) $detail->service_detail_id);
-                                        $remaining = $balance->remainingWeight((int) $detail->service_detail_id);
-                                    @endphp
+                            @if ($process->waste_process_type_id === \App\Models\WasteProcessType::PROCESS_INCINERACION)
+                                <thead>
                                     <tr>
-                                        <td>#{{ $detail->manifest_id }}</td>
-                                        <td>{{ $detail->serviceDetail?->rpbiProfile?->name ?? '—' }}</td>
-                                        <td>{{ number_format($available, 2) }}</td>
-                                        <td>{{ number_format($treated, 2) }}</td>
-                                        <td>{{ number_format($remaining, 2) }}</td>
-                                        <td>
-                                            @if ($detail->is_completed)
-                                                Agotada
-                                            @elseif ($detail->is_finished)
-                                                Parcial
-                                            @else
-                                                Pendiente
-                                            @endif
-                                        </td>
+                                        <th>Manifiesto</th>
+                                        <th>Cliente</th>
+                                        <th>Perfil</th>
+                                        <th class="text-end">Cantidad</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
+                                </thead>
+                                <tbody>
+                                    @foreach ($process->details as $detail)
+                                        @php
+                                            $client = $detail->manifest?->service?->client;
+                                            $clientName = $client?->company
+                                                ?: trim(($client?->name ?? '').' '.($client?->parentarl_surname ?? ''));
+                                        @endphp
+                                        <tr>
+                                            <td>#{{ $detail->manifest_id }}</td>
+                                            <td>{{ $clientName !== '' ? $clientName : '—' }}</td>
+                                            <td>{{ $detail->serviceDetail?->rpbiProfile?->name ?? '—' }}</td>
+                                            <td class="text-end">{{ $detail->total_weight }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            @else
+                                <thead>
+                                    <tr>
+                                        <th>Manifiesto</th>
+                                        <th>Perfil</th>
+                                        <th>Disponible</th>
+                                        <th>Capturado</th>
+                                        <th>Remanente</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($process->details as $detail)
+                                        @php
+                                            $available = $balance->availableWeight((int) $detail->service_detail_id);
+                                            $treated = $balance->treatedWeight((int) $detail->service_detail_id);
+                                            $remaining = $balance->remainingWeight((int) $detail->service_detail_id);
+                                        @endphp
+                                        <tr>
+                                            <td>#{{ $detail->manifest_id }}</td>
+                                            <td>{{ $detail->serviceDetail?->rpbiProfile?->name ?? '—' }}</td>
+                                            <td>{{ number_format($available, 2) }}</td>
+                                            <td>{{ number_format($treated, 2) }}</td>
+                                            <td>{{ number_format($remaining, 2) }}</td>
+                                            <td>
+                                                @if ($detail->is_completed)
+                                                    Agotada
+                                                @elseif ($detail->is_finished)
+                                                    Parcial
+                                                @else
+                                                    Pendiente
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            @endif
                         </table>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-4">
-                <div class="card">
+                {{-- <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Certificados / folios</h3>
                     </div>
@@ -108,7 +184,7 @@
                             <div class="list-group-item text-secondary">Sin certificados.</div>
                         @endforelse
                     </div>
-                </div>
+                </div> --}}
 
             </div>
         </div>

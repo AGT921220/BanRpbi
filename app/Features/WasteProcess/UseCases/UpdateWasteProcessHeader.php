@@ -21,9 +21,8 @@ class UpdateWasteProcessHeader
         ?string $solution = null,
         ?string $comments = null
     ): void {
-        $cantidadSolucionReciclar = $wasteProcessPrar->getCantidadSolucionReciclar() ??
-            $wasteProcessContainer->getCantidadContenedores();
-        $cantidadSolucionReciclar = $cantidadSolucionReciclar ?? $wasteProcessPrs->getCantidadIngresado();
+        $cantidadSolucionReciclar = $wasteProcessPrar->getCantidadSolucionReciclar()
+            ?? $wasteProcessContainer->getCantidadContenedores();
         // dd($wasteProcessContainer->toArray());
         $wasteProcess = WasteProcess::find($wasteProcessId);
         $wasteProcess->machine_number = $machineNumber;
@@ -63,17 +62,9 @@ class UpdateWasteProcessHeader
         $wasteProcess->psi = $wasteProcessContainer->getPsi();
         $wasteProcess->solution = $solution;
 
-        $wasteProcess->temperatura_1 = $wasteProcessPrs->getTemperatura1();
-        $wasteProcess->temperatura_2 = $wasteProcessPrs->getTemperatura2();
-        $wasteProcess->temperatura_3 = $wasteProcessPrs->getTemperatura3();
-        $wasteProcess->cantidad_recuperados = $wasteProcessPrs->getCantidadRecuperados();
-        $wasteProcess->porcentaje_recuperado = $wasteProcessPrs->getPorcentajeRecuperado();
-        $wasteProcess->cantidad_sedimentos = $wasteProcessPrs->getCantidadSedimentos();
-        $wasteProcess->porcentaje_sedimentos = $wasteProcessPrs->getPorcentajeSedimentos();
-        $wasteProcess->factor_consumo_kw = $wasteProcessPrs->getFactorConsumoKw();
-        $wasteProcess->consumo_kw_hrs = $wasteProcessPrs->getConsumoKwHrs();
-        $wasteProcess->costo_kw_hr = $wasteProcessPrs->getCostoKwHr();
-        $wasteProcess->costo_total_operacion = $wasteProcessPrs->getCostoTotalOperacion();
+        foreach ($wasteProcessPrs->attributes() as $column => $value) {
+            $wasteProcess->{$column} = $value;
+        }
         $wasteProcess->comments = $comments;
         $wasteProcess->save();
     }

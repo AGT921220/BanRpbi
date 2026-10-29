@@ -24,7 +24,7 @@ final class ClientServiceReminderTemplate implements WhatsappTemplate
 
     public static function getTwilioName(): string
     {
-        return 'rpbi_testing_client_service_reminder';
+        return 'testing_rpbi_client_service_reminder';
     }
 
     public static function getDisplayName(): string

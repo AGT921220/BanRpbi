@@ -24,16 +24,33 @@
                             <h3 class="card-title">Datos generales</h3>
                         </div>
                         <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label required" for="date_start">Fecha inicio</label>
-                                <input type="date" name="date_start" id="date_start" class="form-control"
-                                       value="{{ old('date_start', $data['date_start']) }}" @disabled($isFinished) required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="hour_start_machine">Hora inicio máquina</label>
-                                <input type="time" name="hour_start_machine" id="hour_start_machine" class="form-control"
-                                       value="{{ old('hour_start_machine', $data['start_hour_machine']) }}" @disabled($isFinished)>
-                            </div>
+                            <x-form.input
+                                name="date_start"
+                                :label="$isIncineracion ? 'Fecha' : 'Fecha inicio'"
+                                type="date"
+                                icon="ti ti-calendar"
+                                :value="\Illuminate\Support\Carbon::parse($data['date_start'])->toDateString()"
+                                :disabled="$isFinished"
+                                required
+                            />
+                            <x-form.input
+                                name="hour_start_machine"
+                                :label="$isIncineracion ? 'Hora de carga' : 'Hora inicio máquina'"
+                                type="time"
+                                icon="ti ti-clock"
+                                :value="$data['start_hour_machine']"
+                                :disabled="$isFinished"
+                            />
+                            @if ($isIncineracion)
+                                <x-form.input
+                                    name="hour_machine"
+                                    label="Paro de carga"
+                                    type="time"
+                                    icon="ti ti-clock-stop"
+                                    :value="$data['hour_machine']"
+                                    :disabled="$isFinished"
+                                />
+                            @endif
                             @if ($isEsterilizacion)
                                 <div class="mb-3">
                                     <label class="form-label" for="hour_machine">Hora fin máquina</label>
@@ -58,7 +75,10 @@
                                 </div>
                             @endif
                             <div class="mb-0">
-                                <label class="form-label" for="comments">Comentarios</label>
+                                <label class="form-label" for="comments">
+                                    <i class="ti ti-notes me-1"></i>
+                                    {{ $isIncineracion ? 'Observaciones' : 'Comentarios' }}
+                                </label>
                                 <textarea name="comments" id="comments" class="form-control" rows="3" @disabled($isFinished)>{{ old('comments', $data['params'][0]['comments'] ?? '') }}</textarea>
                             </div>
                         </div>
@@ -77,25 +97,32 @@
                             <div class="row g-2">
                                 @if ($isIncineracion)
                                     @foreach ([
-                                        'cantidad_ingresado' => 'Cantidad ingresada',
-                                        'temperatura_1' => 'Temperatura 1',
-                                        'temperatura_2' => 'Temperatura 2',
-                                        'temperatura_3' => 'Temperatura 3',
-                                        'cantidad_recuperados' => 'Cantidad recuperados',
-                                        'porcentaje_recuperado' => '% recuperado',
-                                        'cantidad_sedimentos' => 'Cantidad sedimentos',
-                                        'porcentaje_sedimentos' => '% sedimentos',
-                                        'factor_consumo_kw' => 'Factor consumo kW',
-                                        'consumo_kw_hrs' => 'Consumo kW/h',
-                                        'costo_kw_hr' => 'Costo kW/h',
-                                        'costo_total_operacion' => 'Costo total',
-                                    ] as $field => $label)
+                                        'temp_camara_primaria' => ['Temp. cámara primaria', 'ti ti-temperature'],
+                                        'temp_camara_secundaria' => ['Temp. cámara secundaria', 'ti ti-temperature'],
+                                        'temp_entrada_venturi' => ['Temperatura entrada Venturi', 'ti ti-temperature'],
+                                        'temp_salida_venturi' => ['Temperatura salida Venturi', 'ti ti-temperature'],
+                                        'temp_salida_chimenea' => ['Temperatura salida chimenea', 'ti ti-temperature'],
+                                        'oxigeno' => ['O2 (Oxígeno)', 'ti ti-wind'],
+                                        'presion_negativa' => ['Presión negativa (IN H2O)', 'ti ti-gauge'],
+                                        'consumo_gas_lp' => ['Consumo de gas LP', 'ti ti-flame'],
+                                        'consumo_promedio_agua' => ['Consumo promedio de agua', 'ti ti-droplet'],
+                                        'evaporacion_agua_tratada' => ['Evaporación agua tratada', 'ti ti-droplet-half-2'],
+                                        'patologicos' => ['Patológicos', 'ti ti-biohazard'],
+                                        'cultivos_cepas' => ['Cultivos y cepas', 'ti ti-microscope'],
+                                        'sangre' => ['Sangre', 'ti ti-droplet-filled'],
+                                        'ceniza_generada' => ['Ceniza generada', 'ti ti-trash'],
+                                        'descarga_lavador' => ['Descarga de lavador', 'ti ti-bucket'],
+                                    ] as $field => [$label, $icon])
                                         <div class="col-md-4">
-                                            <label class="form-label" for="{{ $field }}">{{ $label }}</label>
-                                            <input type="number" step="0.01" name="{{ $field }}" id="{{ $field }}"
-                                                   class="form-control"
-                                                   value="{{ old($field, $data['params'][0][$field] ?? '') }}"
-                                                   @disabled($isFinished)>
+                                            <x-form.input
+                                                :name="$field"
+                                                :label="$label"
+                                                type="number"
+                                                :icon="$icon"
+                                                step="0.01"
+                                                :value="$data['params'][0][$field] ?? ''"
+                                                :disabled="$isFinished"
+                                            />
                                         </div>
                                     @endforeach
                                 @endif
@@ -136,60 +163,106 @@
                         </div>
                     </div>
 
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h3 class="card-title">Cierre por peso</h3>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table card-table table-vcenter">
-                                <thead>
-                                    <tr>
-                                        <th>Manifiesto</th>
-                                        <th>Perfil</th>
-                                        <th>Disponible en proceso</th>
-                                        <th>Remanente global</th>
-                                        <th>Peso a capturar</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($data['details'] as $index => $detail)
-                                        <tr>
-                                            <td>#{{ $detail['manifest_id'] ?? '—' }}</td>
-                                            <td>{{ $detail['profile'] ?? '—' }}</td>
-                                            <td>{{ $detail['total_weight'] }}</td>
-                                            <td>{{ $detail['remaing_weight'] }}</td>
-                                            <td>
-                                                <input type="hidden" name="details[{{ $index }}][id]" value="{{ $detail['id'] }}">
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0.01"
-                                                    max="{{ $detail['remaing_weight'] }}"
-                                                    name="details[{{ $index }}][value]"
-                                                    class="form-control"
-                                                    value="{{ old('details.'.$index.'.value', $detail['process_weight'] > 0 ? $detail['process_weight'] : $detail['total_weight']) }}"
-                                                    @disabled($isFinished || $detail['is_finished'])
-                                                    @required(! $isFinished && ! $detail['is_finished'] && $canFinish)
-                                                >
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @unless ($isFinished)
-                            <div class="card-footer d-flex justify-content-end gap-2">
-                                <button type="submit" class="btn btn-outline-primary" name="finish" value="0">
-                                    <i class="ti ti-device-floppy me-1"></i>
-                                    Guardar
-                                </button>
-                                <button type="submit" class="btn btn-success" name="finish" value="1" @disabled(! $canFinish)>
-                                    <i class="ti ti-check me-1"></i>
-                                    Cerrar proceso
-                                </button>
+                    @if ($isIncineracion)
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h3 class="card-title">Cantidades por manifiesto</h3>
                             </div>
-                        @endunless
-                    </div>
+                            <div class="table-responsive">
+                                <table class="table card-table table-vcenter">
+                                    <thead>
+                                        <tr>
+                                            <th>Manifiesto</th>
+                                            <th>Cliente</th>
+                                            <th>Perfil</th>
+                                            <th class="text-end">Cantidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($data['details'] as $detail)
+                                            <tr>
+                                                <td>#{{ $detail['manifest_id'] ?? '—' }}</td>
+                                                <td>{{ $detail['client'] ?: '—' }}</td>
+                                                <td>{{ $detail['profile'] ?? '—' }}</td>
+                                                <td class="text-end">{{ $detail['total_weight'] }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-secondary">Sin manifiestos en este proceso.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            @unless ($isFinished)
+                                <div class="card-footer d-flex justify-content-end gap-2">
+                                    <button type="submit" class="btn btn-outline-primary" name="finish" value="0">
+                                        <i class="ti ti-device-floppy me-1"></i>
+                                        Guardar
+                                    </button>
+                                    <button type="submit" class="btn btn-success" name="finish" value="1" @disabled(! $canFinish)>
+                                        <i class="ti ti-check me-1"></i>
+                                        Cerrar proceso
+                                    </button>
+                                </div>
+                            @endunless
+                        </div>
+                    @else
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h3 class="card-title">Cierre por peso</h3>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table card-table table-vcenter">
+                                    <thead>
+                                        <tr>
+                                            <th>Manifiesto</th>
+                                            <th>Perfil</th>
+                                            <th>Disponible en proceso</th>
+                                            <th>Remanente global</th>
+                                            <th>Peso a capturar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($data['details'] as $index => $detail)
+                                            <tr>
+                                                <td>#{{ $detail['manifest_id'] ?? '—' }}</td>
+                                                <td>{{ $detail['profile'] ?? '—' }}</td>
+                                                <td>{{ $detail['total_weight'] }}</td>
+                                                <td>{{ $detail['remaing_weight'] }}</td>
+                                                <td>
+                                                    <input type="hidden" name="details[{{ $index }}][id]" value="{{ $detail['id'] }}">
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0.01"
+                                                        max="{{ $detail['remaing_weight'] }}"
+                                                        name="details[{{ $index }}][value]"
+                                                        class="form-control"
+                                                        value="{{ old('details.'.$index.'.value', $detail['process_weight'] > 0 ? $detail['process_weight'] : $detail['total_weight']) }}"
+                                                        @disabled($isFinished || $detail['is_finished'])
+                                                        @required(! $isFinished && ! $detail['is_finished'] && $canFinish)
+                                                    >
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            @unless ($isFinished)
+                                <div class="card-footer d-flex justify-content-end gap-2">
+                                    <button type="submit" class="btn btn-outline-primary" name="finish" value="0">
+                                        <i class="ti ti-device-floppy me-1"></i>
+                                        Guardar
+                                    </button>
+                                    <button type="submit" class="btn btn-success" name="finish" value="1" @disabled(! $canFinish)>
+                                        <i class="ti ti-check me-1"></i>
+                                        Cerrar proceso
+                                    </button>
+                                </div>
+                            @endunless
+                        </div>
+                    @endif
                 </div>
             </div>
         </form>

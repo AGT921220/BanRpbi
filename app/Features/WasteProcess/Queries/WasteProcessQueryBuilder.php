@@ -65,6 +65,21 @@ class WasteProcessQueryBuilder
                 'costo_total_operacion',
                 'psi',
                 'comments',
+                'temp_camara_primaria',
+                'temp_camara_secundaria',
+                'temp_entrada_venturi',
+                'temp_salida_venturi',
+                'temp_salida_chimenea',
+                'oxigeno',
+                'presion_negativa',
+                'consumo_gas_lp',
+                'consumo_promedio_agua',
+                'evaporacion_agua_tratada',
+                'patologicos',
+                'cultivos_cepas',
+                'sangre',
+                'ceniza_generada',
+                'descarga_lavador',
             ])
             ->with(['wasteProcessDetails' => function ($query) {
                 $query->addSelect([

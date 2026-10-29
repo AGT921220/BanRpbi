@@ -5,13 +5,14 @@ namespace App\Console\Commands;
 use App\Features\Invoices\Jobs\CreateInvoiceFromNextServices;
 use App\Features\Manifests\Jobs\CreateDailyManifestsJob;
 use App\Features\Manifests\Jobs\CreateDailyManifestsJobShouldQueue;
+use App\Features\Manifests\Jobs\SendManifestCreatedWhatsAppJob;
 use App\Features\Services\Application\BulkCreateServices;
 use App\Features\WhatsApp\Application\UseCases\SendWhatsappTemplate;
-use App\Features\WhatsApp\Domain\Templates\AppointmentConfirmationRequestTemplate;
 use App\Features\WhatsApp\Domain\Templates\ClientServiceReminderTemplate;
 use App\Jobs\TestHorizonJob;
 use App\Mail\ClientConfigurationSubmitted;
 use App\Models\Client;
+use App\Models\Manifest;
 use App\Models\Service;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -29,14 +30,46 @@ class TestCommand extends Command
      */
     public function handle(BulkCreateServices $bulkCreateServices, SendWhatsappTemplate $sendWhatsappTemplate): void
     {
-        info('Se envía a crear manifiestos');
-        CreateDailyManifestsJob::dispatch();
-        info('Se envía a crear manifiestos');
-        return;
 
+
+
+        $manifest = Manifest::select([
+            'manifests.id',
+            'manifests.public_uuid',
+            'manifests.service_id',
+        ])
+            ->with(['service' => function ($query) {
+                $query->select('id', 'service_date', 'client_id')
+                    ->with(['client' => function ($query) {
+                        $query->select('id', 'name', 'parentarl_surname', 'phone');
+                    }])
+                    ->with(['serviceDetails' => function ($query) {
+                        $query->select('id', 'service_id', 'rpbi_profile_id')
+                            ->with(['rpbiProfile' => function ($query) {
+                                $query->select('id', 'name');
+                            }]);
+                    }]);
+            }])
+            ->where('id', 5)->first();
+        $residues = $manifest->service->serviceDetails->map(function ($serviceDetail) {
+            return $serviceDetail->rpbiProfile->name;
+        })->implode(', ');
+
+    
+
+        dd($manifest->toArray());
+        return;
+        // info('Se envía a crear manifiestos');
+        // CreateDailyManifestsJob::dispatch();
+        // info('Se envía a crear manifiestos');
+        // return;
+        SendManifestCreatedWhatsAppJob::dispatch(5);
+
+        return;
 
         $to = '6144950659';
         $randomUuid = Str::uuid()->toString();
+
         $template = new ClientServiceReminderTemplate(
             'Alfredo',
             '2022-10-01',
