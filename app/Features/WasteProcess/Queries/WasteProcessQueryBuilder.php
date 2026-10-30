@@ -80,6 +80,15 @@ class WasteProcessQueryBuilder
                 'sangre',
                 'ceniza_generada',
                 'descarga_lavador',
+                'temp_esterilizador',
+                'presion_camara_principal',
+                'eliminacion_biologica',
+                'ciclo_carga',
+                'rpbi_bi1_cepas',
+                'rpbi_bi2_punzocortantes',
+                'rpbi_bi4_no_anatomicos',
+                'rpbi_bi5_sangre',
+                'total_procesada',
             ])
             ->with(['wasteProcessDetails' => function ($query) {
                 $query->addSelect([

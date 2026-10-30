@@ -117,18 +117,10 @@ class WasteProcess
         $processType = $this->getWasteProcessHeader()->getWasteProcessTypeId();
         $hourStartMachine = !!$this->getWasteProcessMachine()->getStartHourMachine();
         $hourEndMachine = !!$this->getWasteProcessMachine()->getHourMachine();
-        $machineNumber = !!$this->getWasteProcessMachine()->getMachineNumber();
         $dateStart =  !!$this->getWasteProcessDate()->getDateStart();
-        $solution = !!$this->getSolution();
 
         if ($processType == WasteProcessType::PROCESS_ESTERILIZACION) {
-            return $this->isEsterilizacionFinishable(
-                $hourStartMachine,
-                $hourEndMachine,
-                $machineNumber,
-                $dateStart,
-                $solution
-            );
+            return $hourStartMachine && $hourEndMachine && $dateStart && ! $this->isFinished();
         }
 
         if ($processType == WasteProcessType::PROCESS_INCINERACION) {
@@ -136,15 +128,5 @@ class WasteProcess
         }
 
         return false;
-    }
-    private function isEsterilizacionFinishable(
-        bool $hourStartMachine,
-        bool $hourEndMachine,
-        bool $machineNumber,
-        bool $dateStart,
-        bool $solution
-    ): bool {
-        return $hourStartMachine && $hourEndMachine &&
-            $machineNumber && $dateStart && $solution && !$this->isFinished();
     }
 }

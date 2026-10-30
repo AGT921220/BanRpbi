@@ -16,6 +16,7 @@ class SendWhatsappTemplate
 
     public function __invoke(string $to, WhatsappTemplate $template): void
     {
+        // dd($template->getVariables());
         $this->twilioWhatsappClient->sendTemplateMessage($to, $template->getTemplateSid(), $template->getVariables());
     }
 }

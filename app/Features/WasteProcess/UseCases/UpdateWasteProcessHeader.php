@@ -21,35 +21,18 @@ class UpdateWasteProcessHeader
         ?string $solution = null,
         ?string $comments = null
     ): void {
-        $cantidadSolucionReciclar = $wasteProcessPrar->getCantidadSolucionReciclar()
-            ?? $wasteProcessContainer->getCantidadContenedores();
-        // dd($wasteProcessContainer->toArray());
         $wasteProcess = WasteProcess::find($wasteProcessId);
         $wasteProcess->machine_number = $machineNumber;
         $wasteProcess->hour_start_machine = $hourStartMachine;
         $wasteProcess->hour_machine = $hourMachine;
         $wasteProcess->date_start = $dateStart;
-        $wasteProcess->cantidad_solucion_reciclar = $cantidadSolucionReciclar;
-        $wasteProcess->sosa_caustica = $wasteProcessPrar->getSosaCaustica();
-        $wasteProcess->sulfactante_c500 = $wasteProcessPrar->getSulfactanteC500();
-        $wasteProcess->solucion_clarif_t42 = $wasteProcessPrar->getSolucionClarifT42();
-        $wasteProcess->solucion_flocl_146 = $wasteProcessPrar->getSolucionFlocl146();
-        $wasteProcess->ingreso_filtro_prensa = $wasteProcessPrar->getIngresoFiltroPrensa();
-        $wasteProcess->acido = $wasteProcessPrar->getAcido();
-        $wasteProcess->ph_inicial = $wasteProcessPrar->getPhInicial();
-        $wasteProcess->ph_final = $wasteProcessPrar->getPhFinal();
-        $wasteProcess->ph_lodos = $wasteProcessPrar->getPhLodos();
-        $wasteProcess->eca_12 = $wasteProcessPrar->getEca12();
-        $wasteProcess->eca_22 = $wasteProcessPrar->getEca22();
-        $wasteProcess->eca_1350 = $wasteProcessPrar->getEca1350();
-        $wasteProcess->eca_49 = $wasteProcessPrar->getEca49();
-        $wasteProcess->eca_20pa = $wasteProcessPrar->getEca20pa();
-        $wasteProcess->lodos_generados_porcentaje = $wasteProcessPrar->getLodosGeneradosPorcentaje();
-        $wasteProcess->lodos_generados_tnk_lodos = $wasteProcessPrar->getLodosGeneradosTnk();
-        $wasteProcess->lodos_generados_disposicion = $wasteProcessPrar->getLodosGeneradosDisposicion();
-        $wasteProcess->agua_retorno_proceso_filtro_prensa = $wasteProcessPrar->getAguaRetornoProcesoFiltroPrensa();
-        $wasteProcess->cantidad_total_agua_reciclada = $wasteProcessPrar->getCantidadTotalAguaReciclada();
-        $wasteProcess->others = $wasteProcessPrar->getOthers();
+        if ($wasteProcessContainer->getCantidadContenedores() !== null) {
+            $wasteProcess->cantidad_solucion_reciclar = $wasteProcessContainer->getCantidadContenedores();
+        }
+
+        foreach ($wasteProcessPrar->attributes() as $column => $value) {
+            $wasteProcess->{$column} = $value;
+        }
 
         $wasteProcess->cantidad_contenedores_proceso_interno =
             $wasteProcessContainer->getCantidadContenedoresProcesoInterno();

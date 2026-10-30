@@ -136,27 +136,15 @@ class ProcesosController extends Controller implements HasMiddleware
             $data['date_start'],
             $data['hour_start_machine'] ?? '00:00',
             new WasteProcessPrar(
-                isset($data['cantidad_solucion_reciclar']) ? (string) $data['cantidad_solucion_reciclar'] : null,
-                isset($data['sosa_caustica']) ? (string) $data['sosa_caustica'] : null,
-                isset($data['sulfactante_c500']) ? (string) $data['sulfactante_c500'] : null,
-                isset($data['solucion_clarif_t42']) ? (string) $data['solucion_clarif_t42'] : null,
-                isset($data['solucion_flocl_146']) ? (string) $data['solucion_flocl_146'] : null,
-                isset($data['ingreso_filtro_prensa']) ? (string) $data['ingreso_filtro_prensa'] : null,
-                isset($data['acido']) ? (string) $data['acido'] : null,
-                isset($data['ph_inicial']) ? (string) $data['ph_inicial'] : null,
-                isset($data['ph_final']) ? (string) $data['ph_final'] : null,
-                isset($data['ph_lodos']) ? (string) $data['ph_lodos'] : null,
-                isset($data['eca_12']) ? (string) $data['eca_12'] : null,
-                isset($data['eca_22']) ? (string) $data['eca_22'] : null,
-                isset($data['eca_1350']) ? (string) $data['eca_1350'] : null,
-                isset($data['eca_49']) ? (string) $data['eca_49'] : null,
-                isset($data['eca_20pa']) ? (string) $data['eca_20pa'] : null,
-                isset($data['lodos_generados_porcentaje']) ? (string) $data['lodos_generados_porcentaje'] : null,
-                isset($data['lodos_generados_tnk_lodos']) ? (string) $data['lodos_generados_tnk_lodos'] : null,
-                isset($data['lodos_generados_disposicion']) ? (string) $data['lodos_generados_disposicion'] : null,
-                isset($data['agua_retorno_proceso_filtro_prensa']) ? (string) $data['agua_retorno_proceso_filtro_prensa'] : null,
-                isset($data['cantidad_total_agua_reciclada']) ? (string) $data['cantidad_total_agua_reciclada'] : null,
-                isset($data['others']) ? (string) $data['others'] : null,
+                isset($data['temp_esterilizador']) ? (string) $data['temp_esterilizador'] : null,
+                isset($data['presion_camara_principal']) ? (string) $data['presion_camara_principal'] : null,
+                $data['eliminacion_biologica'] ?? null,
+                $data['ciclo_carga'] ?? null,
+                isset($data['rpbi_bi1_cepas']) ? (string) $data['rpbi_bi1_cepas'] : null,
+                isset($data['rpbi_bi2_punzocortantes']) ? (string) $data['rpbi_bi2_punzocortantes'] : null,
+                isset($data['rpbi_bi4_no_anatomicos']) ? (string) $data['rpbi_bi4_no_anatomicos'] : null,
+                isset($data['rpbi_bi5_sangre']) ? (string) $data['rpbi_bi5_sangre'] : null,
+                isset($data['total_procesada']) ? (string) $data['total_procesada'] : null,
             ),
             new WasteProcessContainer(),
             new WasteProcessPrs(
@@ -183,17 +171,12 @@ class ProcesosController extends Controller implements HasMiddleware
         );
 
         if (! empty($data['finish'])) {
-            $details = $process->waste_process_type_id === WasteProcessType::PROCESS_INCINERACION
-                ? $process->details()
-                    ->where('is_finished', false)
-                    ->get()
-                    ->map(fn ($detail) => (object) [
-                        'id' => (int) $detail->id,
-                        'value' => $detail->total_weight,
-                    ])
-                : collect($data['details'] ?? [])->map(fn (array $row) => (object) [
-                    'id' => (int) $row['id'],
-                    'value' => $row['value'],
+            $details = $process->details()
+                ->where('is_finished', false)
+                ->get()
+                ->map(fn ($detail) => (object) [
+                    'id' => (int) $detail->id,
+                    'value' => $detail->total_weight,
                 ]);
 
             ($this->finishWasteProcess)($process->id, $details, (int) auth()->id());

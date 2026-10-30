@@ -55,17 +55,21 @@ class TestCommand extends Command
             return $serviceDetail->rpbiProfile->name;
         })->implode(', ');
 
-    
+            $to = '6144950659';
+        // $randomUuid = Str::uuid()->toString();
 
-        dd($manifest->toArray());
-        return;
-        // info('Se envía a crear manifiestos');
-        // CreateDailyManifestsJob::dispatch();
-        // info('Se envía a crear manifiestos');
+        // dump($manifest->public_uuid);
+        // dd($randomUuid);
+
+
+        // dd($manifest->toArray());
         // return;
-        SendManifestCreatedWhatsAppJob::dispatch(5);
+        // // info('Se envía a crear manifiestos');
+        // // CreateDailyManifestsJob::dispatch();
+        // // info('Se envía a crear manifiestos');
+        // // return;
+        // SendManifestCreatedWhatsAppJob::dispatch(5);
 
-        return;
 
         $to = '6144950659';
         $randomUuid = Str::uuid()->toString();
@@ -76,7 +80,7 @@ class TestCommand extends Command
             'Alfredo Chofer',
             'BAN-12345',
             'Cultivos y cepas, Objetos punzocortantes',
-            $randomUuid
+            $manifest->public_uuid
         );
         // $template = new AppointmentConfirmationRequestTemplate(
         //     1,
