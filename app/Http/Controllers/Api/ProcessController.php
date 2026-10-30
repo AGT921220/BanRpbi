@@ -6,6 +6,7 @@ use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\WasteProcess\UseCases\CreateWasteProcess;
 use App\Http\Controllers\Controller;
 use App\Models\Manifest;
+use App\Models\Service;
 use App\Models\User;
 use App\Models\WasteProcessType;
 use Illuminate\Http\JsonResponse;
@@ -45,15 +46,21 @@ final class ProcessController extends Controller
         }
 
         foreach ($manifests as $manifest) {
-            if ($manifest->status === Manifest::STATUS_COLLECTED) {
-                continue;
+            $status = (string) ($manifest->service?->status ?? '');
+
+            if ($status !== Service::STATUS_COLLECTED) {
+                throw ValidationException::withMessages([
+                    'manifest_ids' => 'El manifiesto '.$manifest->id
+                        .' está en estatus '.$this->statusLabel($status)
+                        .'. Solo se puede agregar si está Recolectado.',
+                ]);
             }
 
-            throw ValidationException::withMessages([
-                'manifest_ids' => 'El manifiesto '.$manifest->id
-                    .' está en estatus '.$this->statusLabel((string) $manifest->status)
-                    .'. Solo se puede agregar si está Recolectado.',
-            ]);
+            if ($manifest->service?->warehouse_entry_at === null) {
+                throw ValidationException::withMessages([
+                    'manifest_ids' => 'El manifiesto '.$manifest->id.' no tiene entrada a almacén.',
+                ]);
+            }
         }
 
         $this->ensureProcessTypes();
@@ -108,11 +115,11 @@ final class ProcessController extends Controller
     private function statusLabel(string $status): string
     {
         return match ($status) {
-            Manifest::STATUS_PENDING => 'Pendiente',
-            Manifest::STATUS_COLLECTED => 'Recolectado',
-            Manifest::STATUS_IN_PROCESS => 'En proceso',
-            Manifest::STATUS_PROCESSED => 'Procesado',
-            Manifest::STATUS_INVOICED => 'Facturado',
+            Service::STATUS_PENDING => 'Pendiente',
+            Service::STATUS_SCHEDULED => 'Programado',
+            Service::STATUS_COLLECTED => 'Recolectado',
+            // Service::STATUS_IN_WAREHOUSE => 'En almacén',
+            Service::STATUS_NEXT => 'Siguiente',
             default => 'Desconocido',
         };
     }

@@ -28,7 +28,6 @@ class Manifest extends Model
     protected $fillable = [
         'public_uuid',
         'service_id',
-        'status',
     ];
 
     public function service(): BelongsTo

@@ -98,7 +98,6 @@ class FinishWasteProcessWeightsTest extends TestCase
 
         $manifest = Manifest::query()->create([
             'service_id' => $service->id,
-            'status' => Manifest::STATUS_IN_PROCESS,
             'public_uuid' => (string) \Illuminate\Support\Str::uuid(),
         ]);
 

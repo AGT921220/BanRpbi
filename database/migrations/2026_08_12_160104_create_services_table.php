@@ -23,6 +23,9 @@ return new class extends Migration
             $table->decimal('cost', 10, 2)->default(0);
 
             $table->string('status')->default('pending');
+            $table->dateTime('warehouse_entry_at')->nullable();
+            $table->unsignedInteger('warehouse_entry_user_id')->nullable();
+            $table->foreign('warehouse_entry_user_id')->references('id')->on('users');
             $table->integer('route_order')->nullable();
             $table->integer('folio')->nullable();
             $table->integer('order')->nullable();

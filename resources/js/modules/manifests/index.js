@@ -20,7 +20,7 @@ function initManifestsTable() {
             },
             {
                 data: "status",
-                name: "status",
+                name: "services.status",
                 orderSequence: ["asc", "desc"],
             },
             {

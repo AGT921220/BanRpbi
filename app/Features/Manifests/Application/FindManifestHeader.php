@@ -4,6 +4,7 @@ namespace App\Features\Manifests\Application;
 
 use App\Models\Client;
 use App\Models\Manifest;
+use App\Models\Service;
 use App\Models\ServiceDetail;
 
 class FindManifestHeader
@@ -26,12 +27,13 @@ class FindManifestHeader
             return null;
         }
 
-        $status = (string) $manifest->status;
+        $status = (string) ($manifest->service?->status ?? '');
 
         return [
             'id' => $manifest->id,
             'status' => $status,
             'status_label' => $this->statusLabel($status),
+            'warehouse_entry_at' => $manifest->service?->warehouse_entry_at?->toDateTimeString(),
             'folio' => $manifest->id,
             'client' => $this->client($manifest->service?->client),
             'driver' => $manifest->service?->driver?->fullName() ?? '',
@@ -113,11 +115,11 @@ class FindManifestHeader
     private function statusLabel(string $status): string
     {
         return match ($status) {
-            Manifest::STATUS_PENDING => 'Pendiente',
-            Manifest::STATUS_COLLECTED => 'Recolectado',
-            Manifest::STATUS_IN_PROCESS => 'En proceso',
-            Manifest::STATUS_PROCESSED => 'Procesado',
-            Manifest::STATUS_INVOICED => 'Facturado',
+            Service::STATUS_PENDING => 'Pendiente',
+            Service::STATUS_SCHEDULED => 'Programado',
+            Service::STATUS_COLLECTED => 'Recolectado',
+            // Service::STATUS_IN_WAREHOUSE => 'En almacén',
+            Service::STATUS_NEXT => 'Siguiente',
             default => 'Desconocido',
         };
     }

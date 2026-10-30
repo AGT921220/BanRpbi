@@ -2,7 +2,6 @@
 
 namespace App\Features\WasteProcess\UseCases;
 
-use App\Features\Manifests\Domain\ManifestStatusTransitions;
 use App\Features\WasteProcess\Helpers\ServiceDetailBalance;
 use App\Models\Manifest;
 use App\Models\Service;
@@ -68,23 +67,6 @@ class CreateWasteProcess
                 ]);
             }
 
-            $manifestIds = $lines->pluck('manifest_id')->unique();
-
-            foreach ($manifestIds as $manifestId) {
-                $manifest = Manifest::query()->lockForUpdate()->find($manifestId);
-
-                if (! $manifest) {
-                    continue;
-                }
-
-                if (ManifestStatusTransitions::canTransition(
-                    (string) $manifest->status,
-                    Manifest::STATUS_IN_PROCESS,
-                )) {
-                    ManifestStatusTransitions::transition($manifest, Manifest::STATUS_IN_PROCESS);
-                }
-            }
-
             return (int) $wasteProcess->id;
         });
     }
@@ -107,6 +89,12 @@ class CreateWasteProcess
 
             if (! $service || $service->status !== Service::STATUS_COLLECTED) {
                 continue;
+            }
+
+            if ($service->warehouse_entry_at === null) {
+                throw ValidationException::withMessages([
+                    'manifest_ids' => 'El manifiesto '.$manifest->id.' no tiene entrada a almacén.',
+                ]);
             }
 
             $details = ServiceDetail::query()

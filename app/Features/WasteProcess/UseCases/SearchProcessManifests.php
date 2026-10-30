@@ -24,7 +24,7 @@ class SearchProcessManifests
             ->select([
                 'manifests.id',
                 'manifests.service_id',
-                'manifests.status',
+                'services.status',
                 'services.service_date',
                 'clients.company',
             ])
@@ -32,6 +32,7 @@ class SearchProcessManifests
             ->join('clients', 'clients.id', '=', 'services.client_id')
             ->whereNull('manifests.deleted_at')
             ->where('services.status', Service::STATUS_COLLECTED)
+            ->whereNotNull('services.warehouse_entry_at')
             ->whereExists(function ($query) {
                 $query->selectRaw('1')
                     ->from('service_details')
@@ -45,7 +46,6 @@ class SearchProcessManifests
             })
             ->with(['service.serviceDetails.rpbiProfile'])
             ->orderByDesc('manifests.id')
-            ->where('manifests.status', Manifest::STATUS_COLLECTED)
             ->get()
             ->map(function (Manifest $manifest) {
                 $details = $manifest->service?->serviceDetails ?? collect();
@@ -83,7 +83,7 @@ class SearchProcessManifests
                     'id' => $manifest->id,
                     'client' => (string) $manifest->company,
                     'date' => (string) $manifest->service_date,
-                    'status' => $manifest->status,
+                    'status' => (string) ($manifest->service?->status ?? $manifest->status ?? ''),
                     'profiles' => $lines->pluck('profile')->filter()->implode(', '),
                     'weight' => number_format($lines->sum('remaining'), 2, '.', ''),
                     'lines' => $lines->all(),

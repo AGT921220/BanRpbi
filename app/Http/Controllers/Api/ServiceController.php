@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Features\Manifests\Domain\ManifestStatusTransitions;
 use App\Features\Services\Application\FindServiceHeader;
 use App\Features\Services\Application\SearchServiceHeaders;
 use App\Features\Services\Domain\ServiceStatusTransitions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FilterRequest;
-use App\Models\Manifest;
 use App\Models\Service;
 use App\Models\ServiceDetail;
 use Illuminate\Http\Request;
@@ -96,20 +94,6 @@ final class ServiceController extends Controller
 
                 $service->status = Service::STATUS_COLLECTED;
                 $service->save();
-
-                $service->manifests()
-                    ->get()
-                    ->each(function (Manifest $manifest): void {
-                        if (in_array($manifest->status, [
-                            Manifest::STATUS_PENDING,
-                            Manifest::STATUS_COLLECTED,
-                        ], true) || $manifest->status === null || $manifest->status === '') {
-                            ManifestStatusTransitions::transition(
-                                $manifest,
-                                Manifest::STATUS_COLLECTED,
-                            );
-                        }
-                    });
 
                 return ($this->findServiceHeader)($serviceId);
             });

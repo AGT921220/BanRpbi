@@ -4,6 +4,7 @@ namespace App\Features\Manifests\Application;
 
 use App\Features\Shared\Query\BuilderFilter;
 use App\Models\Manifest;
+use App\Models\Service;
 
 class SearchManifestHeaders
 {
@@ -21,7 +22,7 @@ class SearchManifestHeaders
             builder: Manifest::query()
                 ->select([
                     'manifests.id',
-                    'manifests.status',
+                    'services.status',
                     'clients.company',
                     'services.service_date',
                     'services.invoice_id',
@@ -50,11 +51,11 @@ class SearchManifestHeaders
     private function resolveManifestStatus(string $status): string
     {
         return match ($status) {
-            Manifest::STATUS_PENDING => 'Pendiente',
-            Manifest::STATUS_COLLECTED => 'Recolectado',
-            Manifest::STATUS_IN_PROCESS => 'En proceso',
-            Manifest::STATUS_PROCESSED => 'Procesado',
-            Manifest::STATUS_INVOICED => 'Facturado',
+            Service::STATUS_PENDING => 'Pendiente',
+            Service::STATUS_SCHEDULED => 'Programado',
+            Service::STATUS_COLLECTED => 'Recolectado',
+            // Service::STATUS_IN_WAREHOUSE => 'En almacén',
+            Service::STATUS_NEXT => 'Siguiente',
             default => 'Desconocido',
         };
     }

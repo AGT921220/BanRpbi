@@ -2,26 +2,31 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Features\Services\Application\RegisterWarehouseEntry;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class ScanManifestController extends Controller
 {
-    public function show(int $manifestId, Request $request)
+    public function __construct(
+        private readonly RegisterWarehouseEntry $registerWarehouseEntry,
+    ) {}
+
+    public function store(Request $request): JsonResponse
     {
-        info($request->all());
-        info('Manifest ID: ' . $manifestId);
-        return response()->json([
-            'message' => 'Servicios ordenados correctamente.',
-        ], 201);
-    }
-    public function store(Request $request)
-    {
-        $manifestId = $request->input('manifest_id');
-        info('Manifest ID: ' . $manifestId);
+        $data = $request->validate([
+            'manifest_id' => ['required', 'integer'],
+        ]);
+
+        $service = ($this->registerWarehouseEntry)(
+            (int) $data['manifest_id'],
+            (int) $request->user()->id,
+        );
 
         return response()->json([
-            'message' => 'Servicios ordenados correctamente.',
-        ], 201);
+            'message' => 'Entrada de almacén registrada.',
+            'data' => $service,
+        ]);
     }
 }

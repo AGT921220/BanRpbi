@@ -41,7 +41,6 @@ class ListServicesForAssignmentTest extends TestCase
 
         Manifest::query()->create([
             'service_id' => $withManifest->id,
-            'status' => Manifest::STATUS_PENDING,
             'public_uuid' => (string) Str::uuid(),
         ]);
 

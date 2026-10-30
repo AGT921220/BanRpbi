@@ -2,12 +2,9 @@
 
 namespace App\Features\WasteProcess\UseCases;
 
-use App\Features\Manifests\Domain\ManifestStatusTransitions;
 use App\Features\WasteProcess\Helpers\ServiceDetailBalance;
-use App\Models\Manifest;
 use App\Models\ProcessCertificate;
 use App\Models\ProcessFolio;
-use App\Models\Service;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessDetail;
 use Illuminate\Support\Carbon;
@@ -103,51 +100,8 @@ class FinishWasteProcess
             $process->finished_at = $finishedAt;
             $process->save();
 
-            $this->updateManifestStatuses($wasteProcessId);
             $this->createCertificates($process);
         });
-    }
-
-    private function updateManifestStatuses(int $wasteProcessId): void
-    {
-        $manifestIds = WasteProcessDetail::query()
-            ->where('waste_process_id', $wasteProcessId)
-            ->pluck('manifest_id')
-            ->unique();
-
-        foreach ($manifestIds as $manifestId) {
-            $manifest = Manifest::query()->lockForUpdate()->find($manifestId);
-
-            if (! $manifest) {
-                continue;
-            }
-
-            $serviceDetailIds = Service::query()
-                ->whereKey($manifest->service_id)
-                ->with('serviceDetails')
-                ->first()
-                ?->serviceDetails
-                ?->pluck('id') ?? collect();
-
-            if ($serviceDetailIds->isEmpty()) {
-                continue;
-            }
-
-            $allExhausted = $serviceDetailIds->every(
-                fn ($serviceDetailId) => $this->balance->isExhausted((int) $serviceDetailId),
-            );
-
-            if (! $allExhausted) {
-                continue;
-            }
-
-            if (ManifestStatusTransitions::canTransition(
-                (string) $manifest->status,
-                Manifest::STATUS_PROCESSED,
-            )) {
-                ManifestStatusTransitions::transition($manifest, Manifest::STATUS_PROCESSED);
-            }
-        }
     }
 
     private function createCertificates(WasteProcess $process): void

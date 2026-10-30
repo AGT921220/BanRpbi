@@ -28,6 +28,8 @@ class Service extends Model
         'status',
         'folio',
         'invoice_id',
+        'warehouse_entry_at',
+        'warehouse_entry_user_id',
     ];
 
     /**
@@ -37,6 +39,7 @@ class Service extends Model
     {
         return [
             'service_date' => 'date',
+            'warehouse_entry_at' => 'datetime',
         ];
     }
 
@@ -63,5 +66,10 @@ class Service extends Model
     public function manifests(): HasMany
     {
         return $this->hasMany(Manifest::class);
+    }
+
+    public function warehouseEntryUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'warehouse_entry_user_id');
     }
 }

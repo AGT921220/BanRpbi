@@ -78,7 +78,6 @@ class PublicManifestTest extends TestCase
         return Manifest::query()->create([
             'public_uuid' => (string) Str::uuid(),
             'service_id' => $service->id,
-            'status' => Manifest::STATUS_PENDING,
         ]);
     }
 }

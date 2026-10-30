@@ -25,7 +25,7 @@ class ManifestHeadersController extends Controller
             'services.invoice_id',
             'invoices.id',
             'clients.id',
-            'manifests.status',
+            'services.status',
             'status',
         ];
 

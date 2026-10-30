@@ -48,7 +48,6 @@ class AssignServicesToDriverTest extends TestCase
 
         Manifest::query()->create([
             'service_id' => $service->id,
-            'status' => Manifest::STATUS_PENDING,
             'public_uuid' => (string) Str::uuid(),
         ]);
 

@@ -3,6 +3,7 @@
 namespace App\Features\Manifests\Domain;
 
 use App\Models\Manifest;
+use App\Models\Service;
 use InvalidArgumentException;
 
 final class ManifestStatusTransitions
@@ -50,16 +51,29 @@ final class ManifestStatusTransitions
 
     public static function transition(Manifest $manifest, string $to): void
     {
-        $from = filled($manifest->status)
-            ? (string) $manifest->status
-            : Manifest::STATUS_PENDING;
+        $service = $manifest->service()->lockForUpdate()->first();
+        $from = filled($service?->status)
+            ? (string) $service->status
+            : Service::STATUS_PENDING;
         self::assertCanTransition($from, $to);
 
-        if ($from === $to) {
+        if ($from === $to || $service === null) {
             return;
         }
 
-        $manifest->status = $to;
-        $manifest->save();
+        $serviceStatuses = [
+            Service::STATUS_PENDING,
+            Service::STATUS_SCHEDULED,
+            Service::STATUS_COLLECTED,
+            Service::STATUS_IN_WAREHOUSE,
+            Service::STATUS_NEXT,
+        ];
+
+        if (! in_array($to, $serviceStatuses, true)) {
+            return;
+        }
+
+        $service->status = $to;
+        $service->save();
     }
 }
