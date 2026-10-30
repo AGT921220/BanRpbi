@@ -17,7 +17,6 @@ final class ScanManifestController extends Controller
     }
     public function store(Request $request)
     {
-        info($request->all());
         $manifestId = $request->input('manifest_id');
         info('Manifest ID: ' . $manifestId);
 
