@@ -35,6 +35,11 @@ function initServicesTable() {
                 orderSequence: ["asc", "desc"],
             },
             {
+                data: "driver_name",
+                name: "drivers.name",
+                orderSequence: ["asc", "desc"],
+            },
+            {
                 data: null,
                 name: "actions",
                 orderable: false,

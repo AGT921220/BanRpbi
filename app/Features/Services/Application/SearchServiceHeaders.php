@@ -75,20 +75,23 @@ class SearchServiceHeaders
                         : null,
                 );
             });
-            $status = $nextService && $service->status !== Service::STATUS_COLLECTED
+            $statusMobile = $nextService && $service->status !== Service::STATUS_COLLECTED
                 ? Service::STATUS_NEXT
                 : $service->status;
             $nextService = $service->status !== Service::STATUS_COLLECTED ? false : true;
 
             return [
                 'id' => $service->id,
-                'status' => $this->resolveServiceStatus($status),
+                'status' => $this->resolveServiceStatus($service->status),
+                'status_mobile'=> $this->resolveServiceStatus($statusMobile),
                 'client_name' => $service->company,
                 'zone' => $service->zone,
                 'date' => $service->service_date,
                 'client_maps_url' => $service->client_maps_url,
                 'driver_id' => $service->driver_id,
-                'driver_name' => $service->driver_name,
+                'driver_name' => $service->driver_id === null
+                    ? 'Sin Chofer Asignado'
+                    : $service->driver_name,
                 'manifest_id' => $service->manifest_id,
                 'invoice_id' => $service->invoice_id,
                 'can_view' => $canView,
