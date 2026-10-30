@@ -5,6 +5,14 @@ import QRCode from 'qrcode';
 
 const semarnatLogo = readViteEnv("VITE_SEMARNAT_LOGO");
 
+function semarnatLogoUrl() {
+    if (!semarnatLogo) {
+        return "";
+    }
+
+    return new URL(semarnatLogo, `${window.location.origin}/`).href;
+}
+
 $(document).on("click", ".btn-manifest-pdf", async function (e) {
     e.preventDefault();
 
@@ -32,29 +40,60 @@ async function getManifest(url) {
     });
 }
 
-async function createManifest(manifest) {
-    var doc = new jsPDF();
+export function createManifest(manifest) {
+    return new Promise((resolve, reject) => {
+        const doc = new jsPDF();
 
-        const qrImage = await QRCode.toDataURL(String(manifest.folio), {
-        width: 300,
-        margin: 1,
+        QRCode.toDataURL(String(manifest.folio), {
+            width: 300,
+            margin: 1,
+        })
+            .then((qrImage) => {
+                const img = new Image();
+                let finished = false;
+
+                const finish = () => {
+                    if (finished) {
+                        return;
+                    }
+
+                    finished = true;
+                    const built = buildManifest(doc, manifest, img, qrImage);
+
+                    built.setProperties({
+                        title: "Manifiesto " + manifest.folio,
+                        author: "BAN RPBI",
+                        creator: "BAN RPBI",
+                    });
+
+                    const pdfBlob = built.output("blob");
+                    const url = URL.createObjectURL(pdfBlob);
+                    const frame = document.getElementById("manifest-frame");
+
+                    if (frame) {
+                        frame.src = url;
+                        resolve(url);
+                        return;
+                    }
+
+                    setTimeout(() => {
+                        window.open(url, "_blank");
+                    }, 500);
+                    resolve(url);
+                };
+
+                img.onload = finish;
+                img.onerror = finish;
+
+                const logoUrl = semarnatLogoUrl();
+
+                if (!logoUrl) {
+                    finish();
+                    return;
+                }
+
+                img.src = logoUrl;
+            })
+            .catch(reject);
     });
-
-    var img = new Image();
-    img.onload = function () {
-        doc = buildManifest(doc, manifest, img, qrImage);
-
-        doc.setProperties({
-            title: "Manifiesto " + manifest.folio,
-            author: "BAN RPBI",
-            creator: "BAN RPBI",
-        });
-        var pdfBlob = doc.output("blob");
-        var url = URL.createObjectURL(pdfBlob);
-        setTimeout(() => {
-            window.open(url, "_blank");
-        }, 500);
-    };
-
-    img.src = semarnatLogo;
 }

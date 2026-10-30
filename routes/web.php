@@ -13,13 +13,11 @@ use Illuminate\Support\Facades\Route;
 
     Route::resource('test', TestController::class)->only(['index']);
 
-    Route::resource('client-access/manifests', ClientAccessManifestController::class)
-        ->only(['index', 'show'])
-        ->names([
-            'index' => 'client-access.manifests.index',
-            'show' => 'client-access.manifests.show',
-        ])
-        ;
+    Route::get('client-access/manifests', [ClientAccessManifestController::class, 'index'])
+        ->name('client-access.manifests.index');
+
+    Route::get('client-access/manifests/{manifestPublicUuid}', [ClientAccessManifestController::class, 'show'])
+        ->name('client-access.manifests.show');
 Route::redirect('/', '/dashboard');
 
 Route::middleware('auth')->group(function (): void {
