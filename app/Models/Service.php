@@ -11,10 +11,14 @@ class Service extends Model
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_SCHEDULED = 'scheduled';
-    public const STATUS_COLLECTED = 'collected';
-    public const STATUS_IN_WAREHOUSE = 'in_warehouse';
-    public const STATUS_NEXT = 'next';
 
+    public const STATUS_COLLECTED = 'collected';
+
+    public const STATUS_IN_PROCESS = 'in_process';
+
+    public const STATUS_PROCESSED = 'processed';
+
+    public const STATUS_NEXT = 'next';
 
     /**
      * @var list<string>
@@ -71,5 +75,27 @@ class Service extends Model
     public function warehouseEntryUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'warehouse_entry_user_id');
+    }
+
+    public static function statusLabel(string $status): string
+    {
+        return match ($status) {
+            self::STATUS_PENDING => 'Pendiente',
+            self::STATUS_SCHEDULED => 'Programado',
+            self::STATUS_COLLECTED => 'Recolectado',
+            self::STATUS_IN_PROCESS => 'Proceso',
+            self::STATUS_PROCESSED => 'Cerrado',
+            self::STATUS_NEXT => 'Siguiente',
+            default => 'Desconocido',
+        };
+    }
+
+    public static function pickupIsDone(string $status): bool
+    {
+        return in_array($status, [
+            self::STATUS_COLLECTED,
+            self::STATUS_IN_PROCESS,
+            self::STATUS_PROCESSED,
+        ], true);
     }
 }

@@ -75,15 +75,16 @@ class SearchServiceHeaders
                         : null,
                 );
             });
-            $statusMobile = $nextService && $service->status !== Service::STATUS_COLLECTED
+            $pickupDone = Service::pickupIsDone((string) $service->status);
+            $statusMobile = $nextService && ! $pickupDone
                 ? Service::STATUS_NEXT
                 : $service->status;
-            $nextService = $service->status !== Service::STATUS_COLLECTED ? false : true;
+            $nextService = $pickupDone;
 
             return [
                 'id' => $service->id,
                 'status' => $this->resolveServiceStatus($service->status),
-                'status_mobile'=> $this->resolveServiceStatus($statusMobile),
+                'status_mobile' => $this->resolveServiceStatus($statusMobile),
                 'client_name' => $service->company,
                 'zone' => $service->zone,
                 'date' => $service->service_date,
@@ -143,6 +144,22 @@ class SearchServiceHeaders
                 'bg' => '#D1FAE5',
                 'color' => '#059669',
                 'icon' => 'checkmark-circle-outline',
+            ],
+
+            Service::STATUS_IN_PROCESS => [
+                'status' => Service::STATUS_IN_PROCESS,
+                'label' => 'Proceso',
+                'bg' => '#FEF3C7',
+                'color' => '#B45309',
+                'icon' => 'sync-outline',
+            ],
+
+            Service::STATUS_PROCESSED => [
+                'status' => Service::STATUS_PROCESSED,
+                'label' => 'Cerrado',
+                'bg' => '#DCFCE7',
+                'color' => '#166534',
+                'icon' => 'lock-closed-outline',
             ],
 
             default => [

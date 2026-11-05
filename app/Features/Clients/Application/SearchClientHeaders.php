@@ -2,10 +2,12 @@
 
 namespace App\Features\Clients\Application;
 
+use App\Features\Clients\Domain\TaxRegimes;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Shared\Query\BuilderFilter;
 use App\Features\Shared\Query\QueryModifierCategory;
 use App\Models\Client;
+use App\Models\ClientContract;
 use Illuminate\Support\Facades\Gate;
 
 final readonly class SearchClientHeaders
@@ -32,6 +34,8 @@ final readonly class SearchClientHeaders
                 'email',
                 'phone',
                 'company',
+                'legal_name',
+                'tax_regime',
                 'zone_id',
                 'configuration_status',
                 'created_at',
@@ -77,7 +81,7 @@ final readonly class SearchClientHeaders
                         && $active
                         && filled($active->contract_id)
                         && filled($active->start_date)
-                        && (int) $active->status === \App\Models\ClientContract::STATUS_ACTIVE
+                        && (int) $active->status === ClientContract::STATUS_ACTIVE
                         && $active->contract
                         && $active->contract->rpbiProfiles->isNotEmpty();
 
@@ -88,6 +92,8 @@ final readonly class SearchClientHeaders
                         phone: $client->phone,
                         company: $client->company,
                         createdAt: $client->created_at?->format('d/m/Y H:i'),
+                        legalName: $client->legal_name,
+                        taxRegime: TaxRegimes::label($client->tax_regime),
                         hasContract: (bool) $client->contracts_exists,
                         hasActiveContract: (bool) $client->active_contract_exists,
                         hasCollectionZone: $client->zone_id !== null,

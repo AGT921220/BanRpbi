@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Features\Clients\Domain\TaxRegimes;
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Http\Requests\Admin\Concerns\ResolvesClientStateCity;
 use Illuminate\Foundation\Http\FormRequest;
@@ -33,8 +34,10 @@ final class UpdateClientRequest extends FormRequest
             ],
             'phone' => ['required', 'string', 'max:30'],
             'company' => ['required', 'string', 'max:255'],
+            'legal_name' => ['required', 'string', 'max:255'],
             'nra' => ['required', 'string', 'max:255'],
             'rfc' => ['required', 'string', 'max:13', 'regex:/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/'],
+            'tax_regime' => ['required', 'string', Rule::in(array_keys(TaxRegimes::OPTIONS))],
             'zone_id' => [
                 'required',
                 'integer',
@@ -72,8 +75,10 @@ final class UpdateClientRequest extends FormRequest
             'email' => 'correo electrónico',
             'phone' => 'teléfono',
             'company' => 'empresa',
+            'legal_name' => 'razón social',
             'nra' => 'NRA',
             'rfc' => 'RFC',
+            'tax_regime' => 'régimen fiscal',
             'zone_id' => 'zona de recolección',
             'street' => 'calle',
             'num_ext' => 'número exterior',

@@ -112,10 +112,9 @@ class GenerateTestDataCommand extends Command
     ];
 
     private const SERVICE_STATUSES = [
-        Service::STATUS_PENDING => 20,
-        Service::STATUS_SCHEDULED => 20,
-        Service::STATUS_COLLECTED => 35,
-        Service::STATUS_IN_WAREHOUSE => 20,
+        Service::STATUS_PENDING => 25,
+        Service::STATUS_SCHEDULED => 25,
+        Service::STATUS_COLLECTED => 45,
         Service::STATUS_NEXT => 5,
     ];
 
@@ -741,7 +740,6 @@ class GenerateTestDataCommand extends Command
         }
 
         $driverIds = $this->driverPool();
-        $userIds = $this->userPool();
         $costs = DB::table('contracts')->whereIn('id', $contractIds)->pluck('cost', 'id');
         $folio = (int) DB::table('services')->max('folio');
         $this->folioFrom = $folio + 1;
@@ -756,7 +754,6 @@ class GenerateTestDataCommand extends Command
             $status = (string) $this->weighted(self::SERVICE_STATUSES);
             $contractId = $contractIds[mt_rand(0, count($contractIds) - 1)];
             $createdAt = $this->randomDate(540, 0);
-            $inWarehouse = $status === Service::STATUS_IN_WAREHOUSE;
 
             $rows[] = [
                 'service_date' => now()->subDays(mt_rand(0, 540))->toDateString(),
@@ -768,10 +765,8 @@ class GenerateTestDataCommand extends Command
                     : null,
                 'cost' => $costs[$contractId] ?? 0,
                 'status' => $status,
-                'warehouse_entry_at' => $inWarehouse ? $createdAt : null,
-                'warehouse_entry_user_id' => ($inWarehouse && $userIds !== [])
-                    ? $userIds[mt_rand(0, count($userIds) - 1)]
-                    : null,
+                'warehouse_entry_at' => null,
+                'warehouse_entry_user_id' => null,
                 'route_order' => mt_rand(1, 40),
                 'folio' => $folio,
                 'order' => $i,
@@ -1440,7 +1435,6 @@ class GenerateTestDataCommand extends Command
         $preferred = $this->servicesWithoutManifest()
             ->whereIn('services.status', [
                 Service::STATUS_COLLECTED,
-                Service::STATUS_IN_WAREHOUSE,
                 Service::STATUS_SCHEDULED,
             ])
             ->orderBy('services.id')
@@ -1489,7 +1483,7 @@ class GenerateTestDataCommand extends Command
 
         $serviceIds = array_map('intval', $this->scopedServices()
             ->whereNull('services.invoice_id')
-            ->whereIn('services.status', [Service::STATUS_COLLECTED, Service::STATUS_IN_WAREHOUSE])
+            ->where('services.status', Service::STATUS_COLLECTED)
             ->orderBy('services.id')
             ->limit(count($invoiceIds) * 3)
             ->pluck('services.id')

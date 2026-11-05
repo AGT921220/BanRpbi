@@ -51,7 +51,7 @@ final class ProcessController extends Controller
             if ($status !== Service::STATUS_COLLECTED) {
                 throw ValidationException::withMessages([
                     'manifest_ids' => 'El manifiesto '.$manifest->id
-                        .' está en estatus '.$this->statusLabel($status)
+                        .' está en estatus '.Service::statusLabel($status)
                         .'. Solo se puede agregar si está Recolectado.',
                 ]);
             }
@@ -112,18 +112,6 @@ final class ProcessController extends Controller
         return [];
     }
 
-    private function statusLabel(string $status): string
-    {
-        return match ($status) {
-            Service::STATUS_PENDING => 'Pendiente',
-            Service::STATUS_SCHEDULED => 'Programado',
-            Service::STATUS_COLLECTED => 'Recolectado',
-            // Service::STATUS_IN_WAREHOUSE => 'En almacén',
-            Service::STATUS_NEXT => 'Siguiente',
-            default => 'Desconocido',
-        };
-    }
-
     private function ensureProcessTypes(): void
     {
         $types = [
@@ -136,7 +124,7 @@ final class ProcessController extends Controller
                 continue;
             }
 
-            $type = new WasteProcessType();
+            $type = new WasteProcessType;
             $type->id = $id;
             $type->name = $name;
             $type->save();

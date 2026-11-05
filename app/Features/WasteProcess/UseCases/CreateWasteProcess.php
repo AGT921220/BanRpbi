@@ -50,7 +50,7 @@ class CreateWasteProcess
                 '',
             );
 
-            $wasteProcess = new WasteProcess();
+            $wasteProcess = new WasteProcess;
             $wasteProcess->waste_process_type_id = $wasteProcessTypeId;
             $wasteProcess->date_start = $dateStart;
             $wasteProcess->user_id = $userId;
@@ -66,6 +66,14 @@ class CreateWasteProcess
                     'process_weight' => '0',
                 ]);
             }
+
+            $serviceIds = Manifest::query()
+                ->whereIn('id', $lines->pluck('manifest_id')->unique()->all())
+                ->pluck('service_id');
+
+            Service::query()
+                ->whereIn('id', $serviceIds)
+                ->update(['status' => Service::STATUS_IN_PROCESS]);
 
             return (int) $wasteProcess->id;
         });

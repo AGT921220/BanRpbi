@@ -3,8 +3,11 @@
 namespace App\Features\WasteProcess\UseCases;
 
 use App\Features\WasteProcess\Helpers\ServiceDetailBalance;
+use App\Models\Manifest;
 use App\Models\ProcessCertificate;
 use App\Models\ProcessFolio;
+use App\Models\Service;
+use App\Models\ServiceDetail;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessDetail;
 use Illuminate\Support\Carbon;
@@ -100,8 +103,43 @@ class FinishWasteProcess
             $process->finished_at = $finishedAt;
             $process->save();
 
+            $this->syncManifestStatus($process);
             $this->createCertificates($process);
         });
+    }
+
+    private function syncManifestStatus(WasteProcess $process): void
+    {
+        $serviceIds = Manifest::query()
+            ->whereIn(
+                'id',
+                WasteProcessDetail::query()
+                    ->where('waste_process_id', $process->id)
+                    ->pluck('manifest_id'),
+            )
+            ->pluck('service_id')
+            ->unique();
+
+        foreach ($serviceIds as $serviceId) {
+            $service = Service::query()->whereKey($serviceId)->lockForUpdate()->first();
+
+            if ($service === null) {
+                continue;
+            }
+
+            $details = ServiceDetail::query()
+                ->where('service_id', $service->id)
+                ->get();
+
+            $hasRemaining = $details->contains(
+                fn (ServiceDetail $detail): bool => $this->balance->remainingWeight((int) $detail->id) > 0,
+            );
+
+            $service->status = $hasRemaining
+                ? Service::STATUS_COLLECTED
+                : Service::STATUS_PROCESSED;
+            $service->save();
+        }
     }
 
     private function createCertificates(WasteProcess $process): void

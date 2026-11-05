@@ -58,7 +58,9 @@ class AssignServicesToDriverTest extends TestCase
     {
         $this->actingAsUserWithPermissions([PermissionTypes::COLLECTIONS_ASSIGN]);
 
-        $service = $this->createServiceWithManifest();
+        $service = $this->createServiceWithManifest([
+            'service_date' => now()->addDay()->toDateString(),
+        ]);
         $driver = Driver::factory()->create();
         $manifestId = $service->manifests->first()->id;
 

@@ -114,13 +114,6 @@ class FindManifestHeader
 
     private function statusLabel(string $status): string
     {
-        return match ($status) {
-            Service::STATUS_PENDING => 'Pendiente',
-            Service::STATUS_SCHEDULED => 'Programado',
-            Service::STATUS_COLLECTED => 'Recolectado',
-            // Service::STATUS_IN_WAREHOUSE => 'En almacén',
-            Service::STATUS_NEXT => 'Siguiente',
-            default => 'Desconocido',
-        };
+        return Service::statusLabel($status);
     }
 }

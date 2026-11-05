@@ -75,8 +75,10 @@ class ClientCrudTest extends TestCase
             'email' => 'carlos.lopez@example.com',
             'phone' => '5512345678',
             'company' => 'Acme SA',
+            'legal_name' => 'Acme SA de CV',
             'nra' => 'NRA-12345678',
             'rfc' => 'LOPC800101ABC',
+            'tax_regime' => '601',
             'zone_id' => $zone->id,
             'street' => 'Av. Reforma',
             'num_ext' => '123',
@@ -157,8 +159,10 @@ class ClientCrudTest extends TestCase
             'email' => 'actualizado@example.com',
             'phone' => '5511111111',
             'company' => 'Nueva Empresa',
+            'legal_name' => 'Nueva Empresa SA de CV',
             'nra' => 'NRA-11223344',
             'rfc' => 'PEXA850101AB1',
+            'tax_regime' => '612',
             'zone_id' => $zone->id,
             'street' => 'Calle Sur',
             'num_ext' => '55',
@@ -236,8 +240,10 @@ class ClientCrudTest extends TestCase
             'email' => 'mismo@example.com',
             'phone' => '5522222222',
             'company' => 'Empresa',
+            'legal_name' => 'Empresa SA de CV',
             'nra' => 'NRA-55667788',
             'rfc' => 'NOMA900101XXX',
+            'tax_regime' => '626',
             'zone_id' => $zone->id,
             'street' => 'Calle Centro',
             'num_ext' => '1',
@@ -304,8 +310,10 @@ class ClientCrudTest extends TestCase
             'email',
             'phone',
             'company',
+            'legal_name',
             'nra',
             'rfc',
+            'tax_regime',
             'zone_id',
             'street',
             'postal_code',
@@ -322,6 +330,8 @@ class ClientCrudTest extends TestCase
         $response = $this->get(route('clients.create'));
 
         $response->assertOk();
+        $response->assertSee('Razón social');
+        $response->assertSee('Régimen fiscal');
         $response->assertSee('client-zone-id', false);
         $response->assertSee('Zona Activa');
         $response->assertDontSee('Zona Inactiva');

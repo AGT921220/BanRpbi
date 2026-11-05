@@ -21,6 +21,8 @@ final readonly class ClientHeader
         public bool $canConfigure,
         public bool $canViewContractHistory = false,
         public ?int $clientContractId = null,
+        public ?string $legalName = null,
+        public ?string $taxRegime = null,
     ) {}
 
     /**
@@ -51,6 +53,8 @@ final readonly class ClientHeader
             'email' => $this->email,
             'phone' => $this->phone,
             'company' => $this->company,
+            'legal_name' => $this->legalName,
+            'tax_regime' => $this->taxRegime,
             'created_at' => $this->createdAt,
             'has_contract' => $this->hasContract,
             'has_active_contract' => $this->hasActiveContract,

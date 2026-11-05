@@ -21,7 +21,9 @@ final class ClientHeaderController extends Controller
         1 => 'email',
         2 => 'phone',
         3 => 'company',
-        4 => 'created_at',
+        4 => 'legal_name',
+        5 => 'tax_regime',
+        6 => 'created_at',
     ];
 
     /**
@@ -32,6 +34,8 @@ final class ClientHeaderController extends Controller
         'email',
         'phone',
         'company',
+        'legal_name',
+        'tax_regime',
         'created_at',
     ];
 
@@ -44,6 +48,7 @@ final class ClientHeaderController extends Controller
         'email',
         'phone',
         'company',
+        'legal_name',
     ];
 
     public function __construct(

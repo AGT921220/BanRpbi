@@ -65,7 +65,6 @@ final class ManifestStatusTransitions
             Service::STATUS_PENDING,
             Service::STATUS_SCHEDULED,
             Service::STATUS_COLLECTED,
-            Service::STATUS_IN_WAREHOUSE,
             Service::STATUS_NEXT,
         ];
 

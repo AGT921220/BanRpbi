@@ -49,7 +49,7 @@ class RegisterWarehouseEntry
             if ($service->status !== Service::STATUS_COLLECTED) {
                 throw ValidationException::withMessages([
                     'manifest_id' => 'El manifiesto '.$manifest->id
-                        .' está en estatus '.$this->statusLabel((string) $service->status)
+                        .' está en estatus '.Service::statusLabel((string) $service->status)
                         .'. Solo se puede registrar la entrada si está Recolectado.',
                 ]);
             }
@@ -62,17 +62,5 @@ class RegisterWarehouseEntry
         });
 
         return ($this->findServiceHeader)($serviceId);
-    }
-
-    private function statusLabel(string $status): string
-    {
-        return match ($status) {
-            Service::STATUS_PENDING => 'Pendiente',
-            Service::STATUS_SCHEDULED => 'Programado',
-            Service::STATUS_COLLECTED => 'Recolectado',
-            // Service::STATUS_IN_WAREHOUSE => 'En almacén',
-            Service::STATUS_NEXT => 'Siguiente',
-            default => 'Desconocido',
-        };
     }
 }

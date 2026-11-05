@@ -50,6 +50,14 @@
 />
 
 <x-form.input
+    name="legal_name"
+    label="Razón social"
+    icon="ti ti-building-bank"
+    :value="old('legal_name', $client?->legal_name)"
+    required
+/>
+
+<x-form.input
     name="nra"
     label="NRA"
     icon="ti ti-license"
@@ -67,6 +75,34 @@
     style="text-transform: uppercase"
     required
 />
+
+<div class="mb-3">
+    <label class="form-label required" for="tax_regime">Régimen fiscal</label>
+    <div class="input-icon">
+        <span class="input-icon-addon">
+            <i class="ti ti-receipt"></i>
+        </span>
+        <select
+            name="tax_regime"
+            id="tax_regime"
+            class="form-select @error('tax_regime') is-invalid @enderror"
+            required
+        >
+            <option value="">Selecciona un régimen</option>
+            @foreach (\App\Features\Clients\Domain\TaxRegimes::OPTIONS as $code => $label)
+                <option
+                    value="{{ $code }}"
+                    @selected((string) old('tax_regime', $client?->tax_regime) === (string) $code)
+                >
+                    {{ $label }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    @error('tax_regime')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
+</div>
 
 <hr class="my-4">
 

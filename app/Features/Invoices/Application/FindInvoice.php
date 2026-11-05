@@ -2,9 +2,9 @@
 
 namespace App\Features\Invoices\Application;
 
+use App\Features\Permissions\Constants\PermissionTypes;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Gate;
-use App\Features\Permissions\Constants\PermissionTypes;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -25,6 +25,8 @@ class FindInvoice
                 $q->select([
                     'id',
                     'company',
+                    'legal_name',
+                    'tax_regime',
                     'name',
                     'parentarl_surname',
                     'nra',
@@ -52,6 +54,8 @@ class FindInvoice
                             $clientQuery->select([
                                 'id',
                                 'company',
+                                'legal_name',
+                                'tax_regime',
                                 'name',
                                 'parentarl_surname',
                                 'nra',
@@ -83,9 +87,12 @@ class FindInvoice
         }
 
         $clientModel = $invoice->client ?? $invoice->service?->client;
-        $clientName = $clientModel
-            ? trim(($clientModel->company ?: '').' '.trim(($clientModel->name ?? '').' '.($clientModel->parentarl_surname ?? '')))
-            : null;
+        $clientName = null;
+        if ($clientModel) {
+            $clientName = filled($clientModel->legal_name)
+                ? $clientModel->legal_name
+                : trim(($clientModel->company ?: '').' '.trim(($clientModel->name ?? '').' '.($clientModel->parentarl_surname ?? '')));
+        }
 
         $details = $invoice->service?->serviceDetails ?? collect();
         $manifestId = $invoice->service?->manifests?->first()?->id;
@@ -133,6 +140,8 @@ class FindInvoice
             'client' => $clientModel ? [
                 'id' => $clientModel->id,
                 'name' => trim($clientName ?: '') ?: null,
+                'legal_name' => $clientModel->legal_name,
+                'tax_regime' => $clientModel->tax_regime,
                 'rfc' => $clientModel->rfc,
                 'nra' => $clientModel->nra,
                 'email' => $clientModel->email,

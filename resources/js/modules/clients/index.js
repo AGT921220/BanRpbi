@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { data: 'email', name: 'email' },
         { data: 'phone', name: 'phone' },
         { data: 'company', name: 'company' },
+        { data: 'legal_name', name: 'legal_name' },
+        { data: 'tax_regime', name: 'tax_regime' },
         { data: 'created_at', name: 'created_at' },
         {
             data: null,

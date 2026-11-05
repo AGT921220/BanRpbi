@@ -146,7 +146,7 @@ class ProcesosController extends Controller implements HasMiddleware
                 isset($data['rpbi_bi5_sangre']) ? (string) $data['rpbi_bi5_sangre'] : null,
                 isset($data['total_procesada']) ? (string) $data['total_procesada'] : null,
             ),
-            new WasteProcessContainer(),
+            new WasteProcessContainer,
             new WasteProcessPrs(
                 isset($data['temp_camara_primaria']) ? (string) $data['temp_camara_primaria'] : null,
                 isset($data['temp_camara_secundaria']) ? (string) $data['temp_camara_secundaria'] : null,
@@ -189,6 +189,66 @@ class ProcesosController extends Controller implements HasMiddleware
         return redirect()
             ->route('procesos.edit', $process->id)
             ->with('success', 'Proceso actualizado correctamente.');
+    }
+
+    public function bitacora(Request $request, string $type): View
+    {
+        $this->authorize(PermissionTypes::LOGBOOKS_VIEW);
+
+        $typeId = match ($type) {
+            'incineracion' => WasteProcessType::PROCESS_INCINERACION,
+            'esterilizacion' => WasteProcessType::PROCESS_ESTERILIZACION,
+            default => abort(404),
+        };
+
+        $dateFrom = $request->string('date_from')->toString();
+        $dateTo = $request->string('date_to')->toString();
+        $selectedIds = collect($request->input('process_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values()
+            ->all();
+
+        $query = WasteProcess::query()
+            ->with([
+                'type',
+                'details.serviceDetail.rpbiProfile',
+                'details.manifest.service.client',
+            ])
+            ->where('waste_process_type_id', $typeId)
+            ->orderBy('date_start')
+            ->orderBy('id');
+
+        if ($dateFrom !== '') {
+            $query->whereDate('date_start', '>=', $dateFrom);
+        }
+
+        if ($dateTo !== '') {
+            $query->whereDate('date_start', '<=', $dateTo);
+        }
+
+        $processes = $query->get();
+        $logbook = collect();
+
+        if ($request->boolean('generate')) {
+            $logbook = $selectedIds === []
+                ? $processes
+                : $processes->whereIn('id', $selectedIds)->values();
+        }
+
+        return view('dashboard.procesos.bitacora', [
+            'type' => $type,
+            'title' => $typeId === WasteProcessType::PROCESS_INCINERACION
+                ? 'Bitácora de incineración'
+                : 'Bitácora de esterilización',
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'processes' => $processes,
+            'selectedIds' => $selectedIds,
+            'logbook' => $logbook,
+            'generated' => $request->boolean('generate'),
+            'isIncineracion' => $typeId === WasteProcessType::PROCESS_INCINERACION,
+        ]);
     }
 
     public function show(int $proceso): View
@@ -247,7 +307,7 @@ class ProcesosController extends Controller implements HasMiddleware
                 continue;
             }
 
-            $type = new WasteProcessType();
+            $type = new WasteProcessType;
             $type->id = $id;
             $type->name = $name;
             $type->save();

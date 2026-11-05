@@ -25,6 +25,7 @@
                                 <th>Folio</th>
                                 <th>Status</th>
                                 <th>Cliente</th>
+                                <th>Monto</th>
                                 <th>UUID</th>
                                 <th>Fecha</th>
                                 <th class="w-1">Acciones</th>

@@ -34,4 +34,8 @@ class Manifest extends Model
     {
         return $this->belongsTo(Service::class);
     }
+    public function wasteProcessDetails(): BelongsTo
+    {
+        return $this->belongsTo(WasteProcessDetail::class, 'id', 'manifest_id');
+    }
 }

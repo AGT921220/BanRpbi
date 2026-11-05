@@ -31,8 +31,10 @@ class Client extends Model
         'email',
         'phone',
         'company',
+        'legal_name',
         'nra',
         'rfc',
+        'tax_regime',
         'street',
         'num_ext',
         'num_int',
@@ -100,6 +102,7 @@ class Client extends Model
     {
         return $this->hasMany(Service::class);
     }
+
     public function configurationApprovals(): HasMany
     {
         return $this->hasMany(ClientConfigurationApproval::class);

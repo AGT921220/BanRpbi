@@ -11,13 +11,13 @@ use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\TestController;
 use Illuminate\Support\Facades\Route;
 
-    Route::resource('test', TestController::class)->only(['index']);
+Route::resource('test', TestController::class)->only(['index']);
 
-    Route::get('client-access/manifests', [ClientAccessManifestController::class, 'index'])
-        ->name('client-access.manifests.index');
+Route::get('client-access/manifests', [ClientAccessManifestController::class, 'index'])
+    ->name('client-access.manifests.index');
 
-    Route::get('client-access/manifests/{manifestPublicUuid}', [ClientAccessManifestController::class, 'show'])
-        ->name('client-access.manifests.show');
+Route::get('client-access/manifests/{manifestPublicUuid}', [ClientAccessManifestController::class, 'show'])
+    ->name('client-access.manifests.show');
 Route::redirect('/', '/dashboard');
 
 Route::middleware('auth')->group(function (): void {
@@ -52,6 +52,10 @@ Route::middleware('auth')->group(function (): void {
         ->name('invoices.create');
     Route::resource('invoices', InvoiceController::class)
         ->only(['index']);
+
+    Route::get('procesos/bitacora/{type}', [ProcesosController::class, 'bitacora'])
+        ->whereIn('type', ['incineracion', 'esterilizacion'])
+        ->name('procesos.bitacora');
 
     Route::resource('procesos', ProcesosController::class)
         ->only(['index', 'store', 'create', 'edit', 'update', 'destroy', 'show']);

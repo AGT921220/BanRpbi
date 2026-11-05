@@ -14,7 +14,6 @@ use App\Http\Requests\Admin\RejectClientConfigurationRequest;
 use App\Models\Client;
 use App\Models\ClientConfigurationApproval;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Carbon;
 
 final class ApprovalController extends Controller
 {
@@ -28,7 +27,6 @@ final class ApprovalController extends Controller
     public function index()
     {
         $this->authorize(PermissionTypes::APPROVALS_VIEW);
-
 
         // return ($this->listPendingApprovals)();
         return view('approvals.index', [
@@ -50,17 +48,14 @@ final class ApprovalController extends Controller
             ($this->bulkCreateServices)(
                 client: $client,
             );
+            CreateInitialServiceManifestJob::dispatch($client->id);
+
             $clientContract = $client->activeContract;
-            if ($clientContract !== null && !!$clientContract->generate_initial_invoice) {
+            if ($clientContract !== null && $clientContract->generate_initial_invoice) {
                 CreateInvoiceFromNextServices::dispatch(
                     $client->id,
                     $clientContract->initial_invoice_manifest_count
                 )->onQueue('invoices');
-                if (Carbon::parse($clientContract->start_date)->startOfDay()->lessThanOrEqualTo(Carbon::today())) {
-                    CreateInitialServiceManifestJob::dispatch($client->id);
-                    //AQUI APLICA OTRO JOB PARA CREAR EL MANIFIESTO SI EL PRIMER SERVICIO ES HOY MISMO
-
-                }
             }
         }
 

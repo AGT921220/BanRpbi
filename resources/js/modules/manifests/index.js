@@ -19,6 +19,14 @@ function initManifestsTable() {
                 orderSequence: ["asc", "desc"],
             },
             {
+                data: "service_id",
+                name: "services.id",
+                orderSequence: ["asc", "desc"],
+                render(data) {
+                    return data ? `#${data}` : "—";
+                },
+            },
+            {
                 data: "status",
                 name: "services.status",
                 orderSequence: ["asc", "desc"],

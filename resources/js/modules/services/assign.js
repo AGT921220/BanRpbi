@@ -14,7 +14,9 @@ function initServiceDate() {
     if (queryDate) {
         $date.val(queryDate);
     } else if (!$date.val()) {
-        $date.val(formatDate(new Date()));
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        $date.val(formatDate(tomorrow));
     }
 
     updateServiceDateLabel();

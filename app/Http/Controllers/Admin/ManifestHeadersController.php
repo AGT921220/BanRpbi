@@ -19,6 +19,7 @@ class ManifestHeadersController extends Controller
         $this->authorize(PermissionTypes::MANIFESTS_VIEW);
 
         $allowedFilters = [
+            'manifests.id',
             'service_date',
             'services.service_date',
             'invoice_id',

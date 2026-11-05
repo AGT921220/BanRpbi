@@ -12,22 +12,24 @@ use Illuminate\Support\Carbon;
 
 class CreateInitialServiceManifestJob implements ShouldQueue
 {
-    use Queueable, Dispatchable, InteractsWithQueue, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     private int $clientId;
+
     public function __construct(int $clientId)
     {
         $this->clientId = $clientId;
     }
+
     public function handle(): void
     {
-        $now = Carbon::now()->toDateString();
-        $services = Service::
-        whereDate('service_date', '<=', $now)
-        ->where('client_id', $this->clientId)
-        ->get();
+        $through = Carbon::now()->addDay()->toDateString();
+        $services = Service::query()
+            ->whereDate('service_date', '<=', $through)
+            ->where('client_id', $this->clientId)
+            ->get();
         foreach ($services as $service) {
             CreateManifestJob::dispatch($service->id);
         }
     }
-
 }

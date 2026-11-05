@@ -20,6 +20,11 @@ $(function () {
                 orderSequence: ["asc", "desc"],
             },
             {
+                data: "amount",
+                name: "amount",
+                orderSequence: ["asc", "desc"],
+            },
+            {
                 data: "external_id",
                 name: "invoices.external_id",
                 orderSequence: ["asc", "desc"],

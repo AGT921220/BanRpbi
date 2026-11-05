@@ -95,6 +95,6 @@ final class ServiceController extends Controller
             }
         }
 
-        return Carbon::now()->toDateString();
+        return Carbon::tomorrow()->toDateString();
     }
 }

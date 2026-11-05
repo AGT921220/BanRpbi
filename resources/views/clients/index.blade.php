@@ -35,6 +35,8 @@
                                 <th>Correo</th>
                                 <th>Teléfono</th>
                                 <th>Empresa</th>
+                                <th>Razón social</th>
+                                <th>Régimen fiscal</th>
                                 <th>Creado</th>
                                 <th class="w-1">Acciones</th>
                             </tr>

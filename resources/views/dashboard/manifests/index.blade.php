@@ -24,6 +24,7 @@
                         <thead>
                             <tr>
                                 <th>N° Manifiesto</th>
+                                <th>N° Recolección</th>
                                 <th>Status</th>
                                 <th>Cliente</th>
                                 <th>Fecha</th>
