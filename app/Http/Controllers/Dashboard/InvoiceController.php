@@ -31,9 +31,10 @@ class InvoiceController extends Controller
         $this->authorize(PermissionTypes::INVOICES_CREATE);
 
         return view('dashboard.invoices.create', [
-            'clients' => Client::query()
-                ->orderBy('company')
-                ->orderBy('name')
+            'clients' => Client::whereHas('services', function ($query) {
+                $query->whereNull('invoice_id');
+            })
+                ->orderBy('id')
                 ->get(['id', 'company', 'name', 'parentarl_surname']),
         ]);
     }

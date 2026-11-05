@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Features\Invoices\Application\SearchBillableClientsForInvoice;
+use App\Features\Permissions\Constants\PermissionTypes;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+final class InvoiceClientOptionsController extends Controller
+{
+    public function __construct(
+        private readonly SearchBillableClientsForInvoice $searchBillableClientsForInvoice,
+    ) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize(PermissionTypes::INVOICES_CREATE);
+
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        return response()->json([
+            'data' => ($this->searchBillableClientsForInvoice)((string) ($validated['q'] ?? '')),
+        ]);
+    }
+}

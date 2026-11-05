@@ -96,6 +96,10 @@ class Client extends Model
         return $this->pendingContract();
     }
 
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
     public function configurationApprovals(): HasMany
     {
         return $this->hasMany(ClientConfigurationApproval::class);

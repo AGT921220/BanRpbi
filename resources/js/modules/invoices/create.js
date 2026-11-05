@@ -1,4 +1,7 @@
 import { get } from "../../admin.js";
+import select2Url from "select2/dist/js/select2.min.js?url";
+import "select2/dist/css/select2.min.css";
+import "select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css";
 
 const CLIENT_SELECT = "#client_id";
 const SERVICES_CHECKLIST = "#services-checklist";
@@ -12,17 +15,44 @@ const STATUS_LABELS = {
 };
 
 $(function () {
-    initClientSelect();
-    initSelectAll();
+    loadSelect2().then(() => {
+        initClientSelect();
+        initSelectAll();
+    });
 });
 
+function loadSelect2() {
+    if (window.jQuery.fn.select2) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = select2Url;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("No se pudo cargar Select2"));
+        document.head.appendChild(script);
+    });
+}
+
 function initClientSelect() {
-    $(CLIENT_SELECT).on("change", function () {
+    const $select = $(CLIENT_SELECT);
+
+    $select.select2({
+        theme: "bootstrap-5",
+        width: "100%",
+        placeholder: $select.data("placeholder"),
+        language: {
+            noResults: () => "No se encontró el cliente",
+        },
+    });
+
+    $select.on("change", function () {
         loadBillableServices($(this).val());
     });
 
-    if ($(CLIENT_SELECT).val()) {
-        loadBillableServices($(CLIENT_SELECT).val());
+    if ($select.val()) {
+        loadBillableServices($select.val());
     }
 }
 

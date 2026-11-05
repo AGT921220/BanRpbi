@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Features\Invoices\Application;
+
+use App\Models\Client;
+
+final class SearchBillableClientsForInvoice
+{
+    /**
+     * @return list<array{id: int, text: string}>
+     */
+    public function __invoke(string $term): array
+    {
+        $term = trim($term);
+
+        if (mb_strlen($term) < 2) {
+            return [];
+        }
+
+        $like = '%'.addcslashes($term, '%_\\').'%';
+
+        return Client::query()
+            ->select(['id', 'company', 'name', 'parentarl_surname'])
+            ->whereHas('services', function ($query) {
+                $query->whereNull('invoice_id');
+            })
+            ->where(function ($query) use ($like) {
+                $query->where('name', 'like', $like)
+                    ->orWhere('parentarl_surname', 'like', $like)
+                    ->orWhere('company', 'like', $like)
+                    ->orWhereRaw("CONCAT(name, ' ', parentarl_surname) LIKE ?", [$like]);
+            })
+            ->orderBy('name')
+            ->orderBy('id')
+            ->limit(20)
+            ->get()
+            ->map(fn (Client $client): array => [
+                'id' => $client->id,
+                'text' => $this->label($client),
+            ])
+            ->all();
+    }
+
+    private function label(Client $client): string
+    {
+        $name = $client->fullName();
+
+        if ($client->company) {
+            return trim($client->company.' — '.$name);
+        }
+
+        return $name;
+    }
+}

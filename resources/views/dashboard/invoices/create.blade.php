@@ -35,31 +35,29 @@
                         <div class="card-body">
                             <div class="mb-0">
                                 <label class="form-label required" for="client_id">Seleccionar cliente</label>
-                                <div class="input-icon">
-                                    <span class="input-icon-addon">
-                                        <i class="ti ti-user"></i>
-                                    </span>
-                                    <select
-                                        name="client_id"
-                                        id="client_id"
-                                        class="form-select @error('client_id') is-invalid @enderror"
-                                        required
-                                    >
-                                        <option value="">Selecciona un cliente</option>
-                                        @foreach ($clients as $client)
-                                            @php
-                                                $clientLabel = $client->company
-                                                    ?: trim("{$client->name} {$client->parentarl_surname}");
-                                            @endphp
-                                            <option
-                                                value="{{ $client->id }}"
-                                                @selected((string) old('client_id') === (string) $client->id)
-                                            >
-                                                {{ $clientLabel }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                <select
+                                    name="client_id"
+                                    id="client_id"
+                                    class="form-select @error('client_id') is-invalid @enderror"
+                                    data-placeholder="Busca por nombre del cliente"
+                                    required
+                                >
+                                    <option value=""></option>
+                                    @foreach ($clients as $client)
+                                        @php
+                                            $clientName = trim("{$client->name} {$client->parentarl_surname}");
+                                            $clientLabel = $client->company
+                                                ? trim("{$client->company} — {$clientName}")
+                                                : $clientName;
+                                        @endphp
+                                        <option
+                                            value="{{ $client->id }}"
+                                            @selected((string) old('client_id') === (string) $client->id)
+                                        >
+                                            {{ $clientLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
                                 @error('client_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
