@@ -47,6 +47,7 @@ class FacturapiClient
 
     public function downloadInvoicePdf(string $externalInvoiceId): string
     {
+        info($this->getBaseUri().'invoices/'.$externalInvoiceId.'/pdf');
         $response = $this->httpClient->request(
             'GET',
             $this->getBaseUri().'invoices/'.$externalInvoiceId.'/pdf',
