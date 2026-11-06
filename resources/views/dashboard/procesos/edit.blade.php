@@ -95,7 +95,7 @@
                                                 type="number"
                                                 :icon="$icon"
                                                 step="0.01"
-                                                :value="$data['params'][0][$field] ?? ''"
+                                                :value="filled($data['params'][0][$field] ?? null) ? $data['params'][0][$field] : 0"
                                                 :disabled="$isFinished"
                                             />
                                         </div>
@@ -121,7 +121,7 @@
                                                 :type="$type"
                                                 :icon="$icon"
                                                 :step="$type === 'number' ? '0.01' : null"
-                                                :value="$data['params'][0][$field] ?? ''"
+                                                :value="filled($data['params'][0][$field] ?? null) ? $data['params'][0][$field] : ($type === 'number' ? 0 : '')"
                                                 :disabled="$isFinished"
                                             />
                                         </div>

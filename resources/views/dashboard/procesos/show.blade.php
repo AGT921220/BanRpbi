@@ -86,7 +86,7 @@
                                 ] as $field => $label)
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">{{ $label }}</div>
-                                        <div class="datagrid-content">{{ $process->{$field} ?? '—' }}</div>
+                                        <div class="datagrid-content">{{ filled($process->{$field}) ? $process->{$field} : 0 }}</div>
                                     </div>
                                 @endforeach
                             </div>
@@ -114,7 +114,13 @@
                                 ] as $field => $label)
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">{{ $label }}</div>
-                                        <div class="datagrid-content">{{ $process->{$field} ?? '—' }}</div>
+                                        <div class="datagrid-content">
+                                            @if (in_array($field, ['eliminacion_biologica', 'ciclo_carga'], true))
+                                                {{ $process->{$field} ?: '—' }}
+                                            @else
+                                                {{ filled($process->{$field}) ? $process->{$field} : 0 }}
+                                            @endif
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
