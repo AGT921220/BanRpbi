@@ -31,7 +31,7 @@ final class BuildClientContractPdfData
         $client = $clientContract->client;
         $contract = $clientContract->contract;
         $frequencyLabels = \App\Models\Contract::frequencyLabels();
-
+        // dd($client->toArray());
         return [
             'client_contract_id' => $clientContract->id,
             'status' => $clientContract->status,
@@ -44,7 +44,8 @@ final class BuildClientContractPdfData
             'notes' => $clientContract->notes ?: $contract->notes,
             'client' => [
                 'id' => $client->id,
-                'name' => trim(($client->company ?: '').' '.trim(($client->name ?? '').' '.($client->parentarl_surname ?? ''))),
+                'representante_legal' => trim(trim(($client->name ?? '').' '.($client->parentarl_surname ?? ''))),
+                'name' => $client->company,
                 'rfc' => $client->rfc,
                 'nra' => $client->nra,
                 'email' => $client->email,
@@ -58,6 +59,13 @@ final class BuildClientContractPdfData
                     $client->city?->name,
                     $client->state?->name,
                 ])->filter()->implode(', '),
+                'street' => $client->street,
+                'num_ext' => $client->num_ext,
+                'num_int' => $client->num_int,
+                'colony' => $client->colony,
+                'postal_code' => $client->postal_code,
+                'city' => $client->city?->name,
+                'state' => $client->state?->name,
             ],
             'contract' => [
                 'id' => $contract->id,
@@ -89,6 +97,7 @@ final class BuildClientContractPdfData
         }
 
         if (! in_array($clientContract->status, [
+            ClientContract::STATUS_PENDING,
             ClientContract::STATUS_ACTIVE,
             ClientContract::STATUS_COMPLETED,
         ], true)) {

@@ -84,6 +84,19 @@
                                 </td>
                                 <td>
                                     <div class="btn-list flex-nowrap">
+                                        @if ($client->pendingContract)
+                                            <a
+                                                href="#"
+                                                target="_blank"
+                                                rel="noopener"
+                                                data-id="{{ $client->pendingContract->id }}"
+                                                class="btn btn-sm btn-outline-secondary btn-contract-pdf"
+                                            >
+                                                <i class="ti ti-file-text me-1"></i>
+                                                Ver Contrato
+                                            </a>
+                                        @endif
+
                                         @if($client->can_approve)
                                             <button
                                                 type="button"
@@ -233,6 +246,8 @@
 @endsection
 
 @push('scripts')
+    @vite('resources/js/modules/contracts/contractPdf.js')
+    @vite('resources/js/modules/contracts/contractPdfBuilder.js')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const modalEl = document.getElementById('approve-client-modal');

@@ -6,6 +6,7 @@ use App\Features\Permissions\Constants\PermissionTypes;
 use App\Models\Client;
 use App\Models\ClientContract;
 use App\Models\Contract;
+use App\Models\RpbiProfile;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,6 +63,7 @@ class ApprovalsTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('approvals.index');
         $response->assertSee('Clientes pendientes de aprobación');
+        $response->assertSee('Ver Contrato');
         $response->assertSee('Persona 1');
         $response->assertSee('Persona 2');
         $response->assertDontSee('Director de Ventas');
@@ -221,6 +223,40 @@ class ApprovalsTest extends TestCase
             'client_id' => $client->id,
             'status' => ClientContract::STATUS_CANCELLED,
         ]);
+    }
+
+    public function test_approvals_user_can_fetch_pending_contract_pdf_data(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::APPROVALS_VIEW]);
+        $client = $this->pendingClient();
+        $clientContract = $client->pendingContract;
+        $profile = RpbiProfile::query()->orderBy('code')->first();
+
+        $this->assertNotNull($clientContract);
+        $this->assertNotNull($profile);
+
+        $clientContract->contract->rpbiProfiles()->attach($profile->id);
+
+        $this->getJson(route('client-contracts.show', $clientContract))
+            ->assertOk()
+            ->assertJsonPath('data.client_contract_id', $clientContract->id)
+            ->assertJsonPath('data.status', ClientContract::STATUS_PENDING);
+    }
+
+    public function test_approvals_user_cannot_fetch_active_contract_pdf_data(): void
+    {
+        $this->actingAsUserWithPermissions([PermissionTypes::APPROVALS_VIEW]);
+
+        $client = Client::factory()->create();
+        $clientContract = ClientContract::query()->create([
+            'client_id' => $client->id,
+            'contract_id' => Contract::factory()->create()->id,
+            'start_date' => '2026-08-01',
+            'end_date' => '2027-08-01',
+            'status' => ClientContract::STATUS_ACTIVE,
+        ]);
+
+        $this->getJson(route('client-contracts.show', $clientContract))->assertForbidden();
     }
 
     public function test_unauthorized_user_cannot_approve(): void
