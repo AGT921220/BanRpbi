@@ -48,5 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::post('token-push', [TokenPushController::class, 'store']);
+    Route::get('procesos', [ProcessController::class, 'index']);
     Route::post('procesos', [ProcessController::class, 'store']);
+    Route::get('procesos/{proceso}', [ProcessController::class, 'show']);
+    Route::put('procesos/{proceso}', [ProcessController::class, 'update']);
 });

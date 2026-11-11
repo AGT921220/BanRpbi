@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class RpbiProfile extends Model
 {
+    public const PATHOLOGICAL_ID = 3;
+
     protected $table = 'rpbi_profiles';
 
     /**

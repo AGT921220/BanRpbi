@@ -17,7 +17,10 @@ class BuildWasteProcess
 {
     public function __invoke(WasteProcess $wasteProcess): DtoWasteProcess
     {
-        $wateProcessDate = new WasteProcessDate($wasteProcess->date_start, $wasteProcess->created_at);
+        $wateProcessDate = new WasteProcessDate(
+            $this->asString($wasteProcess->date_start),
+            $this->asString($wasteProcess->created_at),
+        );
         $wasteProcessMachine = new WasteProcessMachine(
             $wasteProcess->machine_number,
             $wasteProcess->hour_start_machine
@@ -28,9 +31,9 @@ class BuildWasteProcess
                 : null,
         );
         $wasteProcessFinished = new WasteProcessFinish(
-            $wasteProcess->is_finished,
-            $wasteProcess->finished_by_id,
-            $wasteProcess->finished_at
+            (int) $wasteProcess->is_finished,
+            $wasteProcess->finished_by_id === null ? null : (int) $wasteProcess->finished_by_id,
+            $this->asString($wasteProcess->finished_at),
         );
         $wasteProcessHeader = new WasteProcessHeader(
             $wasteProcess->id,
@@ -141,6 +144,15 @@ class BuildWasteProcess
             'comments' => $wasteProcess->comments ?? '',
         ]];
     }
+    private function asString(mixed $value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        return (string) $value;
+    }
+
     private function getClients(WasteProcess $wasteProcess): string
     {
         return $wasteProcess->wasteProcessDetails
