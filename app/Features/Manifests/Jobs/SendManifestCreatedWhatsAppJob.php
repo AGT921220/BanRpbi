@@ -9,7 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Str;
 
 class SendManifestCreatedWhatsAppJob implements ShouldQueue
 {
@@ -28,7 +27,6 @@ class SendManifestCreatedWhatsAppJob implements ShouldQueue
         $template = new ClientServiceReminderTemplate(
             'Alfredo',
             '2022-10-01',
-            'Alfredo Chofer',
             'BAN-12345',
             'Cultivos y cepas, Objetos punzocortantes',
             $manifest->public_uuid

@@ -11,7 +11,6 @@ final class ClientServiceReminderTemplate implements WhatsappTemplate
     public function __construct(
         private string $clientName,
         private string $date,
-        private string $driverName,
         private string $manifestNumber,
         private string $residues,
         private string $manifestUuid,
@@ -37,10 +36,9 @@ final class ClientServiceReminderTemplate implements WhatsappTemplate
         return [
             '1' => $this->clientName,
             '2' => $this->date,
-            '3' => $this->driverName,
-            '4' => $this->manifestNumber,
-            '5' => $this->residues,
-            '6' => $this->manifestUuid,
+            '3' => $this->manifestNumber,
+            '4' => $this->residues,
+            '5' => $this->manifestUuid,
         ];
     }
 

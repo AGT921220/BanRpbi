@@ -2,6 +2,7 @@
 
 namespace App\Features\Services\Application;
 
+use App\Features\Manifests\Jobs\SendManifestCreatedWhatsAppJob;
 use App\Features\Services\Domain\ServiceStatusTransitions;
 use App\Models\Driver;
 use App\Models\Service;
@@ -25,6 +26,7 @@ final class AssignServicesToDriver
 
         return (int) DB::transaction(function () use ($driverId, $serviceIds): int {
             $validIds = Service::query()
+            ->with('manifests')
                 ->whereIn('id', $serviceIds)
                 ->whereHas('manifests')
                 ->pluck('id')
@@ -51,6 +53,11 @@ final class AssignServicesToDriver
                     continue;
                 }
 
+                if ($service->driver_id == null) {
+                    dd($service->toArray());
+                    SendManifestCreatedWhatsAppJob::dispatch($manifest->id);
+                }
+                dd($service->driver_id);
                 $service->driver_id = $driverId;
                 $service->status = Service::STATUS_SCHEDULED;
                 $service->save();

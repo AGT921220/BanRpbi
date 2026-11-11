@@ -33,6 +33,5 @@ class CreateManifestJob implements ShouldQueue
         $manifest->public_uuid = Str::uuid()->toString();
         $manifest->service_id = $serviceId;
         $manifest->save();
-        SendManifestCreatedWhatsAppJob::dispatch($manifest->id);
     }
 }
