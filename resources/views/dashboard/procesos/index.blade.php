@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Procesos')
-@section('page-title', 'Procesos RPBI')
+@section('title', 'Tratamientos')
+@section('page-title', 'Tratamientos RPBI')
 
 @section('page-actions')
     <a href="{{ route('procesos.create') }}" class="btn btn-primary">
         <i class="ti ti-plus me-1"></i>
-        Nuevo proceso
+        Nuevo tratamiento
     </a>
 @endsection
 
@@ -16,7 +16,7 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="ti ti-flame me-2"></i>
-                    Listado de procesos
+                    Listado de tratamientos
                 </h3>
             </div>
             <div class="table-responsive">
@@ -61,7 +61,7 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center text-secondary py-4">
-                                    No hay procesos registrados.
+                                    No hay tratamientos registrados.
                                 </td>
                             </tr>
                         @endforelse

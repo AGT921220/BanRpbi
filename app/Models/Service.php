@@ -84,7 +84,7 @@ class Service extends Model
             self::STATUS_PENDING => 'Pendiente',
             self::STATUS_SCHEDULED => 'Programado',
             self::STATUS_COLLECTED => 'Recolectado',
-            self::STATUS_IN_PROCESS => 'Proceso',
+            self::STATUS_IN_PROCESS => 'Tratamiento',
             self::STATUS_PROCESSED => 'Cerrado',
             self::STATUS_NEXT => 'Siguiente',
             default => 'Desconocido',

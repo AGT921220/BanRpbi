@@ -71,7 +71,7 @@ class UpdateEsterilizacionProcessTest extends TestCase
             ->assertOk()
             ->assertSee('Fecha de carga')
             ->assertSee('Hora de carga')
-            ->assertSee('Hora término del proceso')
+            ->assertSee('Hora término del tratamiento')
             ->assertSee('Temperatura del esterilizador')
             ->assertSee('Presión cámara principal')
             ->assertSee('Eliminación biológica')

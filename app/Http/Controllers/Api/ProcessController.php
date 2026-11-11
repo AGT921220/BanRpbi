@@ -24,7 +24,7 @@ final class ProcessController extends Controller
         $typeIds = $this->creatableTypeIds($request->user());
 
         if ($typeIds === []) {
-            abort(403, 'No tienes permiso para crear procesos.');
+            abort(403, 'No tienes permiso para crear tratamientos.');
         }
 
         $data = $request->validate([
@@ -73,7 +73,7 @@ final class ProcessController extends Controller
         );
 
         return response()->json([
-            'message' => 'Proceso '.$processId.' creado correctamente.',
+            'message' => 'Tratamiento '.$processId.' creado correctamente.',
             'data' => [
                 'id' => $processId,
             ],

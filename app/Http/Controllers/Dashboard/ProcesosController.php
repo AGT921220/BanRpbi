@@ -104,7 +104,7 @@ class ProcesosController extends Controller implements HasMiddleware
             return redirect('/procesos/create')->with('error', $th->getMessage())->withInput();
         }
 
-        return redirect("/procesos/{$processId}/edit")->with('success', 'Proceso creado correctamente');
+        return redirect("/procesos/{$processId}/edit")->with('success', 'Tratamiento creado correctamente');
     }
 
     public function edit(int $processId): View
@@ -183,12 +183,12 @@ class ProcesosController extends Controller implements HasMiddleware
 
             return redirect()
                 ->route('procesos.show', $process->id)
-                ->with('success', 'Proceso cerrado correctamente.');
+                ->with('success', 'Tratamiento cerrado correctamente.');
         }
 
         return redirect()
             ->route('procesos.edit', $process->id)
-            ->with('success', 'Proceso actualizado correctamente.');
+            ->with('success', 'Tratamiento actualizado correctamente.');
     }
 
     public function bitacora(Request $request, string $type): View
@@ -270,7 +270,7 @@ class ProcesosController extends Controller implements HasMiddleware
 
     public function destroy(int $proceso): RedirectResponse
     {
-        abort(403, 'La eliminación de procesos no está disponible.');
+        abort(403, 'La eliminación de tratamientos no está disponible.');
     }
 
     private function creatableTypes(): Collection

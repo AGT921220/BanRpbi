@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Generar proceso')
-@section('page-title', 'Generar proceso')
+@section('title', 'Generar tratamiento')
+@section('page-title', 'Generar tratamiento')
 
 @section('content')
     <div class="container-xl">
@@ -14,12 +14,12 @@
                         <div class="card-header">
                             <h3 class="card-title">
                                 <i class="ti ti-flask me-2"></i>
-                                Proceso
+                                Tratamiento
                             </h3>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label class="form-label required" for="waste_process_type_id">Tipo de proceso</label>
+                                <label class="form-label required" for="waste_process_type_id">Tipo de tratamiento</label>
                                 <select
                                     name="waste_process_type_id"
                                     id="waste_process_type_id"
@@ -69,7 +69,7 @@
                         </div>
                         <div class="card-body">
                             <div class="text-secondary text-center py-4" id="manifests-placeholder">
-                                Selecciona el tipo de proceso para ver los manifiestos que puedes incluir.
+                                Selecciona el tipo de tratamiento para ver los manifiestos que puedes incluir.
                             </div>
 
                             <div id="process-manifests" class="d-none">
@@ -131,7 +131,7 @@
                         <div class="card-footer d-flex justify-content-end">
                             <button type="button" class="btn btn-primary" id="open-process-confirm">
                                 <i class="ti ti-plus me-1"></i>
-                                Crear proceso
+                                Crear tratamiento
                             </button>
                         </div>
                     </div>

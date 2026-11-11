@@ -10,7 +10,7 @@ class ManifestStatusCalculator
             return "En Almacén";
         }
         if ($hasProcess && !$hasCompletedProcess) {
-            return "En Proceso";
+            return "En Tratamiento";
         }
         if ($hasCompletedProcess) {
             return "Cerrado";

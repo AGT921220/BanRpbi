@@ -271,7 +271,7 @@
                                         </span>
 
                                         <span class="nav-link-title">
-                                            Procesos
+                                            Tratamientos
                                         </span>
                                     </a>
 

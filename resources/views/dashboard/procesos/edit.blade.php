@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Captura proceso #'.$process->getWasteProcessId())
-@section('page-title', 'Captura proceso #'.$process->getWasteProcessId())
+@section('title', 'Captura tratamiento #'.$process->getWasteProcessId())
+@section('page-title', 'Captura tratamiento #'.$process->getWasteProcessId())
 
 @section('page-actions')
     <a href="{{ route('procesos.show', $process->getWasteProcessId()) }}" class="btn btn-outline-secondary">
@@ -43,7 +43,7 @@
                             />
                             <x-form.input
                                 name="hour_machine"
-                                :label="$isEsterilizacion ? 'Hora término del proceso' : 'Paro de carga'"
+                                :label="$isEsterilizacion ? 'Hora término del tratamiento' : 'Paro de carga'"
                                 type="time"
                                 icon="ti ti-clock-stop"
                                 :value="$data['hour_machine']"
@@ -155,7 +155,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="4" class="text-secondary">Sin manifiestos en este proceso.</td>
+                                                <td colspan="4" class="text-secondary">Sin manifiestos en este tratamiento.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -169,7 +169,7 @@
                                     </button>
                                     <button type="submit" class="btn btn-success" name="finish" value="1" @disabled(! $canFinish)>
                                         <i class="ti ti-check me-1"></i>
-                                        Cerrar proceso
+                                        Cerrar tratamiento
                                     </button>
                                 </div>
                             @endunless

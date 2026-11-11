@@ -76,7 +76,7 @@
 
             <div class="card mb-3">
                 <div class="card-header">
-                    <h3 class="card-title">Procesos</h3>
+                    <h3 class="card-title">Tratamientos</h3>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-vcenter card-table">
@@ -99,12 +99,12 @@
                                             name="process_ids[]"
                                             value="{{ $process->id }}"
                                             @checked(in_array($process->id, $selectedIds, true))
-                                            aria-label="Seleccionar proceso {{ $process->id }}"
+                                            aria-label="Seleccionar tratamiento {{ $process->id }}"
                                         >
                                     </td>
                                     <td>{{ $process->id }}</td>
                                     <td>{{ optional($process->date_start)->format('d/m/Y') }}</td>
-                                    <td>{{ $process->is_finished ? 'Cerrado' : 'Proceso' }}</td>
+                                    <td>{{ $process->is_finished ? 'Cerrado' : 'Tratamiento' }}</td>
                                     <td>
                                         {{ $process->details->pluck('manifest_id')->unique()->filter()->implode(', ') ?: '—' }}
                                     </td>
@@ -112,7 +112,7 @@
                             @empty
                                 <tr>
                                     <td colspan="5" class="text-secondary text-center py-4">
-                                        No hay procesos en el rango indicado.
+                                        No hay tratamientos en el rango indicado.
                                     </td>
                                 </tr>
                             @endforelse
@@ -134,9 +134,9 @@
                 <div class="card mb-3">
                     <div class="card-header">
                         <h3 class="card-title">
-                            Proceso #{{ $process->id }}
+                            Tratamiento #{{ $process->id }}
                             · {{ optional($process->date_start)->format('d/m/Y') }}
-                            · {{ $process->is_finished ? 'Cerrado' : 'Proceso' }}
+                            · {{ $process->is_finished ? 'Cerrado' : 'Tratamiento' }}
                         </h3>
                     </div>
                     <div class="card-body">
@@ -233,7 +233,7 @@
             @empty
                 <div class="card">
                     <div class="card-body text-secondary text-center py-4">
-                        No hay procesos seleccionados para la bitácora.
+                        No hay tratamientos seleccionados para la bitácora.
                     </div>
                 </div>
             @endforelse

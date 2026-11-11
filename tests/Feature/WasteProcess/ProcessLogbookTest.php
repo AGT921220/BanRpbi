@@ -61,7 +61,7 @@ class ProcessLogbookTest extends TestCase
         ]));
 
         $generated->assertOk();
-        $generated->assertSee('Proceso #'.$inside->id);
+        $generated->assertSee('Tratamiento #'.$inside->id);
     }
 
     public function test_logbook_requires_permission(): void

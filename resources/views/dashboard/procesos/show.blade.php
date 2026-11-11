@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Proceso #'.$process->id)
-@section('page-title', 'Proceso #'.$process->id)
+@section('title', 'Tratamiento #'.$process->id)
+@section('page-title', 'Tratamiento #'.$process->id)
 
 @section('page-actions')
     <a href="{{ route('procesos.index') }}" class="btn btn-outline-secondary">
@@ -42,7 +42,7 @@
                             </div>
                             <div class="datagrid-item">
                                 <div class="datagrid-title">
-                                    {{ $process->waste_process_type_id === \App\Models\WasteProcessType::PROCESS_ESTERILIZACION ? 'Hora término del proceso' : 'Paro de carga' }}
+                                    {{ $process->waste_process_type_id === \App\Models\WasteProcessType::PROCESS_ESTERILIZACION ? 'Hora término del tratamiento' : 'Paro de carga' }}
                                 </div>
                                 <div class="datagrid-content">{{ $process->hour_machine ? \Illuminate\Support\Carbon::parse($process->hour_machine)->format('H:i') : '—' }}</div>
                             </div>

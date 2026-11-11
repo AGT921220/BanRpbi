@@ -148,7 +148,7 @@ class SearchServiceHeaders
 
             Service::STATUS_IN_PROCESS => [
                 'status' => Service::STATUS_IN_PROCESS,
-                'label' => 'Proceso',
+                'label' => 'Tratamiento',
                 'bg' => '#FEF3C7',
                 'color' => '#B45309',
                 'icon' => 'sync-outline',

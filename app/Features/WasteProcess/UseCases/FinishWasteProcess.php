@@ -34,7 +34,7 @@ class FinishWasteProcess
 
             if ($process->is_finished) {
                 throw ValidationException::withMessages([
-                    'process' => 'El proceso ya está cerrado.',
+                    'process' => 'El tratamiento ya está cerrado.',
                 ]);
             }
 
@@ -50,7 +50,7 @@ class FinishWasteProcess
 
             if ($processDetails->count() !== count($detailIds)) {
                 throw ValidationException::withMessages([
-                    'details' => 'Hay líneas de proceso inválidas o ajenas a este proceso.',
+                    'details' => 'Hay líneas de tratamiento inválidas o ajenas a este tratamiento.',
                 ]);
             }
 
