@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Service extends Model
 {
@@ -67,9 +68,9 @@ class Service extends Model
         return $this->hasMany(ServiceDetail::class);
     }
 
-    public function manifests(): HasMany
+    public function manifest(): HasOne
     {
-        return $this->hasMany(Manifest::class);
+        return $this->hasOne(Manifest::class);
     }
 
     public function warehouseEntryUser(): BelongsTo

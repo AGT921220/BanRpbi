@@ -49,7 +49,7 @@ class FindInvoice
                 $q->select(['id', 'client_id', 'service_date', 'invoice_id'])
                     ->with([
                         'serviceDetails.rpbiProfile',
-                        'manifests:id,service_id',
+                        'manifest:id,service_id',
                         'client' => function ($clientQuery) {
                             $clientQuery->select([
                                 'id',

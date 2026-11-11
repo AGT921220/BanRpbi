@@ -62,7 +62,7 @@ class AssignServicesToDriverTest extends TestCase
             'service_date' => now()->addDay()->toDateString(),
         ]);
         $driver = Driver::factory()->create();
-        $manifestId = $service->manifests->first()->id;
+        $manifestId = $service->manifest->id;
 
         $response = $this->get(route('services.assign'));
 

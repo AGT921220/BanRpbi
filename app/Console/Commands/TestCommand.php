@@ -77,7 +77,6 @@ class TestCommand extends Command
         $template = new ClientServiceReminderTemplate(
             'Alfredo',
             '2022-10-01',
-            'Alfredo Chofer',
             'BAN-12345',
             'Cultivos y cepas, Objetos punzocortantes',
             $manifest->public_uuid

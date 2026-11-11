@@ -54,7 +54,7 @@
                                     @foreach ($services as $service)
                                         @php
                                             $isAssigned = $service->driver_id !== null;
-                                            $manifestId = $service->manifests->first()?->id;
+                                            $manifestId = $service->manifest->id;
                                             $clientLabel = $service->client?->company
                                                 ?: trim(($service->client?->name ?? '').' '.($service->client?->parentarl_surname ?? ''));
                                         @endphp

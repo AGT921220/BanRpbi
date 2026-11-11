@@ -26,9 +26,8 @@ final class AssignServicesToDriver
 
         return (int) DB::transaction(function () use ($driverId, $serviceIds): int {
             $validIds = Service::query()
-            ->with('manifests')
                 ->whereIn('id', $serviceIds)
-                ->whereHas('manifests')
+                ->whereHas('manifest')
                 ->pluck('id')
                 ->all();
 
@@ -39,6 +38,7 @@ final class AssignServicesToDriver
             }
 
             $services = Service::query()
+                ->with('manifest')
                 ->whereIn('id', $validIds)
                 ->lockForUpdate()
                 ->get();
@@ -52,12 +52,11 @@ final class AssignServicesToDriver
                 ) && $service->status !== Service::STATUS_SCHEDULED) {
                     continue;
                 }
-
+            info('ASIGNADO A SERVICIO');
+            info($service->toArray());
                 if ($service->driver_id == null) {
-                    dd($service->toArray());
-                    SendManifestCreatedWhatsAppJob::dispatch($manifest->id);
+                    SendManifestCreatedWhatsAppJob::dispatch($service->manifest->id);
                 }
-                dd($service->driver_id);
                 $service->driver_id = $driverId;
                 $service->status = Service::STATUS_SCHEDULED;
                 $service->save();

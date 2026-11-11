@@ -12,7 +12,7 @@
 
 @section('content')
     @php
-        $manifest = $service->manifests->first();
+        $manifest = $service->manifest;
         $statusLabel = $header['status']['label'] ?? $service->status;
     @endphp
 

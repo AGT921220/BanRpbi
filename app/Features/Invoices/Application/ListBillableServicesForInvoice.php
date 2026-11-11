@@ -21,7 +21,7 @@ final class ListBillableServicesForInvoice
         return Service::query()
             ->with([
                 'zone:id,name',
-                'manifests:id,service_id',
+                'manifest:id,service_id',
             ])
             ->where('client_id', $clientId)
             ->whereNull('invoice_id')
@@ -34,7 +34,7 @@ final class ListBillableServicesForInvoice
                     'service_date' => $service->service_date?->format('Y-m-d') ?? '',
                     'status' => $service->status,
                     'zone' => $service->zone?->name,
-                    'manifest_id' => $service->manifests->first()?->id,
+                    'manifest_id' => $service->manifest->id,
                 ];
             });
     }
