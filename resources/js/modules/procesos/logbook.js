@@ -12,60 +12,12 @@ $(function () {
     }
 
     const general = table.dataset.general === "1";
-    const columns = [];
-
-    if (!general) {
-        columns.push({
-            data: "id",
-            name: "actions",
-            orderable: false,
-            searchable: false,
-            render(id) {
-                return `
-                    <input
-                        type="checkbox"
-                        class="form-check-input"
-                        name="process_ids[]"
-                        value="${id}"
-                        aria-label="Seleccionar tratamiento ${id}"
-                    >
-                `;
-            },
-        });
-    }
-
-    columns.push(
-        {
-            data: "id",
-            name: "waste_processes.id",
-            orderSequence: ["asc", "desc"],
-        },
-        {
-            data: "fecha",
-            name: "waste_processes.date_start",
-            orderSequence: ["asc", "desc"],
-        },
-        {
-            data: "tipo",
-            name: "waste_process_types.name",
-            orderSequence: ["asc", "desc"],
-        },
-        {
-            data: "estado",
-            name: "waste_processes.id",
-            orderable: false,
-        },
-        {
-            data: "manifiestos",
-            name: "actions",
-            orderable: false,
-        },
-    );
+    const columns = general ? generalColumns() : treatmentColumns();
 
     createDataTable(TABLE_ID, columns, {
-        entityName: "tratamientos",
+        entityName: general ? "recolecciones" : "tratamientos",
         pageLength: 15,
-        order: [[general ? 1 : 2, "asc"]],
+        order: [[general ? 3 : 2, "asc"]],
         ajax: (data, callback) => {
             getDataTableData(data, callback, {
                 url: table.dataset.url,
@@ -99,6 +51,103 @@ $(function () {
         });
     });
 });
+
+function generalColumns() {
+    return [
+        {
+            data: "service_id",
+            name: "service_details.service_id",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "service_detail_id",
+            name: "service_details.id",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "weight",
+            name: "service_details.weight",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "service_date",
+            name: "services.service_date",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "status",
+            name: "services.status",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "warehouse_entry_at",
+            name: "services.warehouse_entry_at",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "client_name",
+            name: "clients.company",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "manifest_id",
+            name: "manifests.id",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "driver_name",
+            name: "drivers.name",
+            orderSequence: ["asc", "desc"],
+        },
+    ];
+}
+
+function treatmentColumns() {
+    return [
+        {
+            data: "id",
+            name: "actions",
+            orderable: false,
+            searchable: false,
+            render(id) {
+                return `
+                    <input
+                        type="checkbox"
+                        class="form-check-input"
+                        name="process_ids[]"
+                        value="${id}"
+                        aria-label="Seleccionar tratamiento ${id}"
+                    >
+                `;
+            },
+        },
+        {
+            data: "id",
+            name: "waste_processes.id",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "fecha",
+            name: "waste_processes.date_start",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "tipo",
+            name: "waste_process_types.name",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "estado",
+            name: "waste_processes.id",
+            orderable: false,
+        },
+        {
+            data: "manifiestos",
+            name: "actions",
+            orderable: false,
+        },
+    ];
+}
 
 function currentParams(form) {
     return {

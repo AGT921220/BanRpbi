@@ -91,7 +91,7 @@
 
             <div class="card mb-3">
                 <div class="card-header">
-                    <h3 class="card-title">Tratamientos</h3>
+                    <h3 class="card-title">{{ $general ? 'Bitácora general' : 'Tratamientos' }}</h3>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -103,14 +103,24 @@
                         >
                             <thead>
                                 <tr>
-                                    @unless ($general)
+                                    @if ($general)
+                                        <th>Servicio</th>
+                                        <th>Detalle</th>
+                                        <th>Peso</th>
+                                        <th>Fecha de servicio</th>
+                                        <th>Estado</th>
+                                        <th>Ingreso a almacén</th>
+                                        <th>Cliente</th>
+                                        <th>Manifiesto</th>
+                                        <th>Chofer</th>
+                                    @else
                                         <th class="w-1">Sel.</th>
-                                    @endunless
-                                    <th>#</th>
-                                    <th>Fecha</th>
-                                    <th>Tipo</th>
-                                    <th>Estado</th>
-                                    <th>Manifiestos</th>
+                                        <th>#</th>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Estado</th>
+                                        <th>Manifiestos</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody></tbody>

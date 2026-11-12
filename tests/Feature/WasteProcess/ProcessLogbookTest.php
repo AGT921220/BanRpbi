@@ -3,9 +3,17 @@
 namespace Tests\Feature\WasteProcess;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Models\Client;
+use App\Models\Contract;
+use App\Models\Driver;
+use App\Models\Manifest;
+use App\Models\Service;
+use App\Models\ServiceDetail;
 use App\Models\User;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessType;
+use App\Models\Zone;
+use Illuminate\Support\Str;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -224,7 +232,7 @@ class ProcessLogbookTest extends TestCase
         $this->getJson(route('bitacora-general.index'))->assertForbidden();
     }
 
-    public function test_bitacora_general_lists_both_process_types_with_its_permission(): void
+    public function test_bitacora_general_lists_service_details_with_its_permission(): void
     {
         Permission::findOrCreate(PermissionTypes::LOGBOOKS_VIEW, 'web');
         Permission::findOrCreate(PermissionTypes::BITACORA_GENERAL_VIEW, 'web');
@@ -236,45 +244,61 @@ class ProcessLogbookTest extends TestCase
         $this->get(route('procesos.bitacoras.general'))->assertForbidden();
 
         $user->givePermissionTo(PermissionTypes::BITACORA_GENERAL_VIEW);
-        $this->processType(WasteProcessType::PROCESS_INCINERACION, 'Incineración');
-        $this->processType(WasteProcessType::PROCESS_ESTERILIZACION, 'Esterilización');
-
-        WasteProcess::query()->create([
+        $zone = Zone::factory()->create();
+        $client = Client::factory()->create(['company' => 'Empresa Medica 1']);
+        $driver = Driver::factory()->create([
+            'name' => 'Chofer',
+            'parentarl_surname' => 'Uno',
+            'maternal_surname' => '',
+            'zone_id' => $zone->id,
             'user_id' => $user->id,
-            'waste_process_type_id' => WasteProcessType::PROCESS_INCINERACION,
-            'date_start' => '2026-11-04',
         ]);
-        WasteProcess::query()->create([
-            'user_id' => $user->id,
-            'waste_process_type_id' => WasteProcessType::PROCESS_ESTERILIZACION,
-            'date_start' => '2026-11-05',
+        $service = Service::query()->create([
+            'service_date' => '2026-09-25',
+            'zone_id' => $zone->id,
+            'client_id' => $client->id,
+            'contract_id' => Contract::factory()->create()->id,
+            'driver_id' => $driver->id,
+            'status' => Service::STATUS_COLLECTED,
+        ]);
+        $detail = ServiceDetail::query()->create([
+            'service_id' => $service->id,
+            'weight' => '10',
+        ]);
+        $manifest = Manifest::query()->create([
+            'service_id' => $service->id,
+            'public_uuid' => (string) Str::uuid(),
         ]);
 
         $page = $this->get(route('procesos.bitacoras.general', [
-            'date_from' => '2026-11-01',
-            'date_to' => '2026-11-30',
-            'filtro' => 'incineracion',
+            'date_from' => '2026-09-01',
+            'date_to' => '2026-09-30',
         ]));
 
         $page->assertOk();
         $page->assertSee('Bitácora General');
+        $page->assertSee('Fecha de servicio');
+        $page->assertSee('Ingreso a almacén');
         $page->assertDontSee('Generar bitácora');
         $page->assertDontSee('Sólo incineración');
-        $page->assertSee(route('procesos.bitacoras.general'), false);
-        $page->assertSee(route('procesos.bitacoras.tratamientos'), false);
         $page->assertSee(route('bitacora-general.index'), false);
         $page->assertDontSee(route('logbook-headers.index'), false);
 
         $headers = $this->getJson(route('bitacora-general.index', [
-            'filtro' => 'ambas',
-            'date_from' => '2026-11-01',
-            'date_to' => '2026-11-30',
+            'date_from' => '2026-09-01',
+            'date_to' => '2026-09-30',
         ]));
 
         $headers->assertOk();
-        $tipos = collect($headers->json('data'))->pluck('tipo');
-        $this->assertTrue($tipos->contains('Incineración'));
-        $this->assertTrue($tipos->contains('Esterilización'));
+        $headers->assertJsonPath('data.0.service_id', $service->id);
+        $headers->assertJsonPath('data.0.service_detail_id', $detail->id);
+        $headers->assertJsonPath('data.0.weight', '10');
+        $headers->assertJsonPath('data.0.service_date', '25/09/2026');
+        $headers->assertJsonPath('data.0.status', 'Recolectado');
+        $headers->assertJsonPath('data.0.warehouse_entry_at', '—');
+        $headers->assertJsonPath('data.0.client_name', 'Empresa Medica 1');
+        $headers->assertJsonPath('data.0.manifest_id', $manifest->id);
+        $headers->assertJsonPath('data.0.driver_name', 'Chofer Uno');
     }
 
     private function actingAsLogbookUser(): User

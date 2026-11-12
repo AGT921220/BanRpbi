@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Shared\Query\QueryOptions;
-use App\Features\WasteProcess\Application\SearchBitacoraGeneral;
+use App\Features\WasteProcess\Application\SearchLogbookHeaders;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class LogbookHeadersController extends Controller
 {
     public function __construct(
-        private readonly SearchBitacoraGeneral $searchBitacoraGeneral,
+        private readonly SearchLogbookHeaders $searchLogbookHeaders,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -53,7 +53,7 @@ class LogbookHeadersController extends Controller
         }
 
         return response()->json(
-            ($this->searchBitacoraGeneral)(
+            ($this->searchLogbookHeaders)(
                 filtro: $this->filtro($request),
                 dateFrom: $request->string('date_from')->toString(),
                 dateTo: $request->string('date_to')->toString(),
