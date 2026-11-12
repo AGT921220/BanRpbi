@@ -14,8 +14,12 @@ use App\Features\WasteProcess\UseCases\SearchProcessManifests;
 use App\Features\WasteProcess\UseCases\UpdateWasteProcessHeader;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Process\UpdateWasteProcessRequest;
+use App\Models\Client;
+use App\Models\Driver;
 use App\Models\Manifest;
 use App\Models\Reactor;
+use App\Models\RpbiProfile;
+use App\Models\Service;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessType;
 use Illuminate\Database\Eloquent\Collection;
@@ -244,6 +248,16 @@ class ProcesosController extends Controller implements HasMiddleware
             'filtro' => $filtro,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
+            'dateField' => $this->generalDateField($request),
+            'clientId' => $request->integer('client_id') ?: null,
+            'status' => $request->string('status')->toString(),
+            'manifestId' => $request->integer('manifest_id') ?: null,
+            'driverId' => $request->integer('driver_id') ?: null,
+            'profileId' => $request->integer('rpbi_profile_id') ?: null,
+            'clients' => $general ? $this->bitacoraClients() : collect(),
+            'drivers' => $general ? $this->bitacoraDrivers() : collect(),
+            'profiles' => $general ? $this->bitacoraProfiles() : collect(),
+            'statuses' => $this->bitacoraStatuses(),
         ]);
     }
 
@@ -267,6 +281,71 @@ class ProcesosController extends Controller implements HasMiddleware
     public function destroy(int $proceso): RedirectResponse
     {
         abort(403, 'La eliminación de tratamientos no está disponible.');
+    }
+
+    private function generalDateField(Request $request): string
+    {
+        $dateField = $request->string('date_field')->toString();
+
+        if (in_array($dateField, ['service_date', 'collected_at', 'warehouse_entry_at'], true)) {
+            return $dateField;
+        }
+
+        return 'service_date';
+    }
+
+    /**
+     * @return Collection<int, Client>
+     */
+    private function bitacoraClients(): Collection
+    {
+        return Client::query()
+            ->orderBy('company')
+            ->orderBy('name')
+            ->get(['id', 'company', 'name', 'parentarl_surname']);
+    }
+
+    /**
+     * @return Collection<int, Driver>
+     */
+    private function bitacoraDrivers(): Collection
+    {
+        return Driver::query()
+            ->orderBy('name')
+            ->orderBy('parentarl_surname')
+            ->get(['id', 'name', 'parentarl_surname', 'maternal_surname']);
+    }
+
+    /**
+     * @return Collection<int, RpbiProfile>
+     */
+    private function bitacoraProfiles(): Collection
+    {
+        return RpbiProfile::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name']);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function bitacoraStatuses(): array
+    {
+        $statuses = [
+            Service::STATUS_PENDING,
+            Service::STATUS_SCHEDULED,
+            Service::STATUS_COLLECTED,
+            Service::STATUS_IN_PROCESS,
+            Service::STATUS_PROCESSED,
+        ];
+
+        $labels = [];
+
+        foreach ($statuses as $status) {
+            $labels[$status] = Service::statusLabel($status);
+        }
+
+        return $labels;
     }
 
     private function logbookFilter(Request $request): string

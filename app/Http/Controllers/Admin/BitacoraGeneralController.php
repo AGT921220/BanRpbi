@@ -6,6 +6,7 @@ use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Shared\Query\QueryOptions;
 use App\Features\WasteProcess\Application\SearchBitacoraGeneral;
 use App\Http\Controllers\Controller;
+use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -57,6 +58,12 @@ class BitacoraGeneralController extends Controller
             ($this->searchBitacoraGeneral)(
                 dateFrom: $request->string('date_from')->toString(),
                 dateTo: $request->string('date_to')->toString(),
+                dateField: $this->dateField($request),
+                clientId: $this->positiveId($request, 'client_id'),
+                status: $this->status($request),
+                manifestId: $this->positiveId($request, 'manifest_id'),
+                driverId: $this->positiveId($request, 'driver_id'),
+                profileId: $this->positiveId($request, 'rpbi_profile_id'),
                 options: [
                     QueryOptions::offset($offset),
                     QueryOptions::limit($limit),
@@ -65,5 +72,46 @@ class BitacoraGeneralController extends Controller
                 draw: $draw,
             ),
         );
+    }
+
+    private function dateField(Request $request): string
+    {
+        $dateField = $request->string('date_field')->toString();
+
+        if (in_array($dateField, ['service_date', 'collected_at', 'warehouse_entry_at'], true)) {
+            return $dateField;
+        }
+
+        return 'service_date';
+    }
+
+    private function status(Request $request): string
+    {
+        $status = $request->string('status')->toString();
+        $allowed = [
+            Service::STATUS_PENDING,
+            Service::STATUS_SCHEDULED,
+            Service::STATUS_COLLECTED,
+            Service::STATUS_IN_PROCESS,
+            Service::STATUS_PROCESSED,
+            Service::STATUS_NEXT,
+        ];
+
+        if (in_array($status, $allowed, true)) {
+            return $status;
+        }
+
+        return '';
+    }
+
+    private function positiveId(Request $request, string $key): ?int
+    {
+        $id = $request->integer($key);
+
+        if ($id <= 0) {
+            return null;
+        }
+
+        return $id;
     }
 }

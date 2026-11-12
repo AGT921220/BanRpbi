@@ -290,6 +290,12 @@ class ProcessLogbookTest extends TestCase
         $page->assertSee('Código de perfil');
         $page->assertSee('Nombre de perfil');
         $page->assertSee('Ingreso a almacén');
+        $page->assertSee('Aplicar rango a');
+        $page->assertSee('Fecha de entrada al almacén');
+        $page->assertSee('Clientes');
+        $page->assertSee('Estatus');
+        $page->assertSee('Id de manifiesto');
+        $page->assertSee('Perfil');
         $page->assertDontSee('Generar bitácora');
         $page->assertDontSee('Sólo incineración');
         $page->assertSee(route('bitacora-general.index'), false);
@@ -313,6 +319,29 @@ class ProcessLogbookTest extends TestCase
         $headers->assertJsonPath('data.0.client_name', 'Empresa Medica 1');
         $headers->assertJsonPath('data.0.manifest_id', $manifest->id);
         $headers->assertJsonPath('data.0.driver_name', 'Chofer Uno');
+
+        $filtered = $this->getJson(route('bitacora-general.index', [
+            'client_id' => $client->id,
+            'status' => Service::STATUS_COLLECTED,
+            'manifest_id' => $manifest->id,
+            'driver_id' => $driver->id,
+            'rpbi_profile_id' => $profile->id,
+            'date_field' => 'collected_at',
+            'date_from' => '2026-09-25',
+            'date_to' => '2026-09-25',
+        ]));
+
+        $filtered->assertOk();
+        $filtered->assertJsonPath('data.0.service_id', $service->id);
+
+        $outside = $this->getJson(route('bitacora-general.index', [
+            'date_field' => 'warehouse_entry_at',
+            'date_from' => '2026-09-01',
+            'date_to' => '2026-09-30',
+        ]));
+
+        $outside->assertOk();
+        $outside->assertJsonCount(0, 'data');
     }
 
     private function actingAsLogbookUser(): User

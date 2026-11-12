@@ -165,10 +165,18 @@ function treatmentColumns() {
 }
 
 function currentParams(form) {
+    const value = (name) => form.querySelector(`[name="${name}"]`)?.value || "";
+
     return {
-        filtro: form.querySelector("[name=filtro]")?.value || "ambas",
-        date_from: form.querySelector("[name=date_from]")?.value || "",
-        date_to: form.querySelector("[name=date_to]")?.value || "",
+        filtro: value("filtro") || "ambas",
+        date_from: value("date_from"),
+        date_to: value("date_to"),
+        date_field: value("date_field"),
+        client_id: value("client_id"),
+        status: value("status"),
+        manifest_id: value("manifest_id"),
+        driver_id: value("driver_id"),
+        rpbi_profile_id: value("rpbi_profile_id"),
     };
 }
 
