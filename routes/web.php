@@ -9,6 +9,7 @@ use App\Http\Controllers\Dashboard\ManifestController;
 use App\Http\Controllers\Dashboard\ProcesosController;
 use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\TestController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('test', TestController::class)->only(['index']);
@@ -53,8 +54,17 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('invoices', InvoiceController::class)
         ->only(['index']);
 
-    Route::get('procesos/bitacora/{type}', [ProcesosController::class, 'bitacora'])
-        ->whereIn('type', ['incineracion', 'esterilizacion'])
+    Route::get('procesos/bitacoras/tratamientos', [ProcesosController::class, 'bitacorasTratamientos'])
+        ->name('procesos.bitacoras.tratamientos');
+
+    Route::get('procesos/bitacora/{type}', function (string $type, Request $request) {
+        abort_unless(in_array($type, ['incineracion', 'esterilizacion'], true), 404);
+
+        return redirect()->route('procesos.bitacoras.tratamientos', [
+            ...$request->query(),
+            'filtro' => $type,
+        ]);
+    })->whereIn('type', ['incineracion', 'esterilizacion'])
         ->name('procesos.bitacora');
 
     Route::resource('procesos', ProcesosController::class)

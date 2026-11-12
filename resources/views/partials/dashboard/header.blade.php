@@ -292,14 +292,9 @@
                                         @endcanany
 
                                         @can(PermissionTypes::LOGBOOKS_VIEW)
-                                            <a href="{{ route('procesos.bitacora', 'incineracion') }}" class="dropdown-item">
-                                                <i class="ti ti-flame me-2"></i>
-                                                Bitácora Incineración
-                                            </a>
-
-                                            <a href="{{ route('procesos.bitacora', 'esterilizacion') }}" class="dropdown-item">
-                                                <i class="ti ti-temperature me-2"></i>
-                                                Bitácora Esterilización
+                                            <a href="{{ route('procesos.bitacoras.tratamientos') }}" class="dropdown-item">
+                                                <i class="ti ti-notebook me-2"></i>
+                                                Bitácora de tratamientos
                                             </a>
                                         @endcan
                                     </div>

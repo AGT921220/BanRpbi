@@ -19,6 +19,7 @@ use App\Models\Reactor;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessType;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -191,16 +192,11 @@ class ProcesosController extends Controller implements HasMiddleware
             ->with('success', 'Tratamiento actualizado correctamente.');
     }
 
-    public function bitacora(Request $request, string $type): View
+    public function bitacorasTratamientos(Request $request): View|JsonResponse
     {
         $this->authorize(PermissionTypes::LOGBOOKS_VIEW);
 
-        $typeId = match ($type) {
-            'incineracion' => WasteProcessType::PROCESS_INCINERACION,
-            'esterilizacion' => WasteProcessType::PROCESS_ESTERILIZACION,
-            default => abort(404),
-        };
-
+        $filtro = $this->logbookFilter($request);
         $dateFrom = $request->string('date_from')->toString();
         $dateTo = $request->string('date_to')->toString();
         $selectedIds = collect($request->input('process_ids', []))
@@ -208,46 +204,38 @@ class ProcesosController extends Controller implements HasMiddleware
             ->filter()
             ->values()
             ->all();
+        $generated = $request->boolean('generate');
+        $processes = $this->logbookProcesses($filtro, $dateFrom, $dateTo);
 
-        $query = WasteProcess::query()
-            ->with([
-                'type',
-                'details.serviceDetail.rpbiProfile',
-                'details.manifest.service.client',
-            ])
-            ->where('waste_process_type_id', $typeId)
-            ->orderBy('date_start')
-            ->orderBy('id');
-
-        if ($dateFrom !== '') {
-            $query->whereDate('date_start', '>=', $dateFrom);
+        if ($generated && $selectedIds === []) {
+            $selectedIds = $processes->pluck('id')->map(fn ($id) => (int) $id)->all();
         }
 
-        if ($dateTo !== '') {
-            $query->whereDate('date_start', '<=', $dateTo);
-        }
-
-        $processes = $query->get();
         $logbook = collect();
 
-        if ($request->boolean('generate')) {
-            $logbook = $selectedIds === []
-                ? $processes
-                : $processes->whereIn('id', $selectedIds)->values();
+        if ($generated) {
+            $logbook = $processes
+                ->filter(fn (WasteProcess $process) => in_array((int) $process->id, $selectedIds, true))
+                ->values();
+        }
+
+        $pdf = $generated
+            ? $this->logbookPdf($logbook, $filtro, $dateFrom, $dateTo)
+            : null;
+
+        if ($generated && $request->expectsJson()) {
+            return response()->json($pdf);
         }
 
         return view('dashboard.procesos.bitacora', [
-            'type' => $type,
-            'title' => $typeId === WasteProcessType::PROCESS_INCINERACION
-                ? 'Bitácora de incineración'
-                : 'Bitácora de esterilización',
+            'title' => 'Bitácora de tratamientos',
+            'filtro' => $filtro,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'processes' => $processes,
             'selectedIds' => $selectedIds,
-            'logbook' => $logbook,
-            'generated' => $request->boolean('generate'),
-            'isIncineracion' => $typeId === WasteProcessType::PROCESS_INCINERACION,
+            'generated' => $generated,
+            'pdf' => $pdf,
         ]);
     }
 
@@ -271,6 +259,299 @@ class ProcesosController extends Controller implements HasMiddleware
     public function destroy(int $proceso): RedirectResponse
     {
         abort(403, 'La eliminación de tratamientos no está disponible.');
+    }
+
+    private function logbookFilter(Request $request): string
+    {
+        $filtro = $request->string('filtro')->toString();
+
+        if (in_array($filtro, ['incineracion', 'esterilizacion', 'ambas'], true)) {
+            return $filtro;
+        }
+
+        return 'ambas';
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function logbookTypeIds(string $filtro): array
+    {
+        if ($filtro === 'incineracion') {
+            return [WasteProcessType::PROCESS_INCINERACION];
+        }
+
+        if ($filtro === 'esterilizacion') {
+            return [WasteProcessType::PROCESS_ESTERILIZACION];
+        }
+
+        return [
+            WasteProcessType::PROCESS_INCINERACION,
+            WasteProcessType::PROCESS_ESTERILIZACION,
+        ];
+    }
+
+    private function logbookProcesses(string $filtro, string $dateFrom, string $dateTo): Collection
+    {
+        $query = WasteProcess::query()
+            ->with([
+                'user',
+                'type',
+                'details.serviceDetail.rpbiProfile',
+                'details.manifest.service.client',
+            ])
+            ->whereIn('waste_process_type_id', $this->logbookTypeIds($filtro))
+            ->orderBy('date_start')
+            ->orderBy('id');
+
+        if ($dateFrom !== '') {
+            $query->whereDate('date_start', '>=', $dateFrom);
+        }
+
+        if ($dateTo !== '') {
+            $query->whereDate('date_start', '<=', $dateTo);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function logbookPdf(Collection $logbook, string $filtro, string $dateFrom, string $dateTo): array
+    {
+        $incineracion = $logbook
+            ->filter(fn (WasteProcess $process) => (int) $process->waste_process_type_id === WasteProcessType::PROCESS_INCINERACION)
+            ->values();
+        $esterilizacion = $logbook
+            ->filter(fn (WasteProcess $process) => (int) $process->waste_process_type_id === WasteProcessType::PROCESS_ESTERILIZACION)
+            ->values();
+        $mes = $this->logbookMonthLabel($dateFrom, $dateTo, $logbook);
+        $pdf = ['filtro' => $filtro];
+
+        if ($filtro !== 'esterilizacion') {
+            $pdf['incineracion'] = [
+                'titulo' => 'BITÁCORA DE INCINERACIÓN',
+                'operador' => $this->logbookOperators($incineracion),
+                'mes' => $mes,
+                'rows' => $incineracion->map(fn (WasteProcess $process) => $this->incineracionRow($process))->all(),
+                'detalles' => $this->incineracionDetails($incineracion),
+            ];
+        }
+
+        if ($filtro !== 'incineracion') {
+            $pdf['esterilizacion'] = [
+                'titulo' => 'REPORTE DE ESTERILIZACION MENSUAL (AUTOCLAVE)',
+                'fila_total' => 'Total kilos Por Corriente Esterilizados',
+                'autorizacion' => (string) config('business.transportista.autorizacion_tratamiento'),
+                'operador' => $this->logbookOperators($esterilizacion),
+                'mes' => $mes,
+                'rows' => $esterilizacion->map(fn (WasteProcess $process) => $this->esterilizacionRow($process, $mes))->all(),
+                'totales' => $this->esterilizacionTotals($esterilizacion),
+            ];
+        }
+
+        return $pdf;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function incineracionRow(WasteProcess $process): array
+    {
+        $row = [
+            'id' => (string) $process->id,
+            'fecha_completa' => $process->date_start?->format('d/m/Y') ?? '',
+            'hora_carga' => $this->logbookHour($process->hour_start_machine),
+            'hora_termino' => $this->logbookHour($process->hour_machine),
+            'estado' => $process->is_finished ? 'Cerrado' : 'Tratamiento',
+            'comments' => (string) ($process->comments ?? ''),
+        ];
+
+        foreach ([
+            'temp_camara_primaria',
+            'temp_camara_secundaria',
+            'temp_entrada_venturi',
+            'temp_salida_venturi',
+            'temp_salida_chimenea',
+            'oxigeno',
+            'presion_negativa',
+            'consumo_gas_lp',
+            'consumo_promedio_agua',
+            'evaporacion_agua_tratada',
+            'patologicos',
+            'cultivos_cepas',
+            'sangre',
+            'ceniza_generada',
+            'descarga_lavador',
+        ] as $field) {
+            $row[$field] = $this->logbookDecimal($process->{$field});
+        }
+
+        return $row;
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function incineracionDetails(Collection $processes): array
+    {
+        $rows = [];
+
+        foreach ($processes as $process) {
+            foreach ($process->details as $detail) {
+                $rows[] = [
+                    'tratamiento' => (string) $process->id,
+                    'fecha' => $process->date_start?->format('d/m/Y') ?? '',
+                    'manifest' => $detail->manifest_id ? '#'.$detail->manifest_id : '—',
+                    'client' => $this->clientName($detail->manifest?->service?->client),
+                    'profile' => $detail->serviceDetail?->rpbiProfile?->name ?? '—',
+                    'weight' => $this->logbookDecimal($detail->total_weight),
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function esterilizacionRow(WasteProcess $process, string $mes): array
+    {
+        return [
+            'fecha' => $this->logbookFecha($process, $mes),
+            'hora_carga' => $this->logbookHour($process->hour_start_machine),
+            'hora_termino' => $this->logbookHour($process->hour_machine),
+            'temp_esterilizador' => $this->logbookDecimal($process->temp_esterilizador),
+            'presion_camara_principal' => $this->logbookDecimal($process->presion_camara_principal),
+            'eliminacion_biologica' => (string) ($process->eliminacion_biologica ?? ''),
+            'ciclo_carga' => (string) ($process->ciclo_carga ?? ''),
+            'rpbi_bi1_cepas' => $this->logbookDecimal($process->rpbi_bi1_cepas),
+            'rpbi_bi2_punzocortantes' => $this->logbookDecimal($process->rpbi_bi2_punzocortantes),
+            'rpbi_bi4_no_anatomicos' => $this->logbookDecimal($process->rpbi_bi4_no_anatomicos),
+            'rpbi_bi5_sangre' => $this->logbookDecimal($process->rpbi_bi5_sangre),
+            'total_procesada' => $this->logbookDecimal($process->total_procesada),
+            'comments' => (string) ($process->comments ?? ''),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function esterilizacionTotals(Collection $processes): array
+    {
+        return [
+            'bi1' => $this->logbookDecimal($processes->sum(fn (WasteProcess $process) => (float) $process->rpbi_bi1_cepas)),
+            'bi2' => $this->logbookDecimal($processes->sum(fn (WasteProcess $process) => (float) $process->rpbi_bi2_punzocortantes)),
+            'bi4' => $this->logbookDecimal($processes->sum(fn (WasteProcess $process) => (float) $process->rpbi_bi4_no_anatomicos)),
+            'bi5' => $this->logbookDecimal($processes->sum(fn (WasteProcess $process) => (float) $process->rpbi_bi5_sangre)),
+            'total' => $this->logbookDecimal($processes->sum(fn (WasteProcess $process) => (float) $process->total_procesada)),
+        ];
+    }
+
+    private function logbookOperators(Collection $processes): string
+    {
+        return $processes
+            ->map(fn (WasteProcess $process) => trim((string) $process->user?->name))
+            ->filter()
+            ->unique()
+            ->implode(', ');
+    }
+
+    private function logbookMonthLabel(string $dateFrom, string $dateTo, Collection $processes): string
+    {
+        $start = $this->carbonDate($dateFrom) ?? $this->carbonDate($processes->min('date_start'));
+        $end = $this->carbonDate($dateTo) ?? $this->carbonDate($processes->max('date_start'));
+
+        if ($start === null) {
+            return '';
+        }
+
+        if ($end === null) {
+            $end = $start;
+        }
+
+        if ($start->format('Y-m') === $end->format('Y-m')) {
+            return $this->spanishMonth((int) $start->month).' '.$start->year;
+        }
+
+        return $start->format('d/m/Y').' - '.$end->format('d/m/Y');
+    }
+
+    private function logbookFecha(WasteProcess $process, string $mes): string
+    {
+        if ($process->date_start === null) {
+            return '';
+        }
+
+        if (preg_match('/^[A-Z]+ \d{4}$/', $mes) === 1) {
+            return $process->date_start->format('j');
+        }
+
+        return $process->date_start->format('d/m/Y');
+    }
+
+    private function logbookHour(mixed $value): string
+    {
+        if (! filled($value)) {
+            return '';
+        }
+
+        return Carbon::parse((string) $value)->format('H:i');
+    }
+
+    private function logbookDecimal(mixed $value): string
+    {
+        if (! filled($value)) {
+            return '0.00';
+        }
+
+        return number_format((float) $value, 2, '.', '');
+    }
+
+    private function carbonDate(mixed $value): ?Carbon
+    {
+        if (! filled($value)) {
+            return null;
+        }
+
+        return Carbon::parse($value);
+    }
+
+    private function spanishMonth(int $month): string
+    {
+        return match ($month) {
+            1 => 'ENERO',
+            2 => 'FEBRERO',
+            3 => 'MARZO',
+            4 => 'ABRIL',
+            5 => 'MAYO',
+            6 => 'JUNIO',
+            7 => 'JULIO',
+            8 => 'AGOSTO',
+            9 => 'SEPTIEMBRE',
+            10 => 'OCTUBRE',
+            11 => 'NOVIEMBRE',
+            12 => 'DICIEMBRE',
+            default => '',
+        };
+    }
+
+    private function clientName(mixed $client): string
+    {
+        if ($client === null) {
+            return '—';
+        }
+
+        $name = $client->legal_name
+            ?: ($client->company ?: trim(($client->name ?? '').' '.($client->parentarl_surname ?? '')));
+
+        if ($name === '') {
+            return '—';
+        }
+
+        return $name;
     }
 
     private function creatableTypes(): Collection
