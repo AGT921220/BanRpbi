@@ -36,10 +36,10 @@ class SearchBitacoraGeneral
             ->join('manifests', 'manifests.service_id', '=', 'services.id')
             ->leftJoin('drivers', 'drivers.id', '=', 'services.driver_id')
             //limit(100)->
-            ->get();
+            ;
 
 
-        return $query;
+        // return $query;
         $data = $this->builderFilter->paginate(
             builder: $query,
             modifiers: $options,

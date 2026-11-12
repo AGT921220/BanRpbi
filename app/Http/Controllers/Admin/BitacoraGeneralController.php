@@ -33,13 +33,13 @@ class BitacoraGeneralController extends Controller
         $draw = max($request->integer('draw', 1), 1);
         $orderBy = $request->string('order_by')->toString();
         $allowed = [
-            'waste_processes.id',
-            'waste_processes.date_start',
-            'waste_process_types.name',
+            // 'waste_processes.id',
+            // 'waste_processes.date_start',
+            // 'waste_process_types.name',
         ];
 
         if (! in_array($orderBy, $allowed, true)) {
-            $orderBy = 'waste_processes.date_start';
+            $orderBy = 'services.id';
         }
 
         $direction = $request->string('order_direction')->toString();
