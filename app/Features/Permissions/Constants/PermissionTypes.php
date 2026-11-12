@@ -107,9 +107,9 @@ final class PermissionTypes
     public const LOGBOOKS_VIEW = 'logbooks.view';
     public const LOGBOOKS_CREATE = 'logbooks.create';
     public const LOGBOOKS_DOWNLOAD = 'logbooks.download';
-    public const LOGBOOKS_GENERAL_VIEW = 'logbooks.general_view';
-    public const LOGBOOKS_GENERAL_CREATE = 'logbooks.general_create';
-    public const LOGBOOKS_GENERAL_DOWNLOAD = 'logbooks.general_download';
+    public const BITACORA_GENERAL_VIEW = 'bitacora_general.view';
+    public const BITACORA_GENERAL_CREATE = 'bitacora_general.create';
+    public const BITACORA_GENERAL_DOWNLOAD = 'bitacora_general.download';
 
     // Facturación
     public const INVOICES_VIEW = 'invoices.view';
@@ -146,17 +146,4 @@ final class PermissionTypes
     public const ROLES_DELETE = 'roles.delete';
     public const ROLES_ASSIGN_PERMISSIONS = 'roles.assign_permissions';
 
-    // Catálogos
-    public const CATALOGS_VIEW = 'catalogs.view';
-    public const CATALOGS_CREATE = 'catalogs.create';
-    public const CATALOGS_UPDATE = 'catalogs.update';
-    public const CATALOGS_DELETE = 'catalogs.delete';
-
-    // Configuración
-    public const SETTINGS_VIEW = 'settings.view';
-    public const SETTINGS_UPDATE = 'settings.update';
-
-    // Perfil
-    public const PROFILE_VIEW = 'profile.view';
-    public const PROFILE_UPDATE = 'profile.update';
 }

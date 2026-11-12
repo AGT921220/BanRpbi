@@ -213,7 +213,7 @@ class ProcessLogbookTest extends TestCase
     public function test_logbook_requires_permission(): void
     {
         Permission::findOrCreate(PermissionTypes::LOGBOOKS_VIEW, 'web');
-        Permission::findOrCreate(PermissionTypes::LOGBOOKS_GENERAL_VIEW, 'web');
+        Permission::findOrCreate(PermissionTypes::BITACORA_GENERAL_VIEW, 'web');
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -227,7 +227,7 @@ class ProcessLogbookTest extends TestCase
     public function test_bitacora_general_lists_both_process_types_with_its_permission(): void
     {
         Permission::findOrCreate(PermissionTypes::LOGBOOKS_VIEW, 'web');
-        Permission::findOrCreate(PermissionTypes::LOGBOOKS_GENERAL_VIEW, 'web');
+        Permission::findOrCreate(PermissionTypes::BITACORA_GENERAL_VIEW, 'web');
 
         $user = User::factory()->create();
         $user->givePermissionTo(PermissionTypes::LOGBOOKS_VIEW);
@@ -235,7 +235,7 @@ class ProcessLogbookTest extends TestCase
 
         $this->get(route('procesos.bitacoras.general'))->assertForbidden();
 
-        $user->givePermissionTo(PermissionTypes::LOGBOOKS_GENERAL_VIEW);
+        $user->givePermissionTo(PermissionTypes::BITACORA_GENERAL_VIEW);
         $this->processType(WasteProcessType::PROCESS_INCINERACION, 'Incineración');
         $this->processType(WasteProcessType::PROCESS_ESTERILIZACION, 'Esterilización');
 

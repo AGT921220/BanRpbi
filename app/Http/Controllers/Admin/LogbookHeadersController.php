@@ -22,7 +22,7 @@ class LogbookHeadersController extends Controller
         abort_unless(
             $user !== null && (
                 $user->can(PermissionTypes::LOGBOOKS_VIEW)
-                || $user->can(PermissionTypes::LOGBOOKS_GENERAL_VIEW)
+                || $user->can(PermissionTypes::BITACORA_GENERAL_VIEW)
             ),
             403,
         );

@@ -3,8 +3,10 @@
 namespace App\Features\WasteProcess\Application;
 
 use App\Features\Shared\Query\BuilderFilter;
+use App\Models\ServiceDetail;
 use App\Models\WasteProcess;
 use App\Models\WasteProcessType;
+use Illuminate\Support\Facades\DB;
 
 class SearchBitacoraGeneral
 {
@@ -12,47 +14,39 @@ class SearchBitacoraGeneral
         private readonly BuilderFilter $builderFilter,
     ) {}
 
-    /**
-     * @param  array<int, mixed>  $options
-     * @return array<string, mixed>
-     */
     public function __invoke(
-        string $filtro,
-        string $dateFrom,
-        string $dateTo,
         array $options,
         int $draw,
-    ): array {
-        $query = WasteProcess::query()
-            ->select([
-                'waste_processes.id',
-                'waste_processes.date_start',
-                'waste_processes.is_finished',
-                'waste_process_types.name as type_name',
-            ])
-            ->join(
-                'waste_process_types',
-                'waste_process_types.id',
-                '=',
-                'waste_processes.waste_process_type_id',
+    ) {
+
+        $query = ServiceDetail::select(
+                'service_details.service_id',
+                'service_details.id as service_detail_id',
+                'service_details.weight',
+                'services.service_date',
+                'services.status',
+                'services.warehouse_entry_at',
+                'clients.company as client_name',
+                'manifests.id as manifest_id',
+                DB::raw('CONCAT(drivers.name, " ", drivers.parentarl_surname) as driver_name'),
             )
-            ->with('details:id,waste_process_id,manifest_id')
-            ->whereIn('waste_processes.waste_process_type_id', $this->typeIds($filtro));
+            ->join('rpbi_profiles', 'rpbi_profiles.id', '=', 'service_details.rpbi_profile_id')
+            ->join('services', 'services.id', '=', 'service_details.service_id')
+            ->join('clients', 'clients.id', '=', 'services.client_id')
+            ->join('manifests', 'manifests.service_id', '=', 'services.id')
+            ->leftJoin('drivers', 'drivers.id', '=', 'services.driver_id')
+            //limit(100)->
+            ->get();
 
-        if ($dateFrom !== '') {
-            $query->whereDate('waste_processes.date_start', '>=', $dateFrom);
-        }
 
-        if ($dateTo !== '') {
-            $query->whereDate('waste_processes.date_start', '<=', $dateTo);
-        }
-
+        return $query;
         $data = $this->builderFilter->paginate(
             builder: $query,
             modifiers: $options,
             draw: $draw,
         );
 
+        return $data;
         $data['data'] = $data['data']->map(function (WasteProcess $process) {
             $manifests = $process->details
                 ->pluck('manifest_id')

@@ -9,6 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Service extends Model
 {
+    protected static function booted(): void
+    {
+        static::saving(function (Service $service): void {
+            if ($service->status !== self::STATUS_COLLECTED || $service->collected_at !== null) {
+                return;
+            }
+
+            $service->collected_at = now();
+        });
+    }
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_SCHEDULED = 'scheduled';
@@ -31,6 +42,7 @@ class Service extends Model
         'contract_id',
         'driver_id',
         'status',
+        'collected_at',
         'folio',
         'invoice_id',
         'warehouse_entry_at',
@@ -44,6 +56,7 @@ class Service extends Model
     {
         return [
             'service_date' => 'date',
+            'collected_at' => 'datetime',
             'warehouse_entry_at' => 'datetime',
         ];
     }

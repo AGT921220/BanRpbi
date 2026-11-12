@@ -47,22 +47,6 @@
 
                     <div class="dropdown-divider"></div>
 
-                    @can(PermissionTypes::PROFILE_VIEW)
-                        <a href="#" class="dropdown-item">
-                            <i class="ti ti-user me-2"></i>
-                            Mi perfil
-                        </a>
-                    @endcan
-
-                    @can(PermissionTypes::SETTINGS_VIEW)
-                        <a href="#" class="dropdown-item">
-                            <i class="ti ti-settings me-2"></i>
-                            Configuración
-                        </a>
-                    @endcan
-
-                    <div class="dropdown-divider"></div>
-
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
 
@@ -296,7 +280,7 @@
                             {{-- BITÁCORAS --}}
                             @canany([
                                 PermissionTypes::LOGBOOKS_VIEW,
-                                PermissionTypes::LOGBOOKS_GENERAL_VIEW,
+                                PermissionTypes::BITACORA_GENERAL_VIEW,
                             ])
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#navbar-bitacoras" data-bs-toggle="dropdown"
@@ -318,7 +302,7 @@
                                             </a>
                                         @endcan
 
-                                        @can(PermissionTypes::LOGBOOKS_GENERAL_VIEW)
+                                        @can(PermissionTypes::BITACORA_GENERAL_VIEW)
                                             <a href="{{ route('procesos.bitacoras.general') }}" class="dropdown-item">
                                                 <i class="ti ti-notebook me-2"></i>
                                                 Bitácora General
@@ -414,8 +398,7 @@
                             @endcanany
 
                             {{-- ADMINISTRACIÓN --}}
-                            @canany([PermissionTypes::USERS_VIEW, PermissionTypes::ROLES_VIEW,
-                                PermissionTypes::CATALOGS_VIEW, PermissionTypes::SETTINGS_VIEW])
+                            @canany([PermissionTypes::USERS_VIEW, PermissionTypes::ROLES_VIEW])
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#navbar-administracion"
                                         data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
@@ -441,20 +424,6 @@
                                             <a href="{{ route('roles.index') }}" class="dropdown-item">
                                                 <i class="ti ti-shield-lock me-2"></i>
                                                 Roles y permisos
-                                            </a>
-                                        @endcan
-
-                                        @can(PermissionTypes::CATALOGS_VIEW)
-                                            <a href="#" class="dropdown-item">
-                                                <i class="ti ti-list-details me-2"></i>
-                                                Catálogos
-                                            </a>
-                                        @endcan
-
-                                        @can(PermissionTypes::SETTINGS_VIEW)
-                                            <a href="#" class="dropdown-item">
-                                                <i class="ti ti-adjustments me-2"></i>
-                                                Configuración
                                             </a>
                                         @endcan
                                     </div>

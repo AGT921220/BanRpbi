@@ -153,7 +153,7 @@ class CreateRolesCommand extends Command
             PermissionTypes::BATCHES_VIEW,
             PermissionTypes::CERTIFICATES_VIEW,
             PermissionTypes::LOGBOOKS_VIEW,
-            PermissionTypes::LOGBOOKS_GENERAL_VIEW,
+            PermissionTypes::BITACORA_GENERAL_VIEW,
             PermissionTypes::INVOICES_VIEW,
             PermissionTypes::PAYMENTS_VIEW,
             PermissionTypes::REPORTS_VIEW,

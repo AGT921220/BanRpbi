@@ -6,6 +6,7 @@ use App\Features\Permissions\Constants\PermissionTypes;
 use App\Features\Shared\Query\QueryOptions;
 use App\Features\WasteProcess\Application\SearchBitacoraGeneral;
 use App\Http\Controllers\Controller;
+use App\Models\Manifest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,10 +16,13 @@ class BitacoraGeneralController extends Controller
         private readonly SearchBitacoraGeneral $searchBitacoraGeneral,
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        $this->authorize(PermissionTypes::LOGBOOKS_GENERAL_VIEW);
+        $this->authorize(PermissionTypes::BITACORA_GENERAL_VIEW);
 
+        // return $searchBitacoraGeneral = ($this->searchBitacoraGeneral)(
+            
+        // );
         $offset = max($request->integer('offset', 0), 0);
         $limit = $request->integer('limit', 20);
 
@@ -46,9 +50,9 @@ class BitacoraGeneralController extends Controller
 
         return response()->json(
             ($this->searchBitacoraGeneral)(
-                filtro: 'ambas',
-                dateFrom: $request->string('date_from')->toString(),
-                dateTo: $request->string('date_to')->toString(),
+                // filtro: 'ambas',
+                // dateFrom: $request->string('date_from')->toString(),
+                // dateTo: $request->string('date_to')->toString(),
                 options: [
                     QueryOptions::offset($offset),
                     QueryOptions::limit($limit),

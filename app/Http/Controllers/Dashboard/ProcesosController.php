@@ -207,7 +207,7 @@ class ProcesosController extends Controller implements HasMiddleware
 
     public function bitacoraGeneral(Request $request): View|JsonResponse
     {
-        $this->authorize(PermissionTypes::LOGBOOKS_GENERAL_VIEW);
+        $this->authorize(PermissionTypes::BITACORA_GENERAL_VIEW);
 
         $request->merge(['filtro' => 'ambas']);
 
