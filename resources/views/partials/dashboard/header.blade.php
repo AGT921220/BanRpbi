@@ -16,7 +16,7 @@
         <div class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
             <a href="{{ route('dashboard') }}" aria-label="BAN RPBI">
                 <img src="{{ asset('images/logo.png') }}" alt="BAN RPBI" class="navbar-brand-image"
-                    style="width: 50px; height: auto;">
+                    style="width: 150px; height: auto;">
             </a>
         </div>
 
@@ -303,7 +303,7 @@
                                         @endcan
 
                                         @can(PermissionTypes::BITACORA_GENERAL_VIEW)
-                                            <a href="{{ route('procesos.bitacoras.general') }}" class="dropdown-item">
+                                            <a href="{{ route('bitacoras.general') }}" class="dropdown-item">
                                                 <i class="ti ti-notebook me-2"></i>
                                                 Bitácora General
                                             </a>

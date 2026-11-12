@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\DriverHeadersController;
 use App\Http\Controllers\ClientAccessManifestController;
+use App\Http\Controllers\Dashboard\BitacoraGeneralController;
 use App\Http\Controllers\Dashboard\DriverController;
 use App\Http\Controllers\Dashboard\InvoiceController;
 use App\Http\Controllers\Dashboard\ManifestController;
@@ -54,10 +55,11 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('invoices', InvoiceController::class)
         ->only(['index']);
 
+    Route::get('bitacoras/general', [BitacoraGeneralController::class, 'index'])
+        ->name('bitacoras.general');
+
     Route::get('procesos/bitacoras/tratamientos', [ProcesosController::class, 'bitacorasTratamientos'])
         ->name('procesos.bitacoras.tratamientos');
-    Route::get('procesos/bitacoras/general', [ProcesosController::class, 'bitacoraGeneral'])
-        ->name('procesos.bitacoras.general');
 
     Route::get('procesos/bitacora/{type}', function (string $type, Request $request) {
         abort_unless(in_array($type, ['incineracion', 'esterilizacion'], true), 404);

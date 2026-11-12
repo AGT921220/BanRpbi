@@ -228,7 +228,7 @@ class ProcessLogbookTest extends TestCase
         $this->actingAs($user);
 
         $this->get(route('procesos.bitacoras.tratamientos'))->assertForbidden();
-        $this->get(route('procesos.bitacoras.general'))->assertForbidden();
+        $this->get(route('bitacoras.general'))->assertForbidden();
         $this->getJson(route('logbook-headers.index'))->assertForbidden();
         $this->getJson(route('bitacora-general.index'))->assertForbidden();
     }
@@ -242,7 +242,7 @@ class ProcessLogbookTest extends TestCase
         $user->givePermissionTo(PermissionTypes::LOGBOOKS_VIEW);
         $this->actingAs($user);
 
-        $this->get(route('procesos.bitacoras.general'))->assertForbidden();
+        $this->get(route('bitacoras.general'))->assertForbidden();
 
         $user->givePermissionTo(PermissionTypes::BITACORA_GENERAL_VIEW);
         $zone = Zone::factory()->create();
@@ -278,7 +278,7 @@ class ProcessLogbookTest extends TestCase
             'public_uuid' => (string) Str::uuid(),
         ]);
 
-        $page = $this->get(route('procesos.bitacoras.general', [
+        $page = $this->get(route('bitacoras.general', [
             'date_from' => '2026-09-01',
             'date_to' => '2026-09-30',
         ]));
