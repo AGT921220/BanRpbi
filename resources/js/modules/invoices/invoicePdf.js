@@ -16,11 +16,6 @@ $(document).on("click", ".btn-invoice-pdf", async function (e) {
     try {
         const invoiceData = await getInvoice(`/admin/invoices/${id}`);
 
-        if (invoiceData.has_official_pdf) {
-            window.open(`/admin/invoices/${id}/pdf`, "_blank");
-            return;
-        }
-
         await createInvoice(invoiceData);
     } catch (error) {
         console.error(error);

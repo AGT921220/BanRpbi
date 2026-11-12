@@ -170,7 +170,6 @@ class FindInvoice
                 'aut_semarnat' => $issuer['aut_semarnat'] ?? null,
             ],
             'items' => $items,
-            'has_official_pdf' => filled($invoice->external_id) && (bool) config('app.facturapi_enabled'),
         ];
     }
 }

@@ -47,9 +47,6 @@ Route::get('manifests/{id}', [ManifestController::class, 'show'])
 Route::get('invoices/{id}', [InvoiceController::class, 'show'])
         ->name('invoices.show');
 
-Route::get('invoices/{id}/pdf', [InvoiceController::class, 'downloadPdf'])
-        ->name('invoices.download-pdf');
-
 Route::get('services/{service}', [DashboardServiceController::class, 'show'])
         ->name('admin.services.show');
 
