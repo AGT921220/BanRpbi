@@ -23,10 +23,10 @@ final class ServiceStatusTransitions
             Service::STATUS_IN_PROCESS,
         ],
         Service::STATUS_IN_PROCESS => [
-            Service::STATUS_PROCESSED,
+            Service::STATUS_CLOSED,
             Service::STATUS_COLLECTED,
         ],
-        Service::STATUS_PROCESSED => [],
+        Service::STATUS_CLOSED => [],
     ];
 
     public static function canTransition(string $from, string $to): bool

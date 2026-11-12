@@ -88,7 +88,7 @@ class BitacoraGeneralController extends Controller
             Service::STATUS_SCHEDULED,
             Service::STATUS_COLLECTED,
             Service::STATUS_IN_PROCESS,
-            Service::STATUS_PROCESSED,
+            Service::STATUS_CLOSED,
         ];
 
         $labels = [];

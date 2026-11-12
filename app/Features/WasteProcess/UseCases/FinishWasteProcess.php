@@ -137,7 +137,7 @@ class FinishWasteProcess
 
             $service->status = $hasRemaining
                 ? Service::STATUS_COLLECTED
-                : Service::STATUS_PROCESSED;
+                : Service::STATUS_CLOSED;
             $service->save();
         }
     }

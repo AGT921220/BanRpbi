@@ -19,11 +19,11 @@ class ManifestStatusTransitionsTest extends TestCase
         );
     }
 
-    public function test_allows_processed_to_invoiced(): void
+    public function test_allows_closed_to_invoiced(): void
     {
         $this->assertTrue(
             ManifestStatusTransitions::canTransition(
-                Manifest::STATUS_PROCESSED,
+                Manifest::STATUS_CLOSED,
                 Manifest::STATUS_INVOICED,
             )
         );

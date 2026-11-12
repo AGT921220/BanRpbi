@@ -18,12 +18,12 @@ final class ManifestStatusTransitions
         ],
         Manifest::STATUS_COLLECTED => [
             Manifest::STATUS_IN_PROCESS,
-            Manifest::STATUS_PROCESSED,
+            Manifest::STATUS_CLOSED,
         ],
         Manifest::STATUS_IN_PROCESS => [
-            Manifest::STATUS_PROCESSED,
+            Manifest::STATUS_CLOSED,
         ],
-        Manifest::STATUS_PROCESSED => [
+        Manifest::STATUS_CLOSED => [
             Manifest::STATUS_INVOICED,
         ],
         Manifest::STATUS_INVOICED => [],

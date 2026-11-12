@@ -28,7 +28,7 @@ class Service extends Model
 
     public const STATUS_IN_PROCESS = 'in_process';
 
-    public const STATUS_PROCESSED = 'processed';
+    public const STATUS_CLOSED = 'closed';
 
     public const STATUS_NEXT = 'next';
 
@@ -98,7 +98,7 @@ class Service extends Model
             self::STATUS_SCHEDULED => 'Programado',
             self::STATUS_COLLECTED => 'Recolectado',
             self::STATUS_IN_PROCESS => 'Tratamiento',
-            self::STATUS_PROCESSED => 'Cerrado',
+            self::STATUS_CLOSED => 'Cerrado',
             self::STATUS_NEXT => 'Siguiente',
             default => 'Desconocido',
         };
@@ -109,7 +109,7 @@ class Service extends Model
         return in_array($status, [
             self::STATUS_COLLECTED,
             self::STATUS_IN_PROCESS,
-            self::STATUS_PROCESSED,
+            self::STATUS_CLOSED,
         ], true);
     }
 }

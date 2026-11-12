@@ -44,7 +44,10 @@ class SearchBitacoraGeneral
             ->leftJoin('drivers', 'drivers.id', '=', 'services.driver_id')
             ->whereNull('manifests.deleted_at');
 
-        $data = $this->builderFilter->paginate(
+            return $query->get()->toArray();
+        
+        
+            $data = $this->builderFilter->paginate(
             builder: $query,
             modifiers: $modifiers,
             draw: $draw,

@@ -154,8 +154,8 @@ class SearchServiceHeaders
                 'icon' => 'sync-outline',
             ],
 
-            Service::STATUS_PROCESSED => [
-                'status' => Service::STATUS_PROCESSED,
+            Service::STATUS_CLOSED => [
+                'status' => Service::STATUS_CLOSED,
                 'label' => 'Cerrado',
                 'bg' => '#DCFCE7',
                 'color' => '#166534',

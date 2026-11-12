@@ -18,7 +18,7 @@ class Manifest extends Model
 
     public const STATUS_IN_PROCESS = 'in_process';
 
-    public const STATUS_PROCESSED = 'processed';
+    public const STATUS_CLOSED = 'closed';
 
     public const STATUS_INVOICED = 'invoiced';
 
