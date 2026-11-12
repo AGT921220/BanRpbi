@@ -38,7 +38,7 @@
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="ti ti-filter me-2"></i>
-                        Rango y selección
+                        Filtros
                     </h3>
                 </div>
                 <div class="card-body">
@@ -106,12 +106,15 @@
                                     @if ($general)
                                         <th>Servicio</th>
                                         <th>Detalle</th>
+                                        <th>Manifiesto</th>
+                                        <th>Código de perfil</th>
+                                        <th>Nombre de perfil</th>
                                         <th>Peso</th>
                                         <th>Fecha de servicio</th>
+                                        <th>Fecha de recolección</th>
                                         <th>Estado</th>
                                         <th>Ingreso a almacén</th>
                                         <th>Cliente</th>
-                                        <th>Manifiesto</th>
                                         <th>Chofer</th>
                                     @else
                                         <th class="w-1">Sel.</th>

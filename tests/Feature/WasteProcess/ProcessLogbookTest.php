@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Contract;
 use App\Models\Driver;
 use App\Models\Manifest;
+use App\Models\RpbiProfile;
 use App\Models\Service;
 use App\Models\ServiceDetail;
 use App\Models\User;
@@ -253,6 +254,11 @@ class ProcessLogbookTest extends TestCase
             'zone_id' => $zone->id,
             'user_id' => $user->id,
         ]);
+        $profile = RpbiProfile::query()->create([
+            'code' => 'BI5',
+            'name' => 'Sangre',
+            'description' => 'Sangre humana y sus componentes en forma líquida.',
+        ]);
         $service = Service::query()->create([
             'service_date' => '2026-09-25',
             'zone_id' => $zone->id,
@@ -260,10 +266,12 @@ class ProcessLogbookTest extends TestCase
             'contract_id' => Contract::factory()->create()->id,
             'driver_id' => $driver->id,
             'status' => Service::STATUS_COLLECTED,
+            'collected_at' => '2026-09-25 10:30:00',
         ]);
         $detail = ServiceDetail::query()->create([
             'service_id' => $service->id,
             'weight' => '10',
+            'rpbi_profile_id' => $profile->id,
         ]);
         $manifest = Manifest::query()->create([
             'service_id' => $service->id,
@@ -278,6 +286,9 @@ class ProcessLogbookTest extends TestCase
         $page->assertOk();
         $page->assertSee('Bitácora General');
         $page->assertSee('Fecha de servicio');
+        $page->assertSee('Fecha de recolección');
+        $page->assertSee('Código de perfil');
+        $page->assertSee('Nombre de perfil');
         $page->assertSee('Ingreso a almacén');
         $page->assertDontSee('Generar bitácora');
         $page->assertDontSee('Sólo incineración');
@@ -294,6 +305,9 @@ class ProcessLogbookTest extends TestCase
         $headers->assertJsonPath('data.0.service_detail_id', $detail->id);
         $headers->assertJsonPath('data.0.weight', '10');
         $headers->assertJsonPath('data.0.service_date', '25/09/2026');
+        $headers->assertJsonPath('data.0.collected_at', '25/09/2026 10:30');
+        $headers->assertJsonPath('data.0.rpbi_profile', 'BI5');
+        $headers->assertJsonPath('data.0.rpbi_profile_name', 'Sangre');
         $headers->assertJsonPath('data.0.status', 'Recolectado');
         $headers->assertJsonPath('data.0.warehouse_entry_at', '—');
         $headers->assertJsonPath('data.0.client_name', 'Empresa Medica 1');

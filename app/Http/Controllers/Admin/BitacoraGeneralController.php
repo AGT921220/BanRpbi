@@ -34,10 +34,13 @@ class BitacoraGeneralController extends Controller
             'service_details.weight',
             'services.service_date',
             'services.status',
+            'services.collected_at',
             'services.warehouse_entry_at',
             'clients.company',
             'manifests.id',
             'drivers.name',
+            'rpbi_profiles.code',
+            'rpbi_profiles.name',
         ];
 
         if (! in_array($orderBy, $allowed, true)) {

@@ -32,11 +32,15 @@ class SearchBitacoraGeneral
                 'services.service_date',
                 'services.status',
                 'services.warehouse_entry_at',
+                'services.collected_at',
                 'clients.company as client_name',
                 'manifests.id as manifest_id',
                 DB::raw("TRIM(CONCAT(COALESCE(drivers.name, ''), ' ', COALESCE(drivers.parentarl_surname, ''), ' ', COALESCE(drivers.maternal_surname, ''))) as driver_name"),
+                'rpbi_profiles.code as rpbi_profile',
+                'rpbi_profiles.name as rpbi_profile_name',
             ])
             ->join('services', 'services.id', '=', 'service_details.service_id')
+            ->leftJoin('rpbi_profiles', 'rpbi_profiles.id', '=', 'service_details.rpbi_profile_id')
             ->join('clients', 'clients.id', '=', 'services.client_id')
             ->join('manifests', 'manifests.service_id', '=', 'services.id')
             ->leftJoin('drivers', 'drivers.id', '=', 'services.driver_id')
@@ -68,12 +72,17 @@ class SearchBitacoraGeneral
                     ? Carbon::parse($detail->service_date)->format('d/m/Y')
                     : '',
                 'status' => Service::statusLabel((string) $detail->status),
+                'collected_at' => $detail->collected_at
+                    ? Carbon::parse($detail->collected_at)->format('d/m/Y H:i')
+                    : '—',
                 'warehouse_entry_at' => $entry
                     ? Carbon::parse($entry)->format('d/m/Y H:i')
                     : '—',
                 'client_name' => $detail->client_name ?: '—',
                 'manifest_id' => (int) $detail->manifest_id,
                 'driver_name' => $driver !== '' ? $driver : '—',
+                'rpbi_profile' => $detail->rpbi_profile ?: '—',
+                'rpbi_profile_name' => $detail->rpbi_profile_name ?: '—',
             ];
         });
 

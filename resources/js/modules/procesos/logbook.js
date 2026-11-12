@@ -17,7 +17,7 @@ $(function () {
     createDataTable(TABLE_ID, columns, {
         entityName: general ? "recolecciones" : "tratamientos",
         pageLength: 15,
-        order: [[general ? 3 : 2, "asc"]],
+        order: [[general ? 6 : 2, "asc"]],
         ajax: (data, callback) => {
             getDataTableData(data, callback, {
                 url: table.dataset.url,
@@ -65,6 +65,21 @@ function generalColumns() {
             orderSequence: ["asc", "desc"],
         },
         {
+            data: "manifest_id",
+            name: "manifests.id",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "rpbi_profile",
+            name: "rpbi_profiles.code",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "rpbi_profile_name",
+            name: "rpbi_profiles.name",
+            orderSequence: ["asc", "desc"],
+        },
+        {
             data: "weight",
             name: "service_details.weight",
             orderSequence: ["asc", "desc"],
@@ -72,6 +87,11 @@ function generalColumns() {
         {
             data: "service_date",
             name: "services.service_date",
+            orderSequence: ["asc", "desc"],
+        },
+        {
+            data: "collected_at",
+            name: "services.collected_at",
             orderSequence: ["asc", "desc"],
         },
         {
@@ -87,11 +107,6 @@ function generalColumns() {
         {
             data: "client_name",
             name: "clients.company",
-            orderSequence: ["asc", "desc"],
-        },
-        {
-            data: "manifest_id",
-            name: "manifests.id",
             orderSequence: ["asc", "desc"],
         },
         {
