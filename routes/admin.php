@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\BitacoraGeneralController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Dashboard\ClientContractHistoryController;
 use App\Http\Controllers\Admin\InvoiceBillableServiceHeadersController;
+use App\Http\Controllers\Admin\LogbookHeadersController;
 use App\Http\Controllers\Admin\InvoiceController as AdminInvoiceController;
 use App\Http\Controllers\Admin\InvoiceHeadersController;
 use App\Http\Controllers\Admin\ManifestHeadersController;
@@ -23,6 +25,12 @@ Route::middleware('auth')->group(function (): void {
 Route::group(['prefix' => 'admin'], function (): void {
 Route::get('manifest-headers', [ManifestHeadersController::class, 'index'])
         ->name('manifest-headers.index');
+
+Route::get('bitacora-general', [BitacoraGeneralController::class, 'index'])
+        ->name('bitacora-general.index');
+
+Route::get('logbook-headers', [LogbookHeadersController::class, 'index'])
+        ->name('logbook-headers.index');
 
 Route::get('invoice-headers', [InvoiceHeadersController::class, 'index'])
         ->name('invoice-headers.index');

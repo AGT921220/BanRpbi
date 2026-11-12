@@ -97,6 +97,9 @@ class PermissionHandler
             PermissionTypes::LOGBOOKS_VIEW,
             PermissionTypes::LOGBOOKS_CREATE,
             PermissionTypes::LOGBOOKS_DOWNLOAD,
+            PermissionTypes::LOGBOOKS_GENERAL_VIEW,
+            PermissionTypes::LOGBOOKS_GENERAL_CREATE,
+            PermissionTypes::LOGBOOKS_GENERAL_DOWNLOAD,
 
             PermissionTypes::INVOICES_VIEW,
             PermissionTypes::INVOICES_CREATE,
@@ -230,6 +233,9 @@ class PermissionHandler
             PermissionTypes::LOGBOOKS_VIEW => 'Ver bitácoras',
             PermissionTypes::LOGBOOKS_CREATE => 'Crear bitácoras',
             PermissionTypes::LOGBOOKS_DOWNLOAD => 'Descargar bitácoras',
+            PermissionTypes::LOGBOOKS_GENERAL_VIEW => 'Ver bitácora general',
+            PermissionTypes::LOGBOOKS_GENERAL_CREATE => 'Crear bitácora general',
+            PermissionTypes::LOGBOOKS_GENERAL_DOWNLOAD => 'Descargar bitácora general',
 
             PermissionTypes::INVOICES_VIEW => 'Ver facturas',
             PermissionTypes::INVOICES_CREATE => 'Generar facturas',

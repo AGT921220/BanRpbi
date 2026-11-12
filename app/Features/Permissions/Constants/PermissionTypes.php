@@ -107,6 +107,9 @@ final class PermissionTypes
     public const LOGBOOKS_VIEW = 'logbooks.view';
     public const LOGBOOKS_CREATE = 'logbooks.create';
     public const LOGBOOKS_DOWNLOAD = 'logbooks.download';
+    public const LOGBOOKS_GENERAL_VIEW = 'logbooks.general_view';
+    public const LOGBOOKS_GENERAL_CREATE = 'logbooks.general_create';
+    public const LOGBOOKS_GENERAL_DOWNLOAD = 'logbooks.general_download';
 
     // Facturación
     public const INVOICES_VIEW = 'invoices.view';

@@ -27,6 +27,7 @@ export default defineConfig({
                 'resources/js/modules/invoices/invoicePdfBuilder.js',
                 'resources/js/modules/invoices/invoicePdfTest.js',
                 'resources/js/modules/procesos/create.js',
+                'resources/js/modules/procesos/logbook.js',
                 'resources/js/modules/services/index.js',
                 'resources/js/modules/services/assign.js',
                 'resources/js/test.js'

@@ -368,7 +368,8 @@ No se encontró documentación previa del proyecto que confirme alguno de estos 
 - Las Form Requests del panel se colocan en `app/Http/Requests/Admin`.
 - Las rutas del panel se consolidan en `routes/admin.php` (middleware `web` + `auth`).
 - `Features` no debe contener controllers ni carpeta `Http`.
-- Reservar `/api` (archivo `routes/api.php`) para una futura API móvil/pública con autenticación propia; mientras DataTables use sesión, las rutas JSON pueden vivir en `routes/admin.php`.
+- Reservar `/api` (archivo `routes/api.php`) para una futura API móvil/pública con autenticación propia.
+- Siempre que es fetch del portal (DataTable, headers, JSON con sesión) la ruta va en `routes/admin.php`, dentro del grupo `prefix => admin`. La URL es `/admin/{recurso}` (p. ej. `admin/bitacora-general`). Las páginas del CRUD siguen en `routes/web.php`.
 - Los controladores deben permanecer delgados.
 - La validación debe estar en Form Requests.
 - Los permisos deben utilizar constantes.

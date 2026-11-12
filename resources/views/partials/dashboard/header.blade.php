@@ -261,7 +261,6 @@
                                 PermissionTypes::ENVIRONMENTAL_PROCESSES_VIEW,
                                 PermissionTypes::BATCHES_VIEW,
                                 PermissionTypes::CERTIFICATES_VIEW,
-                                PermissionTypes::LOGBOOKS_VIEW,
                             ])
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#navbar-procesos" data-bs-toggle="dropdown"
@@ -290,11 +289,39 @@
                                                 Crear
                                             </a>
                                         @endcanany
+                                    </div>
+                                </li>
+                            @endcanany
 
+                            {{-- BITÁCORAS --}}
+                            @canany([
+                                PermissionTypes::LOGBOOKS_VIEW,
+                                PermissionTypes::LOGBOOKS_GENERAL_VIEW,
+                            ])
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#navbar-bitacoras" data-bs-toggle="dropdown"
+                                        data-bs-auto-close="outside" role="button" aria-expanded="false">
+                                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                            <i class="ti ti-notebook"></i>
+                                        </span>
+
+                                        <span class="nav-link-title">
+                                            Bitácoras
+                                        </span>
+                                    </a>
+
+                                    <div class="dropdown-menu">
                                         @can(PermissionTypes::LOGBOOKS_VIEW)
                                             <a href="{{ route('procesos.bitacoras.tratamientos') }}" class="dropdown-item">
-                                                <i class="ti ti-notebook me-2"></i>
+                                                <i class="ti ti-recycle me-2"></i>
                                                 Bitácora de tratamientos
+                                            </a>
+                                        @endcan
+
+                                        @can(PermissionTypes::LOGBOOKS_GENERAL_VIEW)
+                                            <a href="{{ route('procesos.bitacoras.general') }}" class="dropdown-item">
+                                                <i class="ti ti-notebook me-2"></i>
+                                                Bitácora General
                                             </a>
                                         @endcan
                                     </div>

@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { showToast } from "../../admin";
 
 const MARGIN = 8;
 
@@ -438,38 +439,6 @@ function buildLogbookPdf(data) {
     });
 }
 
-function bindFilters() {
-    document.querySelectorAll("[data-logbook-filter]").forEach((link) => {
-        if (link.dataset.bound === "1") {
-            return;
-        }
-
-        link.dataset.bound = "1";
-        link.addEventListener("click", (event) => {
-            const form = document.getElementById("logbook-form");
-            if (!form) {
-                return;
-            }
-
-            event.preventDefault();
-            const params = new URLSearchParams();
-            params.set("filtro", link.dataset.logbookFilter);
-            const dateFrom = form.querySelector("[name=date_from]")?.value;
-            const dateTo = form.querySelector("[name=date_to]")?.value;
-
-            if (dateFrom) {
-                params.set("date_from", dateFrom);
-            }
-
-            if (dateTo) {
-                params.set("date_to", dateTo);
-            }
-
-            window.location = `${form.action}?${params.toString()}`;
-        });
-    });
-}
-
 function bindGenerate() {
     const button = document.getElementById("generar-bitacora");
     if (!button || button.dataset.bound === "1") {
@@ -493,29 +462,15 @@ function bindGenerate() {
             });
 
             if (!response.ok) {
-                submitGenerate(form);
+                showToast("danger", "No se pudo generar la bitácora.");
                 return;
             }
 
             buildLogbookPdf(await response.json());
         } catch (error) {
-            submitGenerate(form);
+            showToast("danger", "No se pudo generar la bitácora.");
         }
     });
 }
 
-function submitGenerate(form) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "generate";
-    input.value = "1";
-    form.appendChild(input);
-    form.submit();
-}
-
-bindFilters();
 bindGenerate();
-
-if (window.__logbookPdf) {
-    buildLogbookPdf(window.__logbookPdf);
-}

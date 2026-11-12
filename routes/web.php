@@ -56,6 +56,8 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('procesos/bitacoras/tratamientos', [ProcesosController::class, 'bitacorasTratamientos'])
         ->name('procesos.bitacoras.tratamientos');
+    Route::get('procesos/bitacoras/general', [ProcesosController::class, 'bitacoraGeneral'])
+        ->name('procesos.bitacoras.general');
 
     Route::get('procesos/bitacora/{type}', function (string $type, Request $request) {
         abort_unless(in_array($type, ['incineracion', 'esterilizacion'], true), 404);

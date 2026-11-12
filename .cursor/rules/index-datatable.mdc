@@ -22,5 +22,6 @@ Cuando pidan una vista **index**, copia la **estructura y sintaxis** de manifies
 - `{Entity}HeadersController` en **Admin** (`app/Http/Controllers/Admin/`), como `ManifestHeadersController`: `offset`, `limit`, `draw` + `QueryOptions::orderBy`. Admin es solo para fetch del portal, no de la app.
 - El CRUD (páginas) vive en **Dashboard** (`Dashboard\DriverController`).
 - `Search{Entity}Headers` + `BuilderFilter::paginate` (no `List*` con paginator).
-- Ruta headers en `web.php` (p. ej. `driver-headers`).
+- Ruta fetch en `routes/admin.php`, dentro del grupo `prefix => admin`. La URL queda `admin/{recurso}` (p. ej. `admin/manifest-headers`).
+- Siempre que es fetch (DataTable, headers, JSON del portal) va en `admin.php`. Las páginas del CRUD siguen en `web.php`.
 - Solo columnas reales. No correr migraciones salvo que lo pidan.

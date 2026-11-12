@@ -202,6 +202,20 @@ class ProcesosController extends Controller implements HasMiddleware
     {
         $this->authorize(PermissionTypes::LOGBOOKS_VIEW);
 
+        return $this->logbookPage($request, 'Bitácora de tratamientos', false);
+    }
+
+    public function bitacoraGeneral(Request $request): View|JsonResponse
+    {
+        $this->authorize(PermissionTypes::LOGBOOKS_GENERAL_VIEW);
+
+        $request->merge(['filtro' => 'ambas']);
+
+        return $this->logbookPage($request, 'Bitácora General', true);
+    }
+
+    private function logbookPage(Request $request, string $title, bool $general): View|JsonResponse
+    {
         $filtro = $this->logbookFilter($request);
         $dateFrom = $request->string('date_from')->toString();
         $dateTo = $request->string('date_to')->toString();
@@ -210,38 +224,26 @@ class ProcesosController extends Controller implements HasMiddleware
             ->filter()
             ->values()
             ->all();
-        $generated = $request->boolean('generate');
-        $processes = $this->logbookProcesses($filtro, $dateFrom, $dateTo);
+        if ($request->boolean('generate')) {
+            $processes = $this->logbookProcesses($filtro, $dateFrom, $dateTo);
 
-        if ($generated && $selectedIds === []) {
-            $selectedIds = $processes->pluck('id')->map(fn ($id) => (int) $id)->all();
-        }
+            if ($selectedIds === []) {
+                $selectedIds = $processes->pluck('id')->map(fn ($id) => (int) $id)->all();
+            }
 
-        $logbook = collect();
-
-        if ($generated) {
             $logbook = $processes
                 ->filter(fn (WasteProcess $process) => in_array((int) $process->id, $selectedIds, true))
                 ->values();
-        }
 
-        $pdf = $generated
-            ? $this->logbookPdf($logbook, $filtro, $dateFrom, $dateTo)
-            : null;
-
-        if ($generated && $request->expectsJson()) {
-            return response()->json($pdf);
+            return response()->json($this->logbookPdf($logbook, $filtro, $dateFrom, $dateTo));
         }
 
         return view('dashboard.procesos.bitacora', [
-            'title' => 'Bitácora de tratamientos',
+            'title' => $title,
+            'general' => $general,
             'filtro' => $filtro,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
-            'processes' => $processes,
-            'selectedIds' => $selectedIds,
-            'generated' => $generated,
-            'pdf' => $pdf,
         ]);
     }
 

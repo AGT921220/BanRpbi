@@ -5,9 +5,10 @@
 
 @section('content')
     <div class="container-xl">
-        <form id="logbook-form" method="GET" action="{{ route('procesos.bitacoras.tratamientos') }}">
+        <form id="logbook-form" method="GET" action="{{ $general ? route('procesos.bitacoras.general') : route('procesos.bitacoras.tratamientos') }}">
             <input type="hidden" name="filtro" value="{{ $filtro }}">
 
+            @unless ($general)
             <div class="btn-list mb-3">
                 <a
                     href="{{ route('procesos.bitacoras.tratamientos', array_filter(['filtro' => 'incineracion', 'date_from' => $dateFrom, 'date_to' => $dateTo])) }}"
@@ -31,6 +32,7 @@
                     Ambas
                 </a>
             </div>
+            @endunless
 
             <div class="card mb-3">
                 <div class="card-header">
@@ -78,10 +80,12 @@
                         <i class="ti ti-search me-1"></i>
                         Buscar
                     </button>
-                    <button type="submit" class="btn btn-primary" id="generar-bitacora" name="generate" value="1">
-                        <i class="ti ti-notebook me-1"></i>
-                        Generar bitácora
-                    </button>
+                    @unless ($general)
+                        <button type="button" class="btn btn-primary" id="generar-bitacora">
+                            <i class="ti ti-notebook me-1"></i>
+                            Generar bitácora
+                        </button>
+                    @endunless
                 </div>
             </div>
 
@@ -89,62 +93,35 @@
                 <div class="card-header">
                     <h3 class="card-title">Tratamientos</h3>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
-                        <thead>
-                            <tr>
-                                <th class="w-1">Sel.</th>
-                                <th>#</th>
-                                <th>Fecha</th>
-                                <th>Tipo</th>
-                                <th>Estado</th>
-                                <th>Manifiestos</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($processes as $process)
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table
+                            id="logbook-table"
+                            class="table table-vcenter card-table w-100"
+                            data-url="{{ $general ? route('bitacora-general.index') : route('logbook-headers.index') }}"
+                            data-general="{{ $general ? '1' : '0' }}"
+                        >
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            class="form-check-input"
-                                            name="process_ids[]"
-                                            value="{{ $process->id }}"
-                                            @checked(in_array($process->id, $selectedIds, true))
-                                            aria-label="Seleccionar tratamiento {{ $process->id }}"
-                                        >
-                                    </td>
-                                    <td>{{ $process->id }}</td>
-                                    <td>{{ optional($process->date_start)->format('d/m/Y') }}</td>
-                                    <td>{{ $process->type?->name ?? '—' }}</td>
-                                    <td>{{ $process->is_finished ? 'Cerrado' : 'Tratamiento' }}</td>
-                                    <td>
-                                        {{ $process->details->pluck('manifest_id')->unique()->filter()->implode(', ') ?: '—' }}
-                                    </td>
+                                    @unless ($general)
+                                        <th class="w-1">Sel.</th>
+                                    @endunless
+                                    <th>#</th>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Estado</th>
+                                    <th>Manifiestos</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-secondary text-center py-4">
-                                        No hay tratamientos en el rango indicado.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </form>
-
-        @if ($generated)
-            <div class="alert alert-info" role="status">
-                Se abrió un PDF por cada bitácora en una pestaña nueva. Si el navegador no las mostró, vuelve a pulsar «Generar bitácora».
-            </div>
-        @endif
     </div>
-
-    @if ($pdf)
-        <script>
-            window.__logbookPdf = {{ \Illuminate\Support\Js::from($pdf) }};
-        </script>
-    @endif
 @endsection
+
+@push('scripts')
+    @vite('resources/js/modules/procesos/logbook.js')
+@endpush

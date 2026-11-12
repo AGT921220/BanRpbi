@@ -47,11 +47,25 @@ class ProcessLogbookTest extends TestCase
 
         $filtered->assertOk();
         $filtered->assertSee('Bitácora de tratamientos');
+        $filtered->assertSee('Bitácoras');
+        $filtered->assertDontSee('Bitácora General');
         $filtered->assertSee('Sólo incineración');
-        $filtered->assertSee('02/11/2026');
-        $filtered->assertDontSee('01/10/2026');
+        $filtered->assertSee('Generar bitácora');
+        $filtered->assertSee(route('logbook-headers.index'), false);
         $filtered->assertDontSee('Bitácora Incineración');
         $filtered->assertDontSee('Bitácora Esterilización');
+
+        $headers = $this->getJson(route('logbook-headers.index', [
+            'filtro' => 'incineracion',
+            'date_from' => '2026-11-01',
+            'date_to' => '2026-11-30',
+        ]));
+
+        $headers->assertOk();
+        $headers->assertJsonPath('recordsFiltered', 2);
+        $fechas = collect($headers->json('data'))->pluck('fecha');
+        $this->assertTrue($fechas->contains('02/11/2026'));
+        $this->assertFalse($fechas->contains('01/10/2026'));
 
         $generated = $this->getJson(route('procesos.bitacoras.tratamientos', [
             'filtro' => 'incineracion',
@@ -115,8 +129,17 @@ class ProcessLogbookTest extends TestCase
         ]));
 
         $page->assertOk();
-        $page->assertSee('07/11/2026');
-        $page->assertDontSee('04/11/2026');
+
+        $headers = $this->getJson(route('logbook-headers.index', [
+            'filtro' => 'esterilizacion',
+            'date_from' => '2026-11-01',
+            'date_to' => '2026-11-30',
+        ]));
+
+        $headers->assertOk();
+        $fechas = collect($headers->json('data'))->pluck('fecha');
+        $this->assertTrue($fechas->contains('07/11/2026'));
+        $this->assertFalse($fechas->contains('04/11/2026'));
 
         $generated = $this->getJson(route('procesos.bitacoras.tratamientos', [
             'filtro' => 'esterilizacion',
@@ -190,11 +213,68 @@ class ProcessLogbookTest extends TestCase
     public function test_logbook_requires_permission(): void
     {
         Permission::findOrCreate(PermissionTypes::LOGBOOKS_VIEW, 'web');
+        Permission::findOrCreate(PermissionTypes::LOGBOOKS_GENERAL_VIEW, 'web');
 
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $this->get(route('procesos.bitacoras.tratamientos'))->assertForbidden();
+        $this->get(route('procesos.bitacoras.general'))->assertForbidden();
+        $this->getJson(route('logbook-headers.index'))->assertForbidden();
+        $this->getJson(route('bitacora-general.index'))->assertForbidden();
+    }
+
+    public function test_bitacora_general_lists_both_process_types_with_its_permission(): void
+    {
+        Permission::findOrCreate(PermissionTypes::LOGBOOKS_VIEW, 'web');
+        Permission::findOrCreate(PermissionTypes::LOGBOOKS_GENERAL_VIEW, 'web');
+
+        $user = User::factory()->create();
+        $user->givePermissionTo(PermissionTypes::LOGBOOKS_VIEW);
+        $this->actingAs($user);
+
+        $this->get(route('procesos.bitacoras.general'))->assertForbidden();
+
+        $user->givePermissionTo(PermissionTypes::LOGBOOKS_GENERAL_VIEW);
+        $this->processType(WasteProcessType::PROCESS_INCINERACION, 'Incineración');
+        $this->processType(WasteProcessType::PROCESS_ESTERILIZACION, 'Esterilización');
+
+        WasteProcess::query()->create([
+            'user_id' => $user->id,
+            'waste_process_type_id' => WasteProcessType::PROCESS_INCINERACION,
+            'date_start' => '2026-11-04',
+        ]);
+        WasteProcess::query()->create([
+            'user_id' => $user->id,
+            'waste_process_type_id' => WasteProcessType::PROCESS_ESTERILIZACION,
+            'date_start' => '2026-11-05',
+        ]);
+
+        $page = $this->get(route('procesos.bitacoras.general', [
+            'date_from' => '2026-11-01',
+            'date_to' => '2026-11-30',
+            'filtro' => 'incineracion',
+        ]));
+
+        $page->assertOk();
+        $page->assertSee('Bitácora General');
+        $page->assertDontSee('Generar bitácora');
+        $page->assertDontSee('Sólo incineración');
+        $page->assertSee(route('procesos.bitacoras.general'), false);
+        $page->assertSee(route('procesos.bitacoras.tratamientos'), false);
+        $page->assertSee(route('bitacora-general.index'), false);
+        $page->assertDontSee(route('logbook-headers.index'), false);
+
+        $headers = $this->getJson(route('bitacora-general.index', [
+            'filtro' => 'ambas',
+            'date_from' => '2026-11-01',
+            'date_to' => '2026-11-30',
+        ]));
+
+        $headers->assertOk();
+        $tipos = collect($headers->json('data'))->pluck('tipo');
+        $this->assertTrue($tipos->contains('Incineración'));
+        $this->assertTrue($tipos->contains('Esterilización'));
     }
 
     private function actingAsLogbookUser(): User

@@ -16,18 +16,24 @@ No pongas el resource CRUD en `Admin`.
 
 ## Rutas
 
-Dentro del grupo `auth` de `web.php`:
+El resource de páginas va en el grupo `auth` de `web.php`:
 
 ```php
-use App\Http\Controllers\Admin\DriverHeadersController;
 use App\Http\Controllers\Dashboard\DriverController;
 
-Route::get('driver-headers', [DriverHeadersController::class, 'index'])
-    ->name('driver-headers.index');
 Route::resource('drivers', DriverController::class)->except(['show']);
 ```
 
-No uses `admin.php` para resources nuevos.
+El fetch (headers, DataTable, JSON del portal) va en `routes/admin.php`, dentro del grupo `prefix => admin`. La URL queda `admin/{recurso}`:
+
+```php
+use App\Http\Controllers\Admin\DriverHeadersController;
+
+Route::get('driver-headers', [DriverHeadersController::class, 'index'])
+    ->name('driver-headers.index');
+```
+
+Siempre que es fetch va en `admin.php`. No pongas el resource CRUD en `admin.php`.
 
 ## Estructura
 
