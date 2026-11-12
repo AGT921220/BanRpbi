@@ -15,19 +15,11 @@ class SearchBitacoraGeneral
     ) {}
 
     /**
-     * @param  array<int, mixed>  $options
+     * @param  array<int, mixed>  $modifiers
      * @return array<string, mixed>
      */
     public function __invoke(
-        string $dateFrom,
-        string $dateTo,
-        string $dateField,
-        ?int $clientId,
-        string $status,
-        ?int $manifestId,
-        ?int $driverId,
-        ?int $profileId,
-        array $options,
+        array $modifiers,
         int $draw,
     ): array {
         $query = ServiceDetail::query()
@@ -52,39 +44,9 @@ class SearchBitacoraGeneral
             ->leftJoin('drivers', 'drivers.id', '=', 'services.driver_id')
             ->whereNull('manifests.deleted_at');
 
-        $dateColumn = $this->dateColumn($dateField);
-
-        if ($dateFrom !== '') {
-            $query->whereDate($dateColumn, '>=', $dateFrom);
-        }
-
-        if ($dateTo !== '') {
-            $query->whereDate($dateColumn, '<=', $dateTo);
-        }
-
-        if ($clientId !== null) {
-            $query->where('services.client_id', $clientId);
-        }
-
-        if ($status !== '') {
-            $query->where('services.status', $status);
-        }
-
-        if ($manifestId !== null) {
-            $query->where('manifests.id', $manifestId);
-        }
-
-        if ($driverId !== null) {
-            $query->where('services.driver_id', $driverId);
-        }
-
-        if ($profileId !== null) {
-            $query->where('service_details.rpbi_profile_id', $profileId);
-        }
-
         $data = $this->builderFilter->paginate(
             builder: $query,
-            modifiers: $options,
+            modifiers: $modifiers,
             draw: $draw,
         );
 
@@ -115,18 +77,5 @@ class SearchBitacoraGeneral
         });
 
         return $data;
-    }
-
-    private function dateColumn(string $dateField): string
-    {
-        if ($dateField === 'collected_at') {
-            return 'services.collected_at';
-        }
-
-        if ($dateField === 'warehouse_entry_at') {
-            return 'services.warehouse_entry_at';
-        }
-
-        return 'services.service_date';
     }
 }

@@ -37,6 +37,7 @@ class BulkCreateServices
         $service = new Service;
         $service->service_date = $serviceDate;
         $service->contract_id = $contract->id;
+        $service->cost = $contract->cost;
         $service->client_id = $client->id;
         $service->status = Service::STATUS_PENDING;
         $service->zone_id = $client->zone_id;

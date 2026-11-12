@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Features\Permissions\Constants\PermissionTypes;
+use App\Features\Shared\Query\QueryFilter;
 use App\Features\Shared\Query\QueryOptions;
 use App\Features\WasteProcess\Application\SearchBitacoraGeneral;
 use App\Http\Controllers\Controller;
@@ -56,15 +57,8 @@ class BitacoraGeneralController extends Controller
 
         return response()->json(
             ($this->searchBitacoraGeneral)(
-                dateFrom: $request->string('date_from')->toString(),
-                dateTo: $request->string('date_to')->toString(),
-                dateField: $this->dateField($request),
-                clientId: $this->positiveId($request, 'client_id'),
-                status: $this->status($request),
-                manifestId: $this->positiveId($request, 'manifest_id'),
-                driverId: $this->positiveId($request, 'driver_id'),
-                profileId: $this->positiveId($request, 'rpbi_profile_id'),
-                options: [
+                modifiers: [
+                    ...$this->filters($request),
                     QueryOptions::offset($offset),
                     QueryOptions::limit($limit),
                     QueryOptions::orderBy($orderBy, $direction),
@@ -72,6 +66,70 @@ class BitacoraGeneralController extends Controller
                 draw: $draw,
             ),
         );
+    }
+
+    /**
+     * @return list<QueryFilter>
+     */
+    private function filters(Request $request): array
+    {
+        $filters = [];
+        $dateColumn = $this->dateColumn($this->dateField($request));
+        $dateFrom = $request->string('date_from')->toString();
+        $dateTo = $request->string('date_to')->toString();
+
+        if ($dateFrom !== '') {
+            $filters[] = QueryFilter::where($dateColumn, $dateFrom, '>=');
+        }
+
+        if ($dateTo !== '') {
+            $filters[] = QueryFilter::where($dateColumn, $dateTo.' 23:59:59', '<=');
+        }
+
+        $clientId = $this->positiveId($request, 'client_id');
+
+        if ($clientId !== null) {
+            $filters[] = QueryFilter::where('services.client_id', $clientId);
+        }
+
+        $status = $this->status($request);
+
+        if ($status !== '') {
+            $filters[] = QueryFilter::where('services.status', $status);
+        }
+
+        $manifestId = $this->positiveId($request, 'manifest_id');
+
+        if ($manifestId !== null) {
+            $filters[] = QueryFilter::where('manifests.id', $manifestId);
+        }
+
+        $driverId = $this->positiveId($request, 'driver_id');
+
+        if ($driverId !== null) {
+            $filters[] = QueryFilter::where('services.driver_id', $driverId);
+        }
+
+        $profileId = $this->positiveId($request, 'rpbi_profile_id');
+
+        if ($profileId !== null) {
+            $filters[] = QueryFilter::where('service_details.rpbi_profile_id', $profileId);
+        }
+
+        return $filters;
+    }
+
+    private function dateColumn(string $dateField): string
+    {
+        if ($dateField === 'collected_at') {
+            return 'services.collected_at';
+        }
+
+        if ($dateField === 'warehouse_entry_at') {
+            return 'services.warehouse_entry_at';
+        }
+
+        return 'services.service_date';
     }
 
     private function dateField(Request $request): string
