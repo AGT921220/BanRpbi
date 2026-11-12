@@ -43,9 +43,15 @@ class UpdateIncineracionProcessTest extends TestCase
             'temp_salida_chimenea' => '70.5',
             'oxigeno' => '8.2',
             'presion_negativa' => '-1.5',
+            'cl_en_rps' => '1.1',
+            'co_ppm' => '12',
+            'radiacion_residuos' => '0.4',
             'consumo_gas_lp' => '42.3',
             'consumo_promedio_agua' => '15',
             'evaporacion_agua_tratada' => '3.4',
+            'solidos_mixtos' => '5.5',
+            'rp_solidos_lodos' => '7',
+            'medicamentos_caducos' => '1.8',
             'patologicos' => '12.5',
             'cultivos_cepas' => '2',
             'sangre' => '4.75',
@@ -78,6 +84,12 @@ class UpdateIncineracionProcessTest extends TestCase
         $this->assertEquals(4.75, (float) $process->sangre);
         $this->assertEquals(1.2, (float) $process->ceniza_generada);
         $this->assertEquals(6, (float) $process->descarga_lavador);
+        $this->assertEquals(1.1, (float) $process->cl_en_rps);
+        $this->assertEquals(12, (float) $process->co_ppm);
+        $this->assertEquals(0.4, (float) $process->radiacion_residuos);
+        $this->assertEquals(5.5, (float) $process->solidos_mixtos);
+        $this->assertEquals(7, (float) $process->rp_solidos_lodos);
+        $this->assertEquals(1.8, (float) $process->medicamentos_caducos);
 
         $this->get(route('procesos.edit', $process))
             ->assertOk()
@@ -88,6 +100,12 @@ class UpdateIncineracionProcessTest extends TestCase
             ->assertSee('Temperatura entrada Venturi')
             ->assertSee('Temperatura salida Venturi')
             ->assertSee('Temperatura salida chimenea')
+            ->assertSee('CL en RPs')
+            ->assertSee('CO/ppm (Monóxido de carbono)')
+            ->assertSee('Radiación en residuos')
+            ->assertSee('Sólidos mixtos generados')
+            ->assertSee('RP (sólidos y/o lodos)')
+            ->assertSee('Medicamentos caducos')
             ->assertSee('O2 (Oxígeno)')
             ->assertSee('Presión negativa (IN H2O)')
             ->assertSee('Consumo de gas LP')

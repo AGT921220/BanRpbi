@@ -137,7 +137,7 @@
 
         @if ($generated)
             <div class="alert alert-info" role="status">
-                Se preparó el PDF con el filtro activo. Si el navegador no lo descargó, vuelve a pulsar «Generar bitácora».
+                Se abrió un PDF por cada bitácora en una pestaña nueva. Si el navegador no las mostró, vuelve a pulsar «Generar bitácora».
             </div>
         @endif
     </div>

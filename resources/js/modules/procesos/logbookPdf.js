@@ -3,36 +3,30 @@ import { jsPDF } from "jspdf";
 const MARGIN = 8;
 
 const INCINERACION_COLUMNS = [
-    { key: "id", label: "Tratamiento", w: 1.1 },
-    { key: "fecha_completa", label: "Fecha", w: 1.3 },
-    { key: "hora_carga", label: "Hora de carga", w: 1.1 },
-    { key: "hora_termino", label: "Hora de término", w: 1.2 },
-    { key: "estado", label: "Estado", w: 1.2 },
-    { key: "temp_camara_primaria", label: "Temp. cámara primaria", w: 1.2, numeric: true },
-    { key: "temp_camara_secundaria", label: "Temp. cámara secundaria", w: 1.2, numeric: true },
-    { key: "temp_entrada_venturi", label: "Temperatura entrada Venturi", w: 1.3, numeric: true },
-    { key: "temp_salida_venturi", label: "Temperatura salida Venturi", w: 1.3, numeric: true },
-    { key: "temp_salida_chimenea", label: "Temperatura salida chimenea", w: 1.3, numeric: true },
-    { key: "oxigeno", label: "O2 (Oxígeno)", w: 1, numeric: true },
-    { key: "presion_negativa", label: "Presión negativa (IN H2O)", w: 1.2, numeric: true },
-    { key: "consumo_gas_lp", label: "Consumo de gas LP", w: 1.1, numeric: true },
-    { key: "consumo_promedio_agua", label: "Consumo promedio de agua", w: 1.2, numeric: true },
-    { key: "evaporacion_agua_tratada", label: "Evaporación agua tratada", w: 1.2, numeric: true },
-    { key: "patologicos", label: "Patológicos", w: 1, numeric: true },
-    { key: "cultivos_cepas", label: "Cultivos y cepas", w: 1.1, numeric: true },
-    { key: "sangre", label: "Sangre", w: 0.9, numeric: true },
-    { key: "ceniza_generada", label: "Ceniza generada", w: 1, numeric: true },
-    { key: "descarga_lavador", label: "Descarga de lavador", w: 1.1, numeric: true },
-    { key: "comments", label: "Observaciones", w: 1.6 },
-];
-
-const DETALLE_COLUMNS = [
-    { key: "tratamiento", label: "Tratamiento", w: 1.1 },
-    { key: "fecha", label: "Fecha", w: 1.2 },
-    { key: "manifest", label: "Manifiesto", w: 1.2 },
-    { key: "client", label: "Cliente", w: 3 },
-    { key: "profile", label: "Perfil", w: 2 },
-    { key: "weight", label: "Cantidad", w: 1.2, numeric: true },
+    { key: "fecha", label: "FECHA", w: 1.15 },
+    { key: "hora", label: "HORA DE CARGA Y PARO DE CARGA", w: 1.35 },
+    { key: "temp_camara_primaria", label: "Temp. Cámara primaria °C", w: 1.1, numeric: true },
+    { key: "temp_camara_secundaria", label: "Temp. Cámara Secundaria °C", w: 1.1, numeric: true },
+    { key: "temp_entrada_venturi", label: "Temperatura Entrada Venturi °C", w: 1.15, numeric: true },
+    { key: "temp_salida_venturi", label: "Temperatura Salida Venturi °C", w: 1.15, numeric: true },
+    { key: "temp_salida_chimenea", label: "Temperatura Salida Chimenea °C", w: 1.15, numeric: true },
+    { key: "cl_en_rps", label: "CL en RPs", w: 0.85, numeric: true },
+    { key: "co_ppm", label: "CO/ ppm (Monóxido de carbono)", w: 1.15, numeric: true },
+    { key: "oxigeno", label: "O2 (Oxígeno)", w: 0.9, numeric: true },
+    { key: "presion_negativa", label: "Presión negativa INH2O", w: 1.05, numeric: true },
+    { key: "radiacion_residuos", label: "Radiación en residuos", w: 1.05, numeric: true },
+    { key: "consumo_gas_lp", label: "Consumo de gas LP Lts", w: 1.05, numeric: true, total: true },
+    { key: "consumo_promedio_agua", label: "Consumo Promedio de Agua m3", w: 1.1, numeric: true, total: true },
+    { key: "evaporacion_agua_tratada", label: "Evaporación Agua Tratada m3", w: 1.1, numeric: true, total: true },
+    { key: "solidos_mixtos", label: "Solidos Mixtos Generados Kg", w: 1.1, numeric: true, total: true },
+    { key: "rp_solidos_lodos", label: "RP (solidos y/o Lodos) Kg.", w: 1.15, numeric: true, total: true },
+    { key: "medicamentos_caducos", label: "Medicamentos Caducos Kg.", w: 1.1, numeric: true, total: true },
+    { key: "patologicos", label: "Patológicos kg.", w: 1, numeric: true, total: true },
+    { key: "cultivos_cepas", label: "Cultivos y Cepas kg.", w: 1, numeric: true, total: true },
+    { key: "sangre", label: "Sangre kg.", w: 0.9, numeric: true, total: true },
+    { key: "ceniza_generada", label: "Ceniza generada", w: 0.95, numeric: true, total: true },
+    { key: "descarga_lavador", label: "Descarga de lavador m3", w: 1.05, numeric: true, total: true },
+    { key: "comments", label: "OBSERVACIONES", w: 1.55 },
 ];
 
 const ESTERILIZACION_COLUMNS = [
@@ -164,6 +158,10 @@ function drawDataTable(doc, y, columns, rows, options = {}) {
             cursor = options.drawGroups(doc, cursor, widths);
         }
 
+        if (options.skipLabels) {
+            return cursor;
+        }
+
         return drawUniformRow(
             doc,
             cursor,
@@ -180,8 +178,7 @@ function drawDataTable(doc, y, columns, rows, options = {}) {
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
         doc.text("Sin tratamientos.", MARGIN, y + 5);
-
-        return y + 8;
+        y += 8;
     }
 
     rows.forEach((row) => {
@@ -258,7 +255,78 @@ function drawEsterilizacionTotal(doc, y, widths, drawHeader, section) {
     return cursor + height;
 }
 
-function drawSignatures(doc, y) {
+function drawIncineracionHeader(doc, y, widths) {
+    const bands = [6.2, 6.2, 10];
+    const spans = [
+        { c0: 0, c1: 1, r0: 0, r1: 3, label: "FECHA", size: 4.2 },
+        { c0: 1, c1: 2, r0: 0, r1: 3, label: "HORA DE CARGA Y PARO DE CARGA", size: 3.6 },
+        { c0: 2, c1: 15, r0: 0, r1: 1, label: "PARAMETROS DE MEDICION", size: 5 },
+        { c0: 15, c1: 21, r0: 0, r1: 1, label: "RESIDUOS INCINERADOS", size: 5 },
+        { c0: 21, c1: 23, r0: 0, r1: 1, label: "", size: 4 },
+        { c0: 23, c1: 24, r0: 0, r1: 3, label: "OBSERVACIONES", size: 4 },
+        { c0: 2, c1: 7, r0: 1, r1: 2, label: "Monitoreo de temperaturas", size: 4.4 },
+        { c0: 7, c1: 12, r0: 1, r1: 2, label: "Monitoreo de Parámetros", size: 4.4 },
+        { c0: 12, c1: 15, r0: 1, r1: 2, label: "Consumos", size: 4.4 },
+        { c0: 15, c1: 19, r0: 1, r1: 2, label: "RP's", size: 4.4 },
+        { c0: 19, c1: 21, r0: 1, r1: 2, label: "RPBI'S", size: 4.4 },
+        { c0: 21, c1: 23, r0: 1, r1: 2, label: "Residuos Generados de Proceso", size: 3.8 },
+    ];
+
+    INCINERACION_COLUMNS.forEach((column, index) => {
+        if (index < 2 || index > 22) {
+            return;
+        }
+
+        spans.push({ c0: index, c1: index + 1, r0: 2, r1: 3, label: column.label, size: 3.3 });
+    });
+
+    const yOf = (row) => y + bands.slice(0, row).reduce((total, height) => total + height, 0);
+    const xOf = (column) => MARGIN + widths.slice(0, column).reduce((total, width) => total + width, 0);
+    const wOf = (start, end) => widths.slice(start, end).reduce((total, width) => total + width, 0);
+    const hOf = (start, end) => bands.slice(start, end).reduce((total, height) => total + height, 0);
+
+    spans.forEach((span) => {
+        drawCell(
+            doc,
+            xOf(span.c0),
+            yOf(span.r0),
+            wOf(span.c0, span.c1),
+            hOf(span.r0, span.r1),
+            span.label,
+            span.size,
+            true,
+        );
+    });
+
+    return y + bands.reduce((total, height) => total + height, 0);
+}
+
+function drawIncineracionTotal(doc, y, widths, drawHeader, rows) {
+    const height = 6;
+    const cursor = ensureSpace(doc, y, height, drawHeader);
+    const firstTotal = INCINERACION_COLUMNS.findIndex((column) => column.total);
+    const labelWidth = widths.slice(0, firstTotal).reduce((total, width) => total + width, 0);
+    const fill = [198, 224, 245];
+
+    drawCell(doc, MARGIN, cursor, labelWidth, height, "TOTALES", 6, true, fill);
+
+    let x = MARGIN + labelWidth;
+    INCINERACION_COLUMNS.forEach((column, index) => {
+        if (index < firstTotal) {
+            return;
+        }
+
+        const value = column.total
+            ? formatKg(rows.reduce((total, row) => total + (Number(row[column.key]) || 0), 0))
+            : "";
+        drawCell(doc, x, cursor, widths[index], height, value, 5.5, true, fill);
+        x += widths[index];
+    });
+
+    return cursor + height;
+}
+
+function drawSignatures(doc, y, operator = "") {
     if (y + 24 > doc.internal.pageSize.getHeight() - MARGIN) {
         doc.addPage();
         y = MARGIN;
@@ -276,34 +344,40 @@ function drawSignatures(doc, y) {
     doc.line(rightStart, y, rightEnd, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
+    if (operator) {
+        doc.text(operator, (MARGIN + 8 + leftEnd) / 2, y - 2, { align: "center" });
+    }
     doc.text("Operador Nombre y Firma", (MARGIN + 8 + leftEnd) / 2, y + 4, { align: "center" });
     doc.text("Reviso Nombre y firma", (rightStart + rightEnd) / 2, y + 4, { align: "center" });
 }
 
-function drawIncineracion(doc, section) {
-    let y = drawCenter(doc, 12, section.titulo, 12);
-    y = drawMeta(
-        doc,
-        y + 2,
-        `Operador: ${section.operador || "—"}`,
-        `Periodo: ${section.mes || "—"}`,
-    );
-    y = drawDataTable(doc, y + 1, INCINERACION_COLUMNS, section.rows, { headerSize: 4 });
-
-    if (!section.detalles?.length) {
-        return;
-    }
-
-    y += 8;
-    if (y + 24 > doc.internal.pageSize.getHeight() - MARGIN) {
-        doc.addPage();
-        y = MARGIN;
-    }
-
+function drawIncineracionBanner(doc, y, section) {
+    const width = pageInner(doc);
+    const height = 10;
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.15);
+    doc.rect(MARGIN, y, width, height);
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("AUTORIZACION", MARGIN + 3, y + 6);
+    doc.text(section.autorizacion || "", MARGIN + 36, y + 6);
     doc.setFontSize(9);
-    doc.text("Cantidades por manifiesto", MARGIN, y);
-    drawDataTable(doc, y + 3, DETALLE_COLUMNS, section.detalles, { headerSize: 6, bodySize: 7 });
+    doc.text(section.titulo, doc.internal.pageSize.getWidth() / 2 + 10, y + 6, { align: "center" });
+    doc.setFontSize(8);
+    doc.text(`MES: ${section.mes || ""}`, MARGIN + width - 2, y + 6, { align: "right" });
+
+    return y + height;
+}
+
+function drawIncineracion(doc, section) {
+    let y = drawIncineracionBanner(doc, MARGIN, section);
+    y = drawDataTable(doc, y, INCINERACION_COLUMNS, section.rows, {
+        bodySize: 5.2,
+        skipLabels: true,
+        drawGroups: drawIncineracionHeader,
+        drawFooter: (pdf, cursor, widths, drawHeader) => drawIncineracionTotal(pdf, cursor, widths, drawHeader, section.rows),
+    });
+    drawSignatures(doc, y, section.operador || "");
 }
 
 function drawEsterilizacion(doc, section) {
@@ -324,30 +398,44 @@ function drawEsterilizacion(doc, section) {
     drawSignatures(doc, y);
 }
 
-function buildLogbookPdf(data) {
+function buildSectionPdf(draw, section) {
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    let started = false;
-
-    if (data.incineracion) {
-        drawIncineracion(doc, data.incineracion);
-        started = true;
-    }
-
-    if (data.esterilizacion) {
-        if (started) {
-            doc.addPage();
-        }
-        drawEsterilizacion(doc, data.esterilizacion);
-    }
-
+    draw(doc, section);
     doc.setProperties({
-        title: "Bitácora de tratamientos",
+        title: section.titulo || "Bitácora de tratamientos",
         author: "BAN RPBI",
         creator: "BAN RPBI",
     });
 
-    const filtro = data.filtro || "tratamientos";
-    doc.save(`bitacora-${filtro}.pdf`);
+    return doc;
+}
+
+function openPdf(doc) {
+    const url = URL.createObjectURL(doc.output("blob"));
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+function buildLogbookPdf(data) {
+    const files = [];
+
+    if (data.incineracion) {
+        files.push(buildSectionPdf(drawIncineracion, data.incineracion));
+    }
+
+    if (data.esterilizacion) {
+        files.push(buildSectionPdf(drawEsterilizacion, data.esterilizacion));
+    }
+
+    files.forEach((doc) => {
+        openPdf(doc);
+    });
 }
 
 function bindFilters() {

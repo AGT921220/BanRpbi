@@ -63,8 +63,9 @@ class ProcessLogbookTest extends TestCase
 
         $generated->assertOk();
         $generated->assertJsonPath('filtro', 'incineracion');
-        $generated->assertJsonPath('incineracion.titulo', 'BITÁCORA DE INCINERACIÓN');
-        $generated->assertJsonPath('incineracion.rows.0.fecha_completa', '02/11/2026');
+        $generated->assertJsonPath('incineracion.titulo', 'BITACORA DE TRATAMIENTO POR INCINERACION MENSUAL');
+        $generated->assertJsonPath('incineracion.rows.0.fecha', '2/11/26');
+        $generated->assertJsonPath('incineracion.rows.0.cl_en_rps', '0.00');
         $generated->assertJsonPath('incineracion.rows.0.temp_camara_primaria', '800.00');
         $generated->assertJsonMissingPath('esterilizacion');
         $generated->assertJsonMissingPath('incineracion.rows.1');

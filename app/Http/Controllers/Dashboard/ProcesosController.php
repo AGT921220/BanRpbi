@@ -164,6 +164,12 @@ class ProcesosController extends Controller implements HasMiddleware
                 isset($data['sangre']) ? (string) $data['sangre'] : null,
                 isset($data['ceniza_generada']) ? (string) $data['ceniza_generada'] : null,
                 isset($data['descarga_lavador']) ? (string) $data['descarga_lavador'] : null,
+                isset($data['cl_en_rps']) ? (string) $data['cl_en_rps'] : null,
+                isset($data['co_ppm']) ? (string) $data['co_ppm'] : null,
+                isset($data['radiacion_residuos']) ? (string) $data['radiacion_residuos'] : null,
+                isset($data['solidos_mixtos']) ? (string) $data['solidos_mixtos'] : null,
+                isset($data['rp_solidos_lodos']) ? (string) $data['rp_solidos_lodos'] : null,
+                isset($data['medicamentos_caducos']) ? (string) $data['medicamentos_caducos'] : null,
             ),
             isset($data['machine_number']) ? (int) $data['machine_number'] : null,
             $data['hour_machine'] ?? null,
@@ -331,11 +337,11 @@ class ProcesosController extends Controller implements HasMiddleware
 
         if ($filtro !== 'esterilizacion') {
             $pdf['incineracion'] = [
-                'titulo' => 'BITÁCORA DE INCINERACIÓN',
+                'titulo' => 'BITACORA DE TRATAMIENTO POR INCINERACION MENSUAL',
+                'autorizacion' => (string) config('business.transportista.autorizacion_tratamiento'),
                 'operador' => $this->logbookOperators($incineracion),
                 'mes' => $mes,
                 'rows' => $incineracion->map(fn (WasteProcess $process) => $this->incineracionRow($process))->all(),
-                'detalles' => $this->incineracionDetails($incineracion),
             ];
         }
 
@@ -359,12 +365,10 @@ class ProcesosController extends Controller implements HasMiddleware
      */
     private function incineracionRow(WasteProcess $process): array
     {
+        $hora = trim($this->logbookHour($process->hour_start_machine).' '.$this->logbookHour($process->hour_machine));
         $row = [
-            'id' => (string) $process->id,
-            'fecha_completa' => $process->date_start?->format('d/m/Y') ?? '',
-            'hora_carga' => $this->logbookHour($process->hour_start_machine),
-            'hora_termino' => $this->logbookHour($process->hour_machine),
-            'estado' => $process->is_finished ? 'Cerrado' : 'Tratamiento',
+            'fecha' => $process->date_start?->format('j/n/y') ?? '',
+            'hora' => $hora,
             'comments' => (string) ($process->comments ?? ''),
         ];
 
@@ -374,11 +378,17 @@ class ProcesosController extends Controller implements HasMiddleware
             'temp_entrada_venturi',
             'temp_salida_venturi',
             'temp_salida_chimenea',
+            'cl_en_rps',
+            'co_ppm',
             'oxigeno',
             'presion_negativa',
+            'radiacion_residuos',
             'consumo_gas_lp',
             'consumo_promedio_agua',
             'evaporacion_agua_tratada',
+            'solidos_mixtos',
+            'rp_solidos_lodos',
+            'medicamentos_caducos',
             'patologicos',
             'cultivos_cepas',
             'sangre',
@@ -389,29 +399,6 @@ class ProcesosController extends Controller implements HasMiddleware
         }
 
         return $row;
-    }
-
-    /**
-     * @return array<int, array<string, string>>
-     */
-    private function incineracionDetails(Collection $processes): array
-    {
-        $rows = [];
-
-        foreach ($processes as $process) {
-            foreach ($process->details as $detail) {
-                $rows[] = [
-                    'tratamiento' => (string) $process->id,
-                    'fecha' => $process->date_start?->format('d/m/Y') ?? '',
-                    'manifest' => $detail->manifest_id ? '#'.$detail->manifest_id : '—',
-                    'client' => $this->clientName($detail->manifest?->service?->client),
-                    'profile' => $detail->serviceDetail?->rpbiProfile?->name ?? '—',
-                    'weight' => $this->logbookDecimal($detail->total_weight),
-                ];
-            }
-        }
-
-        return $rows;
     }
 
     /**
@@ -536,22 +523,6 @@ class ProcesosController extends Controller implements HasMiddleware
             12 => 'DICIEMBRE',
             default => '',
         };
-    }
-
-    private function clientName(mixed $client): string
-    {
-        if ($client === null) {
-            return '—';
-        }
-
-        $name = $client->legal_name
-            ?: ($client->company ?: trim(($client->name ?? '').' '.($client->parentarl_surname ?? '')));
-
-        if ($name === '') {
-            return '—';
-        }
-
-        return $name;
     }
 
     private function creatableTypes(): Collection
